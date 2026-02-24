@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Secretary Dashboard{% endblock %}
+
+{% block content %}
+<h3>Welcome Secretary</h3>
+<p>Pending leave requests will appear here.</p>
+
+<hr>
+
+<a href="{{ url_for('secretary.new_memo') }}">
+    Create New Memo
+</a>
+
+<br><br>
+{% if memos %}
+<table border="1" cellpadding="8" cellspacing="0">
+    <thead>
+        <tr>
+            <th>Serial No.</th>
+            <th>Memo #</th>
+            <th>Subject</th>
+            <th>Type</th>
+            <th>From Office</th>
+            <th>Forwarded By</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for memo in memos %}
+        <tr>
+            <td>{{ "%03d"|format(loop.index) }}</td>
+            <td>Memorandum#:{{ memo.memo_number }}</td>
+            <td>{{ memo.subject }}</td>
+            <td>{{ memo.source_type }}</td>
+            <td>{{ memo.from_office }}</td>
+            <td>{{ memo.forwarded_by }}</td>
+            <td>{{ memo.remarks }}</td>
+            <td>{{ memo.notes }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No memos found.</p>
+{% endif %}
+<br><br>
+
+
+<a href="{{ url_for('secretary.update_memo') }}">
+    Update Existing Memo
+</a>
+{% endblock %}

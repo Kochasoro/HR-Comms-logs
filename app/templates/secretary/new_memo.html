@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}New Memo{% endblock %}
+
+{% block content %}
+<h2>New Memo</h2>
+
+<form method="POST">
+  Memo # <input name="memo_number"><br>
+  Subject <input name="subject"><br>
+
+  Type
+  <select name="source_type">
+    <option>General</option>
+    <option>OP</option>
+  </select><br>
+<!-- THIS PART BASICALLY IF OP, THE FROM AND FORWARDED MAGIGING AUTOFILLED NA, BASTA I'LL FIX IT NALANG -->
+  From <input name="from_office"><br>
+  Forwarded By <input name="forwarded_by"><br>
+
+  Remarks <input name="remarks"><br>
+  Notes <textarea name="notes"></textarea><br>
+
+  <button type="submit">Save</button>
+</form>
+{% endblock %}

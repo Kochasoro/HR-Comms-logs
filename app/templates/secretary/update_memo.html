@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Update Memo{% endblock %}
+
+{% block content %}
+<h2>Update Memo</h2>
+
+<form method="POST">
+  Memo # <input name="memo_number"><br>
+
+  Remarks <input name="remarks"><br>
+  Notes <textarea name="notes"></textarea><br>
+
+  <button type="submit">Add Update</button>
+</form>
+{% endblock %}
