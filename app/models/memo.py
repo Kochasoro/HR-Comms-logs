@@ -5,6 +5,7 @@ class Memo(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
+    date = db.Column(db.Date)
     memo_number = db.Column(db.String(50), nullable=False)
     subject = db.Column(db.String(255))
 

@@ -1,5 +1,6 @@
 from app.extensions import db
 from app.models import Memo
+from app.models.log_entry import LogEntry
 
 
 class MemoService:
@@ -18,6 +19,12 @@ class MemoService:
     @staticmethod
     def get_all():   
         return Memo.query.order_by(Memo.id.asc()).all()
+    
+    @staticmethod
+    def get_latest_log(memo_number):
+        return LogEntry.query.filter_by(memo_number=memo_number)\
+                            .order_by(LogEntry.id.desc())\
+                            .first()
     
     @staticmethod
     def close_memo(memo):
