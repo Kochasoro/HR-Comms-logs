@@ -2,22 +2,21 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app.models.memo import Memo
 from app.services.memo_service import MemoService
 from app.services.log_service import LogService
+from app.utils.decorators import role_required
 from datetime import datetime
 from app.extensions import db
-from flask import jsonify
+from flask import jsonify, redirect, url_for
+from flask_login import login_required, current_user
 
 secretary_bp = Blueprint("secretary", __name__, url_prefix="/secretary")
 
 
-@secretary_bp.route("/")
-def dashboard():
-    # Get all memos
-    memos = MemoService.get_all()
-    
-    # Just pass them to the template
-    return render_template("secretary/dashboard.html", memos=memos)
 
-# CREATE NEW MEMO
+@secretary_bp.route("/")
+@role_required("secretary")
+def dashboard():
+    memos = MemoService.get_all()
+    return render_template("secretary/dashboard.html", memos=memos)
 
 @secretary_bp.route("/new", methods=["GET", "POST"])
 def new_memo():

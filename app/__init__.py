@@ -3,23 +3,32 @@ from app.extensions import db, login_manager, migrate
 from app.config import Config
 from app import models
 from app.routes.secretary import secretary_bp
+from app.routes.auth import auth_bp   # 🔥 ADD THIS
+from app.routes.admin import admin_bp  # if you have admin
 from .routes.main import main
 from app.models.user import User   
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-    app.register_blueprint(main)
 
+    # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)
-    migrate.init_app(app, db)   
+    migrate.init_app(app, db)
 
-    print(app.url_map)
+    login_manager.login_view = "auth.login"
 
-    login_manager.login_view = "main.home"  
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
+
+    # Register blueprints
+    app.register_blueprint(main)
+    app.register_blueprint(auth_bp)        
     app.register_blueprint(secretary_bp)
+    app.register_blueprint(admin_bp)     
+
+    print(app.url_map)
+
     return app

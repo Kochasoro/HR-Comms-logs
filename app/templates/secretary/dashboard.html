@@ -3,6 +3,10 @@
 {% block title %}Secretary Dashboard{% endblock %}
 
 {% block content %}
+
+            <div class="mt-5 text-center">
+                <a href="{{ url_for('auth.logout') }}" class="text-danger">Logout</a>
+            </div>
 <h3>Welcome Secretary</h3>
 <p>Pending leave requests will appear here.</p>
 
