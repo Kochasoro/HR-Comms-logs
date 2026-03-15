@@ -1,0 +1,60 @@
+{% extends "admin/admin_base.html" %}
+
+{% block content %}
+<div class="col-md-10 content">
+
+
+    <h2>Holiday Settings</h2>
+
+    <h3>Add Holiday</h3>
+
+    <form method="POST">
+
+    Date
+    <input type="date" name="date" required>
+
+    Holiday Name
+    <input name="name" required>
+
+    Type
+    <select name="type">
+    <option>Regular Holiday</option>
+    <option>Special Holiday</option>
+    <option>Local Holiday</option>
+    </select>
+
+    Description
+    <textarea name="description"></textarea>
+
+    <button type="submit">Add</button>
+
+    </form>
+
+    <hr>
+
+    <h3>Existing Holidays</h3>
+
+    <table border="1">
+
+    <tr>
+    <th>Date</th>
+    <th>Name</th>
+    <th>Type</th>
+    <th>Description</th>
+    </tr>
+
+    {% for holiday in holidays %}
+    <tr>
+
+    <td>{{ holiday.date }}</td>
+    <td>{{ holiday.name }}</td>
+    <td>{{ holiday.type }}</td>
+    <td>{{ holiday.description }}</td>
+
+    </tr>
+    {% endfor %}
+
+    </table>
+</div>
+
+{% endblock %}

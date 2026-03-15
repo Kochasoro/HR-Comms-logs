@@ -3,8 +3,8 @@ from app.extensions import db, login_manager, migrate
 from app.config import Config
 from app import models
 from app.routes.secretary import secretary_bp
-from app.routes.auth import auth_bp   # 🔥 ADD THIS
-from app.routes.admin import admin_bp  # if you have admin
+from app.routes.auth import auth_bp   
+from app.routes.admin import admin_bp 
 from .routes.main import main
 from app.models.user import User   
 
