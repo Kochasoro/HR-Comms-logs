@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WMSU Memo Tracking</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; font-size:15px; }
+body { background:#f4f6f9; }
+/* TOPBAR */
+.topbar { height:65px; background:#B22222; display:flex; align-items:center; justify-content:space-between; padding:0 20px; color:white; }
+.topbar-left { display:flex; align-items:center; gap:15px; }
+.logo { height:40px; }
+.title { font-size:20px; font-weight:500; }
+.topbar-right { font-size:13px; }
+/* SIDEBAR */
+.sidebar { position:fixed; top:65px; left:0; width:60px; height:100%; background:#B22222; display:flex; flex-direction:column; align-items:center; padding-top:20px; gap:20px; z-index:500; }
+.sidebar iconify-icon { font-size:24px; color:#6F1020; padding:10px; border-radius:6px; transition:.2s; cursor:pointer; }
+.sidebar iconify-icon:hover { background:white; }
+/* CONTENT */
+.content { margin-left:60px; padding:25px; max-width:1400px; }
+/* SEARCH BAR */
+.search-bar { display:flex; gap:10px; margin-bottom:15px; }
+.search-bar input, .search-bar select { padding:7px 10px; border:1px solid #ccc; border-radius:4px; }
+/* BUTTONS */
+.buttons { margin-left:auto; display:flex; gap:10px; }
+.btn { background:#B22222; color:white; border:none; padding:7px 14px; border-radius:6px; cursor:pointer; }
+/* HOLIDAY PANEL */
+.holiday-panel { background:white; border-radius:6px; padding:10px; display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:15px; min-height:70px; }
+/* HOLIDAY CARDS */
+.holiday-card { display:flex; gap:10px; background:#fdeaea; padding:10px; border-radius:6px; align-items:flex-start; }
+.holiday-card iconify-icon { font-size:20px; color:#B22222; margin-top:2px; }
+.holiday-top { display:flex; gap:6px; align-items:center; }
+.holiday-title { font-weight:600; font-size:13px; color:#B22222; }
+.holiday-badge { background:#B22222; color:white; font-size:10px; padding:2px 6px; border-radius:4px; }
+.holiday-card p { font-size:11px; margin-top:2px; color:#444; }
+/* TABLE */
+.table-container { background:white; border-radius:6px; overflow:hidden; }
+table { width:100%; border-collapse:collapse; }
+thead { background:#E9EDF2; }
+th,td { padding:10px; text-align:left; }
+tbody tr { border-top:1px solid #eee; }
+.action-icons { display:flex; gap:10px; align-items:center; }
+.action-icons iconify-icon { font-size:20px; cursor:pointer; color:#6F1020; }
+.action-icons iconify-icon.delete-btn { color: #f44336 !important; }
+.delete-btn:hover { transform: scale(1.1); }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+tr.row-fade { animation: fadeOut 0.3s forwards; }
+/* GEAR OPTIONS */
+.option-menu { position:absolute; background:white; box-shadow:0 6px 20px rgba(0,0,0,0.15); border-radius:10px; padding:10px 20px; display:none; gap:20px; }
+.option-menu iconify-icon { font-size:26px; cursor:pointer; }
+/* MODALS */
+.modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.3); display:none; align-items:center; justify-content:center; z-index:9999; }
+.modal-content { background:white; width:600px; max-width:90vw; padding:30px; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.2); max-height:90vh; overflow-y:auto; }
+.modal h2 { margin-bottom:20px; }
+.form-row { display:flex; gap:15px; margin-bottom:15px; }
+.form-group { flex:1; display:flex; flex-direction:column; gap:5px; margin-bottom:15px; }
+input,textarea,select { border:1px solid #ccc; border-radius:4px; padding:7px; }
+textarea { resize:vertical; height:70px; }
+.modal-buttons { display:flex; justify-content:center; gap:20px; margin-top:15px; }
+.cancel { background:#777; }
+</style>
+</head>
+<body>
+<!-- TOPBAR -->
+<div class="topbar">
+<div class="topbar-left">
+<img src="site_logo.png" class="logo">
+<div class="title">Western Mindanao State University</div>
+</div>
+<div class="topbar-right">Logged in as: Admin | Logout</div>
+</div>
+<!-- SIDEBAR -->
+<div class="sidebar">
+<iconify-icon icon="mdi:home-outline"></iconify-icon>
+<iconify-icon icon="mdi:history" id="historyBtn"></iconify-icon>
+<iconify-icon icon="mdi:file-document-outline"></iconify-icon>
+</div>
+<!-- CONTENT -->
+<div class="content" id="mainPage">
+<div style="display:flex;align-items:center">
+<div class="search-bar">
+<input placeholder="Search by Subject From">
+<select><option>Today</option></select>
+</div>
+<div class="buttons">
+<button class="btn" onclick="openAddHoliday()">+ Add Holidays</button>
+<button class="btn" onclick="openAddMemo()">+ Add Memo</button>
+</div>
+</div>
+<!-- HOLIDAYS -->
+<div class="holiday-panel">
+<!-- dynamic holidays here -->
+</div>
+<!-- TABLE -->
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Series</th><th>Date</th><th>From</th><th>Forwarded by</th><th>Subject</th><th>Remarks</th><th>Notes</th><th>Released To</th><th>Released Date</th><th>Action</th>
+</tr>
+</thead>
+<tbody><!-- outputs --></tbody>
+</table>
+</div>
+<!-- History -->
+<div class="content" id="historyPage" style="display:none;">
+
+<div style="background:white;border-radius:8px;padding:20px;height:500px;overflow:auto;">
+
+<select id="historyFilter" style="margin-bottom:15px;padding:6px;">
+<option value="all">Today</option>
+</select>
+
+<div id="historyList"></div>
+
+</div>
+
+</div>
+</div>
+<!-- OPTION MENU -->
+<div id="optionMenu" class="option-menu">
+  <iconify-icon icon="mdi:delete-outline" class="delete-btn"></iconify-icon>
+<iconify-icon icon="mdi:pencil-outline" onclick="openEditMemo()"></iconify-icon>
+</div>
+<!-- ADD MEMO MODAL -->
+<div id="addMemoModal" class="modal">
+<div class="modal-content">
+<h2>Add Memo</h2>
+<div class="form-row">
+<div class="form-group">
+From</label><input id="memoFrom">
+</div>
+<div class="form-group">
+<label>Forwarded by</label><input id="memoForwarded">
+</div>
+</div>
+<div class="form-group">
+Subject</label><input id="memoSubject">
+</div>
+<div class="form-group">
+Remarks</label><textarea id="memoRemarks"></textarea>
+</div>
+<div class="form-group">
+<label>Notes</label><textarea id="memoNotes"></textarea>
+</div>
+<div class="form-row">
+<div class="form-group">
+Release to</label><input id="memoReleaseTo">
+</div>
+<div class="form-group">
+<label>Release by</label><input id="memoReleaseBy">
+</div>
+</div>
+<div class="modal-buttons">
+<button class="btn" onclick="addMemo()">Submit</button>
+<button class="btn cancel" onclick="closeModals()">Cancel</button>
+</div>
+</div>
+</div>
+<!-- EDIT MEMO MODAL -->
+<div id="editMemoModal" class="modal">
+<div class="modal-content">
+<h2>Edit Memo</h2>
+<div class="form-row">
+<div class="form-group">
+<label>From</label><input id="editMemoFrom">
+</div>
+<div class="form-group">
+<label>Forwarded by</label><input id="editMemoForwarded">
+</div>
+</div>
+<div class="form-group">
+<label>Subject</label><input id="editMemoSubject">
+</div>
+<div class="form-group">
+<label>Remarks</label><textarea id="editMemoRemarks"></textarea>
+</div>
+<div class="form-group">
+<label>Notes</label><textarea id="editMemoNotes"></textarea>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label>Release to</label><input id="editMemoReleaseTo">
+</div>
+<div class="form-group">
+<label>Release by</label><input id="editMemoReleaseBy">
+</div>
+</div>
+<div class="modal-buttons">
+<button class="btn" onclick="editMemo()">Submit</button>
+<button class="btn cancel" onclick="closeModals()">Cancel</button>
+</div>
+</div>
+</div>
+<!-- ADD HOLIDAY MODAL -->
+<div id="addHolidayModal" class="modal">
+<div class="modal-content">
+<h2>Add Holiday</h2>
+<div class="form-group">
+<label>Holiday Name</label>
+<input type="text" id="hname">
+</div>
+<div class="form-group">
+<label>Date</label>
+<input type="date" id="hdate">
+</div>
+<div class="form-group">
+<label>Holiday Type</label>
+<select id="htype">
+<option>University Holiday</option>
+<option>Regular Holiday</option>
+<option>Special Holiday</option>
+</select>
+</div>
+<div class="form-group">
+<label>Description</label>
+<textarea id="hdesc" placeholder="Optional notes..."></textarea>
+</div>
+<div class="modal-buttons">
+<button class="btn cancel" onclick="closeAddHolidayModal()">Cancel</button>
+<button class="btn" onclick="saveHoliday()">Save Holiday</button>
+</div>
+</div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div id="deleteConfirmModal" class="modal">
+  <div class="modal-content" style="width:400px; padding:25px; text-align:center;">
+    <iconify-icon icon="mdi:alert-circle" style="font-size:48px; color:#f44336; margin-bottom:15px;"></iconify-icon>
+    <h2>Confirm Delete</h2>
+    <p>Are you sure you want to delete this memo permanently?</p>
+    <p style="font-weight:500; color:#B22222;">This action cannot be undone.</p>
+    <div class="modal-buttons" style="gap:15px;">
+      <button class="btn cancel" onclick="closeDeleteConfirm()" style="background:#6c757d;">Cancel</button>
+      <button class="btn" onclick="confirmDelete()" style="background:#f44336;">Delete Memo</button>
+    </div>
+  </div>
+</div>
+<script>
+
+/* =========================
+HOLIDAY FUNCTIONS
+========================= */
+
+function openAddHoliday(){
+document.getElementById('addHolidayModal').style.display='flex';
+}
+
+function closeAddHolidayModal(){
+document.getElementById('addHolidayModal').style.display='none';
+
+hname.value='';
+hdate.value='';
+htype.selectedIndex=0;
+hdesc.value='';
+}
+
+function saveHoliday(){
+
+const name=hname.value.trim();
+const date=hdate.value;
+const type=htype.value;
+const desc=hdesc.value.trim() || "No Office Transaction on this date";
+
+if(!name || !date){
+alert("Please fill Holiday Name and Date");
+return;
+}
+
+const title=`${date} – ${name}`;
+
+const holiday={title,badge:type,desc};
+
+let holidays=JSON.parse(localStorage.getItem('holidays')||'[]');
+
+holidays.unshift(holiday);
+
+localStorage.setItem('holidays',JSON.stringify(holidays));
+
+renderHolidayCard(holiday);
+
+closeAddHolidayModal();
+
+}
+
+function renderHolidayCard(holiday){
+
+const panel=document.querySelector('.holiday-panel');
+
+const card=document.createElement('div');
+
+card.className='holiday-card';
+
+card.innerHTML=`
+<iconify-icon icon="mdi:calendar"></iconify-icon>
+<div>
+<div class="holiday-top">
+<span class="holiday-title">${holiday.title}</span>
+<span class="holiday-badge">${holiday.badge}</span>
+</div>
+<p>${holiday.desc}</p>
+</div>
+`;
+
+panel.insertBefore(card,panel.firstChild);
+
+}
+
+function loadHolidays(){
+
+const holidays=JSON.parse(localStorage.getItem('holidays')||'[]');
+
+holidays.forEach(renderHolidayCard);
+
+}
+
+
+/* =========================
+MEMO FUNCTIONS
+========================= */
+
+let editingSeries=null;
+let deleteSeries=null;
+let deleteRow=null;
+
+function openAddMemo(){
+document.getElementById("addMemoModal").style.display="flex";
+}
+
+function openEditMemo(){
+document.getElementById("editMemoModal").style.display="flex";
+}
+
+function closeModals(){
+document.getElementById("addMemoModal").style.display="none";
+document.getElementById("editMemoModal").style.display="none";
+}
+
+/* ADD MEMO */
+
+function addMemo(){
+
+const from=memoFrom.value.trim();
+const forwarded=memoForwarded.value.trim();
+const subject=memoSubject.value.trim();
+const remarks=memoRemarks.value.trim();
+const notes=memoNotes.value.trim();
+const releaseTo=memoReleaseTo.value.trim();
+const releaseBy=memoReleaseBy.value.trim();
+
+if(!from || !subject){
+alert("Please fill From and Subject");
+return;
+}
+
+let memos=JSON.parse(localStorage.getItem('memos')||'[]');
+
+const series=`MEMO-${(memos.length+1).toString().padStart(3,'0')}`;
+
+const date=new Date().toLocaleDateString('en-US');
+
+const memo={
+series,
+date,
+from,
+forwarded,
+subject,
+remarks,
+notes,
+releaseTo,
+releaseBy,
+releaseDate:""
+};
+
+memos.unshift(memo);
+
+localStorage.setItem('memos',JSON.stringify(memos));
+
+renderMemoRow(memo);
+
+closeModals();
+
+memoFrom.value="";
+memoForwarded.value="";
+memoSubject.value="";
+memoRemarks.value="";
+memoNotes.value="";
+memoReleaseTo.value="";
+memoReleaseBy.value="";
+
+}
+
+
+/* RENDER MEMO ROW */
+
+function renderMemoRow(memo){
+
+const tbody=document.querySelector("tbody");
+
+const row=document.createElement("tr");
+
+row.innerHTML=`
+
+<td>${memo.series}</td>
+<td>${memo.date}</td>
+<td>${memo.from}</td>
+<td>${memo.forwarded||""}</td>
+<td>${memo.subject}</td>
+<td>${memo.remarks||""}</td>
+<td>${memo.notes||""}</td>
+<td>${memo.releaseTo||""}</td>
+<td>${memo.releaseDate||""}</td>
+
+<td>
+<div class="action-icons">
+
+<iconify-icon icon="mdi:update" class="update-btn"></iconify-icon>
+
+<iconify-icon icon="mdi:delete" class="delete-btn"></iconify-icon>
+
+</div>
+</td>
+
+`;
+
+tbody.insertBefore(row,tbody.firstChild);
+
+}
+
+
+/* LOAD MEMOS */
+
+function loadMemos(){
+
+const memos=JSON.parse(localStorage.getItem('memos')||'[]');
+
+memos.forEach(renderMemoRow);
+
+}
+
+
+/* =========================
+EDIT MEMO
+========================= */
+
+document.addEventListener('click',function(e){
+
+if(e.target.classList.contains("update-btn")){
+
+const row=e.target.closest("tr");
+
+const cells=row.cells;
+
+editingSeries=cells[0].textContent;
+
+editMemoFrom.value=cells[2].textContent;
+editMemoForwarded.value=cells[3].textContent;
+editMemoSubject.value=cells[4].textContent;
+editMemoRemarks.value=cells[5].textContent;
+editMemoNotes.value=cells[6].textContent;
+editMemoReleaseTo.value=cells[7].textContent;
+editMemoReleaseBy.value="";
+
+openEditMemo();
+
+}
+
+});
+
+
+function editMemo(){
+
+if(!editingSeries) return;
+
+let memos=JSON.parse(localStorage.getItem('memos')||'[]');
+
+let memo=memos.find(m=>m.series===editingSeries);
+
+if(!memo) return;
+
+memo.from=editMemoFrom.value;
+memo.forwarded=editMemoForwarded.value;
+memo.subject=editMemoSubject.value;
+memo.remarks=editMemoRemarks.value;
+memo.notes=editMemoNotes.value;
+memo.releaseTo=editMemoReleaseTo.value;
+memo.releaseBy=editMemoReleaseBy.value;
+
+localStorage.setItem('memos',JSON.stringify(memos));
+
+refreshMemoTable();
+
+closeModals();
+
+}
+
+
+/* REFRESH TABLE */
+
+function refreshMemoTable(){
+
+const tbody=document.querySelector("tbody");
+
+tbody.innerHTML="";
+
+const memos=JSON.parse(localStorage.getItem('memos')||'[]');
+
+memos.forEach(renderMemoRow);
+
+}
+
+
+/* =========================
+DELETE MEMO WITH WARNING
+========================= */
+
+document.addEventListener('click',function(e){
+
+if(e.target.classList.contains("delete-btn")){
+
+deleteRow=e.target.closest("tr");
+
+deleteSeries=deleteRow.cells[0].textContent;
+
+document.getElementById("deleteConfirmModal").style.display="flex";
+
+}
+
+});
+
+
+function confirmDelete(){
+
+if(!deleteSeries) return;
+
+let memos=JSON.parse(localStorage.getItem('memos')||'[]');
+
+memos=memos.filter(m=>m.series!==deleteSeries);
+
+localStorage.setItem('memos',JSON.stringify(memos));
+
+deleteRow.classList.add("row-fade");
+
+setTimeout(()=>deleteRow.remove(),300);
+
+closeDeleteConfirm();
+
+}
+
+function closeDeleteConfirm(){
+
+document.getElementById("deleteConfirmModal").style.display="none";
+
+deleteSeries=null;
+deleteRow=null;
+
+}
+
+
+/* =========================
+INITIAL LOAD
+========================= */
+
+document.addEventListener("DOMContentLoaded",function(){
+
+loadHolidays();
+loadMemos();
+
+});
+
+</script>
+</body>
+</html>
