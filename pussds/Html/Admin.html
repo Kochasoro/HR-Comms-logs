@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../Css/Admin.css">
+    <title>Admin</title>
+</head>
+<body>
+   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<div class="main-content">
+  <div class="section-badge">
+    Import & Export
+  </div>
+
+  <div class="cards-grid">
+    <div class="ui-card">
+      <h2 class="card-header">Import Records</h2>
+      <div class="card-content">
+        <p class="instruction">Upload file (Accepts .xlsx and .csv files)</p>
+        <div class="input-row">
+          <label for="file-upload" class="btn-choose">Choose File:</label>
+          <input type="file" id="file-upload" hidden>
+          <input type="text" class="file-display" placeholder="Ex: filename.csv / filename.xlsx" readonly>
+        </div>
+        <p class="validation-text">(Error/Validation Messages will appear below)</p>
+        <button class="btn-action">Upload</button>
+      </div>
+    </div>
+
+    <div class="ui-card">
+      <h2 class="card-header">Export Data</h2>
+      <div class="card-content">
+        <div class="form-item">
+          <label>Export Type:</label>
+          <div class="check-group">
+            <label><input type="checkbox"> Records</label>
+            <label><input type="checkbox"> System Logs</label>
+          </div>
+        </div>
+        <div class="form-item">
+          <label>Date From:</label>
+          <input type="date" class="input-field">
+        </div>
+        <div class="form-item">
+          <label>Date To:</label>
+          <input type="date" class="input-field">
+        </div>
+        <div class="form-item">
+          <label>Format:</label>
+          <div class="format-group">
+            <label><input type="checkbox"> Excel</label>
+            <span class="v-line">|</span>
+            <label><input type="checkbox"> CSV</label>
+            <span class="v-line">|</span>
+            <label><input type="checkbox"> PDF</label>
+          </div>
+        </div>
+        <button class="btn-action">Generate Export</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="activity-log">
+    <div class="log-header">
+      <h2 class="log-title">Recent Activity</h2>
+      <div class="log-filters">
+        <input type="text" placeholder="Search" class="search-input">
+        <select class="sort-select">
+          <option>Sort by</option>
+        </select>
+      </div>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Ref No.</th>
+          <th>Type</th>
+          <th>File Name</th>
+          <th>Date</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>IMP-0001</td>
+          <td>Import</td>
+          <td>records_january.xlsx</td>
+          <td>March 02, 2026</td>
+          <td>11:26 AM</td>
+        </tr>
+        <tr>
+          <td>EXP-0001</td>
+          <td>Export</td>
+          <td>logs_01-01-2026.pdf</td>
+          <td>March 02, 2026</td>
+          <td>03:49 PM</td>
+        </tr>
+        <tr>
+          <td>IMP-0002</td>
+          <td>Import</td>
+          <td>records_february.csv</td>
+          <td>March 03, 2026</td>
+          <td>01:11 PM</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,100 @@
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #fff;
+  margin: 0;
+  color: #333;
+}
+
+.main-content {
+  padding: 40px;
+}
+
+/* Header and Badge */
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+}
+
+.section-badge {
+  background-color: #f2dede;
+  color: #a42323;
+  padding: 15px 35px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 1.3rem;
+}
+
+.top-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.btn-action {
+  background-color: #a42323;
+  color: white;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Filter Bar */
+.logs-card {
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+}
+
+.filter-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.search-input, .filter-select {
+  padding: 8px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.85rem;
+}
+
+.search-input { width: 180px; }
+
+/* Table Styling */
+.logs-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.logs-table th {
+  background-color: #eff1f3;
+  text-align: left;
+  padding: 12px 15px;
+  color: #6c757d;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.logs-table td {
+  padding: 15px 15px;
+  border-bottom: 1px solid #f2f2f2;
+  font-size: 0.85rem;
+  color: #444;
+}
+
+.gear-icon {
+  color: #333;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.gear-icon:hover {
+  color: #a42323;
+}

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../Css/Users.css">
+    <title>Users</title>
+</head>
+<body>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<div class="main-content">
+  <div class="section-badge">
+    Manage Users
+  </div>
+
+  <div class="accounts-card">
+    <div class="accounts-header">
+      <h2 class="accounts-title">Accounts</h2>
+      <input type="text" placeholder="Search" class="search-box">
+    </div>
+
+    <table class="user-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Password</th>
+          <th>Role</th>
+          <th>Last Login</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>USER-01</td>
+          <td>Admin</td>
+          <td>
+            <div class="password-wrapper">
+              <input type="password" value="password123" readonly>
+              <i class="fa-regular fa-eye view-icon"></i>
+            </div>
+          </td>
+          <td>Admin</td>
+          <td>March 02, 2026</td>
+          <td>
+            <button class="btn-password"><i class="fa-solid fa-lock"></i> Change password</button>
+          </td>
+        </tr>
+
+        <tr>
+          <td>USER-02</td>
+          <td>Staff</td>
+          <td>
+            <div class="password-wrapper">
+              <input type="password" value="password123" readonly>
+              <i class="fa-regular fa-eye view-icon"></i>
+            </div>
+          </td>
+          <td>Staff</td>
+          <td>March 02, 2026</td>
+          <td>
+            <button class="btn-password"><i class="fa-solid fa-lock"></i> Change password</button>
+          </td>
+        </tr>
+
+        <tr>
+          <td>USER-03</td>
+          <td>Guest</td>
+          <td>
+            <input type="text" class="disabled-input" value="[Disabled]" readonly>
+          </td>
+          <td>Guest</td>
+          <td>March 03, 2026</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

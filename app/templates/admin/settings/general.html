@@ -1,33 +1,215 @@
 {% extends "admin/admin_base.html" %}
+{% block page_css3 %}
+<style>
 
+/* Badge & Tabs */
+.section-badge {
+  background-color: #f2dede;
+  color: #a42323;
+  padding: 12px 35px;
+  border-radius: 8px;
+  display: inline-block;
+  font-weight: 500;
+  margin-bottom: 25px;
+}
+
+.tabs-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 0px;
+  position: relative;
+  z-index: 2;
+}
+
+.tab-btn {
+  background: #f2dede;
+  border: 1px solid #ccc;
+  border-bottom: none;
+  padding: 8px 25px;
+  border-radius: 8px 8px 0 0;
+  font-family: 'Poppins';
+  color: #a42323;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.tab-btn.active { background: white; border-bottom: 2px solid white; }
+
+/* Main Card */
+.settings-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 0 12px 12px 12px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  background: white;
+}
+
+/* Sections */
+.settings-section { margin-bottom: 40px; }
+
+.section-header {
+  background-color: #e5e7eb;
+  padding: 8px 15px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 25px;
+}
+
+.form-body { padding: 0 40px; }
+
+.form-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+label { font-size: 0.85rem; color: #555; width: 300px; }
+
+.wide-input, .file-path, .color-input {
+  padding: 8px 8px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 350px;
+  font-family: 'Poppins';
+  font-size: 0.85rem;
+}
+
+/* Specific UI Elements */
+.file-box { display: flex; }
+.yellow-choose {
+  background-color: #f9e8b3;
+  border: 1px solid #ccc;
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  width: auto;
+}
+.file-path { border-radius: 0 8px 8px 0; width: 245px; }
+
+.color-picker-box { display: flex; align-items: center; gap: 10px; }
+.color-preview { width: 20px; height: 20px; background: #a42323; border-radius: 4px; }
+
+.btn-right { text-align: right; margin-top: 15px; }
+.btn-save {
+  background-color: #a42323;
+  color: white;
+  border: none;
+  padding: 10px 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Poppins';
+  font-size: 0.85rem;
+}
+
+/* Holiday Table */
+.holiday-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+.holiday-table th { background: #eff1f3; text-align: left; padding: 10px; font-size: 0.8rem; color: #666; }
+.holiday-table td { padding: 12px 10px; border-bottom: 1px solid #eee; font-size: 0.8rem; }
+.trash-icon { color: #444; cursor: pointer; }
+</style>
+{% endblock %}
 {% block content %}
 <div class="col-md-10 content">
+<div class="main-content">
+  <div class="section-badge">Settings</div>
 
-<h2>General Settings</h2>
+  <div class="tabs-container">
+    <button class="tab-btn active">General</button>
+    <button class="tab-btn">Security</button>
+    <button class="tab-btn">Holidays</button>
+    <button class="tab-btn">Appearance</button>
+  </div>
 
-<form method="POST">
-<input type="hidden" name="form_type" value="general">
+  <div class="settings-card">
+    
+    <div class="settings-section">
+      <div class="section-header">GENERAL</div>
+      <form method="POST">
+        <input type="hidden" name="form_type" value="general">
+      <div class="form-body">
+        <div class="form-group">
+          <label>University Name:</label>
+          <input type="text" value="Western Mindanao State University" class="wide-input">
+        </div>
+        <div class="form-group">
+          <label>System Name:</label>
+          <input name="system_name" value="{{ settings.system_name }}"class="wide-input">
+        </div>
+        <div class="form-group">
+          <label>Upload Logo:</label>
+          <div class="file-box">
+            <label class="yellow-choose">Choose File:</label>
+            <input type="text" placeholder="ex. wmsu.png" class="file-path">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Timezone:</label>
+          <select name="timezone" class="wide-input"><option value="Asia/Manila">Asia/Manila</option><option value="UTC">UTC</option></select>
+        </div>
+        <div class="form-group">
+          <label>Language:</label>
+          <select class="wide-input"><option>English</option></select>
+        </div>
+        <div class="btn-right"><button class="btn-save" type="submit">Save Changes</button></div>
+        </form>
+      </div>
+    </div>
 
-System Name
-<input name="system_name" value="{{ settings.system_name }}">
+    <div class="settings-section">
+      <div class="section-header">SECURITY</div>
+      <div class="form-body">
+        <div class="form-group">
+          <label>Minimum password length:</label>
+          <input type="text" placeholder="ex. 1, 2, 3..." class="wide-input">
+        </div>
+        <div class="form-group">
+          <label>Require Special Character:</label>
+          <select class="wide-input"><option>Enable</option></select>
+        </div>
+        <div class="form-group">
+          <label>Enable 2FA (Two-Factor Authentication):</label>
+          <select class="wide-input"><option>Disable</option></select>
+        </div>
+        <div class="btn-right"><button class="btn-save">Save Security Changes</button></div>
+      </div>
+    </div>
 
-Timezone
-<select name="timezone">
-<option value="Asia/Manila">Asia/Manila</option>
-<option value="UTC">UTC</option>
-</select>
+    <div class="settings-section">
+      <div class="section-header">HOLIDAY</div>
+      <div class="form-body">
+        <table class="holiday-table">
+          <tr>
+<th>Date</th>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Action</th>
+</tr>
 
-<button type="submit">Save</button>
+{% for holiday in holidays %}
+<tr>
+
+<td>{{ holiday.date }}</td>
+<td>{{ holiday.name }}</td>
+<td>{{ holiday.type }}</td>
+<td>{{ holiday.description }}</td>
+
+<td>
+<form method="POST" action="{{ url_for('admin.delete_holiday', id=holiday.id) }}">
+<button type="submit" style="background: none; border: none; outline: none; padding: 0; cursor: pointer;">❌</button>
 </form>
+</td>
 
+</tr>
+{% endfor %}
 
-<hr>
-
-
-<h2>Holiday Settings</h2>
-
-<button onclick="openHolidayModal()">Add Holiday</button>
-
+          </tbody>
+        </table>
+        <div class="btn-right"><button class="btn-save" onclick="openHolidayModal()">Add Holiday</button></div>
+        
 <div id="holidayModal" class="modal">
 
 <div class="modal-content">
@@ -63,40 +245,30 @@ Timezone
 </div>
 </div>
 
-<hr>
+      </div>
+    </div>
 
-<h3>Existing Holidays</h3>
+    <div class="settings-section">
+      <div class="section-header">APPEARANCE</div>
+      <div class="form-body">
+        <div class="form-group">
+          <label>Sidebar Color:</label>
+          <div class="color-picker-box">
+            <span class="color-preview"></span>
+            <input type="text" value="#a42323" class="color-input">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Dark Mode:</label>
+          <select class="wide-input"><option>Disable</option></select>
+        </div>
+        <div class="btn-right"><button class="btn-save">Apply Theme</button></div>
+      </div>
+    </div>
 
-<table border="1">
-
-<tr>
-<th>Date</th>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Action</th>
-</tr>
-
-{% for holiday in holidays %}
-<tr>
-
-<td>{{ holiday.date }}</td>
-<td>{{ holiday.name }}</td>
-<td>{{ holiday.type }}</td>
-<td>{{ holiday.description }}</td>
-
-<td>
-<form method="POST" action="{{ url_for('admin.delete_holiday', id=holiday.id) }}">
-<button type="submit">Delete</button>
-</form>
-</td>
-
-</tr>
-{% endfor %}
-
-</table>
-
+  </div>
 </div>
+
 
 <style>
     .modal {

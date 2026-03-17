@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WMSU Settings Page</title>
+    <link rel="stylesheet" href="../Css/Settings.css">
+</head>
+<body>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<div class="main-content">
+  <div class="section-badge">Settings</div>
+
+  <div class="tabs-container">
+    <button class="tab-btn active">General</button>
+    <button class="tab-btn">Security</button>
+    <button class="tab-btn">Holidays</button>
+    <button class="tab-btn">Appearance</button>
+  </div>
+
+  <div class="settings-card">
+    
+    <div class="settings-section">
+      <div class="section-header">GENERAL</div>
+      <div class="form-body">
+        <div class="form-group">
+          <label>University Name:</label>
+          <input type="text" value="Western Mindanao State University" class="wide-input">
+        </div>
+        <div class="form-group">
+          <label>System Name:</label>
+          <input type="text" value="Records Management System" class="wide-input">
+        </div>
+        <div class="form-group">
+          <label>Upload Logo:</label>
+          <div class="file-box">
+            <label class="yellow-choose">Choose File:</label>
+            <input type="text" placeholder="ex. wmsu.png" class="file-path">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Timezone:</label>
+          <select class="wide-input"><option>GMT +8 (Taipei, PHT)</option></select>
+        </div>
+        <div class="form-group">
+          <label>Language:</label>
+          <select class="wide-input"><option>English</option></select>
+        </div>
+        <div class="btn-right"><button class="btn-save">Save Changes</button></div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-header">SECURITY</div>
+      <div class="form-body">
+        <div class="form-group">
+          <label>Minimum password length:</label>
+          <input type="text" placeholder="ex. 1, 2, 3..." class="wide-input">
+        </div>
+        <div class="form-group">
+          <label>Require Special Character:</label>
+          <select class="wide-input"><option>Enable</option></select>
+        </div>
+        <div class="form-group">
+          <label>Enable 2FA (Two-Factor Authentication):</label>
+          <select class="wide-input"><option>Disable</option></select>
+        </div>
+        <div class="btn-right"><button class="btn-save">Save Security Changes</button></div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-header">HOLIDAY</div>
+      <div class="form-body">
+        <table class="holiday-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Holiday Name</th>
+              <th>Type</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>April 02, 2026</td>
+              <td>Eid-al-Fitr</td>
+              <td>Muslim Holiday</td>
+              <td><i class="fa-solid fa-circle-minus trash-icon"></i></td>
+            </tr>
+            <tr>
+              <td>December 25, 2026</td>
+              <td>Christmas</td>
+              <td>Public Holiday</td>
+              <td><i class="fa-solid fa-circle-minus trash-icon"></i></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="btn-right"><button class="btn-save">Add Holiday</button></div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-header">APPEARANCE</div>
+      <div class="form-body">
+        <div class="form-group">
+          <label>Sidebar Color:</label>
+          <div class="color-picker-box">
+            <span class="color-preview"></span>
+            <input type="text" value="#a42323" class="color-input">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Dark Mode:</label>
+          <select class="wide-input"><option>Disable</option></select>
+        </div>
+        <div class="btn-right"><button class="btn-save">Apply Theme</button></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

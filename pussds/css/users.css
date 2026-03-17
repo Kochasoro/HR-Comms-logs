@@ -1,0 +1,122 @@
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #fff;
+  margin: 0;
+  color: #333;
+}
+
+.main-content {
+  padding: 40px;
+}
+
+/* Section Badge */
+.section-badge {
+  background-color: #f2dede;
+  color: #a42323;
+  display: inline-block;
+  padding: 15px 35px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 1.3rem;
+  margin-bottom: 30px;
+}
+
+/* Accounts Card Container */
+.accounts-card {
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+}
+
+.accounts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.accounts-title {
+  color: #c07a7a;
+  font-weight: 500;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.search-box {
+  padding: 8px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  width: 250px;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Table Design */
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.user-table th {
+  background-color: #eff1f3;
+  text-align: left;
+  padding: 12px 15px;
+  color: #6c757d;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.user-table td {
+  padding: 20px 15px;
+  border-bottom: 1px solid #f8f9fa;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+/* Password Field Elements */
+.password-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.password-wrapper input, .disabled-input {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 8px 12px;
+  width: 180px;
+  color: #666;
+  font-family: 'Poppins', sans-serif;
+}
+
+.disabled-input {
+  background-color: #fff;
+  color: #999;
+}
+
+.view-icon {
+  color: #333;
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+/* Change Password Button */
+.btn-password {
+  background-color: #a42323;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 4px rgba(0,0,0,0.15);
+}
+
+.btn-password:hover {
+  opacity: 0.9;
+}
