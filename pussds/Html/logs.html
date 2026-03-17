@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/logs.css">
+    <title>logs</title>
+</head>
+<body>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<div class="main-content">
+  <div class="header-container">
+    <div class="section-badge">System Logs</div>
+    <div class="top-actions">
+      <button class="btn-action">Export Logs</button>
+      <button class="btn-action">Clear Logs</button>
+    </div>
+  </div>
+
+  <div class="logs-card">
+    <div class="filter-bar">
+      <input type="text" placeholder="Search" class="search-input">
+      <select class="filter-select">
+        <option>Today</option>
+      </select>
+      <select class="filter-select">
+        <option>Sort by</option>
+      </select>
+    </div>
+
+    <table class="logs-table">
+      <thead>
+        <tr>
+          <th>Log ID</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>User</th>
+          <th>Action</th>
+          <th>Module</th>
+          <th></th> </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>LOG-0001</td>
+          <td>April 02, 2026</td>
+          <td>09:30 AM</td>
+          <td>Admin</td>
+          <td>Changed Password</td>
+          <td>Manage Accounts</td>
+          <td><i class="fa-solid fa-gear gear-icon"></i></td>
+        </tr>
+        <tr>
+          <td>LOG-0002</td>
+          <td>April 03, 2026</td>
+          <td>10:30 AM</td>
+          <td>Staff</td>
+          <td>Created Memo</td>
+          <td>Dashboard</td>
+          <td><i class="fa-solid fa-gear gear-icon"></i></td>
+        </tr>
+        <tr>
+          <td>LOG-0003</td>
+          <td>April 04, 2026</td>
+          <td>11:30 AM</td>
+          <td>Guest</td>
+          <td>Viewed Records</td>
+          <td>Dashboard</td>
+          <td><i class="fa-solid fa-gear gear-icon"></i></td>
+        </tr>
+        <tr>
+          <td>LOG-0004</td>
+          <td>April 05, 2026</td>
+          <td>01:30 PM</td>
+          <td>Staff</td>
+          <td>Created Memo</td>
+          <td>Dashboard</td>
+          <td><i class="fa-solid fa-gear gear-icon"></i></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

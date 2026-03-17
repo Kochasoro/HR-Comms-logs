@@ -1,4 +1,171 @@
 {% extends "admin/admin_base.html" %}
+{% block page_css3 %}
+<style>
+
+
+.main-content {
+  padding: 40px;
+  max-width: 1200px;
+}
+
+/* Section Badge */
+.section-badge {
+  background-color: #f2dede;
+  color: #a42323;
+  display: inline-block;
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 1.2rem;
+  margin-bottom: 35px;
+}
+
+/* Grid Layout */
+.cards-grid {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.ui-card {
+  flex: 1;
+  background-color: #eef1f6;
+  border-radius: 15px;
+  padding: 30px;
+  text-align: center;
+}
+
+.card-header {
+  color: #a42323;
+  font-weight: 600;
+  font-size: 1.4rem;
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+/* Import UI Components */
+.instruction {
+  font-size: 0.85rem;
+  margin-bottom: 15px;
+}
+
+.input-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.btn-choose {
+  background-color: #f7e6b5;
+  padding: 10px 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px 0 0 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.file-display {
+  border: 1px solid #ccc;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  padding: 10px;
+  width: 220px;
+  font-size: 0.8rem;
+}
+
+.validation-text {
+  font-size: 0.75rem;
+  color: #888;
+  margin-bottom: 25px;
+}
+
+/* Export UI Components */
+.form-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.check-group, .format-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.v-line { color: #ccc; margin: 0 2px; }
+
+.input-field {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  width: 200px;
+}
+
+.btn-action {
+  background-color: #a42323;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Recent Activity */
+.activity-log {
+  border: 1px solid #eee;
+  border-radius: 15px;
+  padding: 25px;
+}
+
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.log-title {
+  color: #b05a5a;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.search-input, .sort-select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.85rem;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  background-color: #e9ecef;
+  text-align: left;
+  padding: 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.data-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f1f1f1;
+  font-size: 0.85rem;
+  color: #444;
+}
+</style>
+{% endblock %}
 {% block content %}
 
         <div class="col-md-10 content">
@@ -44,32 +211,50 @@
             </div>
 
             <!-- Example Table -->
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5>Recent Activity</h5>
-                    <table class="table mt-3">
-                        <thead>
-                            <tr>
-                                <th>User</th>
-                                <th>Action</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>John</td>
-                                <td>Created Memo</td>
-                                <td>March 4, 2026</td>
-                            </tr>
-                            <tr>
-                                <td>Anna</td>
-                                <td>Approved Leave</td>
-                                <td>March 3, 2026</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-        </div>
+          <div class="activity-log">
+    <div class="log-header">
+      <h2 class="log-title">Recent Activity</h2>
+      <div class="log-filters">
+        <input type="text" placeholder="Search" class="search-input">
+        <select class="sort-select">
+          <option>Sort by</option>
+        </select>
+      </div>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Ref No.</th>
+          <th>Type</th>
+          <th>File Name</th>
+          <th>Date</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>IMP-0001</td>
+          <td>Import</td>
+          <td>records_january.xlsx</td>
+          <td>March 02, 2026</td>
+          <td>11:26 AM</td>
+        </tr>
+        <tr>
+          <td>EXP-0001</td>
+          <td>Export</td>
+          <td>logs_01-01-2026.pdf</td>
+          <td>March 02, 2026</td>
+          <td>03:49 PM</td>
+        </tr>
+        <tr>
+          <td>IMP-0002</td>
+          <td>Import</td>
+          <td>records_february.csv</td>
+          <td>March 03, 2026</td>
+          <td>01:11 PM</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}

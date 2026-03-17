@@ -91,7 +91,17 @@ def users():
     users = User.query.all()
 
     return render_template("admin/user.html", users=users)
+@admin_bp.route("/import")
+@login_required
+def import_page():   # ✅ different name
 
+    if current_user.role != "admin":
+        flash("Access denied")
+        return redirect(url_for("secretary.dashboard"))
+
+    users = User.query.all()
+
+    return render_template("admin/import.html", users=users)
 @admin_bp.route("/users/create", methods=["POST"])
 @login_required
 def create_user():

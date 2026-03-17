@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../Css/Dashboard.css">
+    <title>Dashboard</title>
+</head>
+<body>
+   <div class="dashboard-container">
+        
+        <div class="top-controls">
+            <div class="search-group">
+                <input type="text" placeholder="Search by Subject From" class="search-input">
+                <select class="date-dropdown">
+                    <option>Today</option>
+                </select>
+            </div>
+            <div class="button-group">
+              <!-- add holiday button -->
+                <button id="addHolidayBtn" class="btn-red">+ Add holidays</button>
+                <button class="btn-red">+ Add Memo</button>
+            </div>
+        </div>
+
+        <div class="announcement-row">
+            <div class="card">
+                <div class="card-icon">📅</div>
+                <div class="card-content">
+                    <div class="card-header">
+                        <span class="card-date">April 10, 2026 - Eid al-fitr</span>
+                        <span class="badge">University Holiday</span>
+                    </div>
+                    <p class="card-sub">No Office Transaction on this date</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">📅</div>
+                <div class="card-content">
+                    <div class="card-header">
+                        <span class="card-date">April 15, 2026 - Palaro</span>
+                        <span class="badge">University Holiday</span>
+                    </div>
+                    <p class="card-sub">No Office Transaction on this date</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">📅</div>
+                <div class="card-content">
+                    <div class="card-header">
+                        <span class="card-date">April 20, 2026 - Alumni</span>
+                        <span class="badge">University Holiday</span>
+                    </div>
+                    <p class="card-sub">No Office Transaction on this date</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="records-table">
+                <thead>
+                    <tr>
+                        <th>Series</th>
+                        <th>Date</th>
+                        <th>From</th>
+                        <th>Forwarded by</th>
+                        <th>Subject</th>
+                        <th>Remarks</th>
+                        <th>Notes</th>
+                        <th>Released To</th>
+                        <th>Released Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                  <!-- change the ⚙️ 🔄 if possible -->
+                    <tr>
+                        <td>0001</td>
+                        <td>april 02, 2026</td>
+                        <td>Office of the President</td>
+                        <td>Records</td>
+                        <td>Budget Approval</td>
+                        <td>Urgent</td>
+                        <td>Review</td>
+                        <td>All Staff</td>
+                        <td>May 04, 2026</td>
+                        <td class="actions">⚙️ 🔄</td>
+                    </tr>
+                    <tr>
+                        <td>0002</td>
+                        <td>april 03, 2026</td>
+                        <td>Misto</td>
+                        <td>Records</td>
+                        <td>Budget Approval</td>
+                        <td>Signature</td>
+                        <td>Review</td>
+                        <td>All Staff</td>
+                        <td>May 05, 2026</td>
+                        <td class="actions">⚙️ 🔄</td>
+                    </tr>
+                    <tr>
+                        <td>0003</td>
+                        <td>april 04, 2026</td>
+                        <td>Clinic</td>
+                        <td>Records</td>
+                        <td>Budget Approval</td>
+                        <td>Urgent</td>
+                        <td>Review</td>
+                        <td>All Staff</td>
+                        <td>May 06, 2026</td>
+                        <td class="actions">⚙️ 🔄</td>
+                    </tr>
+                    <tr>
+                        <td>0004</td>
+                        <td>april 05, 2026</td>
+                        <td>Library</td>
+                        <td>Records</td>
+                        <td>Request Manpower</td>
+                        <td>Urgent</td>
+                        <td>Review</td>
+                        <td>All Staff</td>
+                        <td>May 06, 2026</td>
+                        <td class="actions">⚙️ 🔄</td>
+                    </tr>
+                    <tr>
+                        <td>0005</td>
+                        <td>april 06, 2026</td>
+                        <td>Home Economics</td>
+                        <td colspan="6"></td>
+                        <td class="actions">⚙️ 🔄</td>
+                    </tr>
+                    <tr>
+                        <td>0006</td>
+                        <td>april 07, 2026</td>
+                        <td>College of Nursing</td>
+                        <td>Records</td>
+                        <td>Tour Approval</td>
+                        <td>Urgent</td>
+                        <td>Review</td>
+                        <td>All Staff</td>
+                        <td>May 08, 2026</td>
+                        <td class="actions">⚙️ 🔄</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="modal-overlay">
+    <div class="modal-card">
+        <h2 class="modal-title">Add Holiday</h2>
+        
+        <div class="modal-body">
+            <div class="modal-group">
+                <label>Holiday Name</label>
+                <input type="text">
+            </div>
+
+            <div class="modal-group">
+                <label>Date</label>
+                <input type="date">
+            </div>
+
+            <div class="modal-group">
+                <label>Holiday Type</label>
+                <select>
+                    <option>University Holiday</option>
+                    <option>National Holiday</option>
+                </select>
+            </div>
+
+            <div class="modal-group">
+                <label>Description</label>
+                <textarea placeholder="Optional notes..."></textarea>
+            </div>
+
+            <div class="modal-actions">
+              <!-- cancel button -->
+                <button id="cancelBtn" class="btn-cancel">Cancel</button>
+                <button class="btn-save-holiday">Save Holiday</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- buttons function -->
+<script>
+    const modal = document.querySelector('.modal-overlay');
+    const openBtn = document.getElementById('addHolidayBtn');
+    const closeBtn = document.getElementById('cancelBtn');
+
+    // Open Modal
+    openBtn.addEventListener('click', () => {
+        modal.classList.add('active');
+    });
+
+    // Close Modal (Cancel Button)
+    closeBtn.addEventListener('click', () => {
+        modal.classList.remove('active');
+    });
+
+    // Close Modal if clicking outside the white card
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('active');
+        }
+    });
+</script>
+</body>
+</html>
