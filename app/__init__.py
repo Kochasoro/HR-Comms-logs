@@ -7,6 +7,7 @@ from app.routes.auth import auth_bp
 from app.routes.admin import admin_bp 
 from .routes.main import main
 from app.models.user import User   
+from app.seed import seed_command  
 
 def create_app():
     app = Flask(__name__)
@@ -25,9 +26,12 @@ def create_app():
 
     # Register blueprints
     app.register_blueprint(main)
-    app.register_blueprint(auth_bp)        
+    app.register_blueprint(auth_bp)
     app.register_blueprint(secretary_bp)
-    app.register_blueprint(admin_bp)     
+    app.register_blueprint(admin_bp)
+
+    # ✅ Register CLI command
+    app.cli.add_command(seed_command)
 
     print(app.url_map)
 

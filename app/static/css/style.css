@@ -167,7 +167,13 @@ border-radius:6px;
 cursor:pointer;
 margin-left:10px;
 }
-
+.update-new-btn {
+  background: none;
+  border: none;
+  color: blue;
+  cursor: pointer;
+  text-decoration: underline;
+}
 
 /* HOLIDAY CARDS */
 

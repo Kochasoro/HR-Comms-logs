@@ -7,6 +7,7 @@ from datetime import datetime
 from app.extensions import db
 from flask import jsonify, redirect, url_for
 from flask_login import login_required, current_user
+from datetime import datetime
 
 secretary_bp = Blueprint("secretary", __name__, url_prefix="/secretary")
 
@@ -16,104 +17,152 @@ secretary_bp = Blueprint("secretary", __name__, url_prefix="/secretary")
 @role_required("secretary")
 def dashboard():
     memos = MemoService.get_all()
-    return render_template("secretary/dashboard.html", memos=memos)
+    return render_template("home.html", memos=memos)
 
-@secretary_bp.route("/new", methods=["GET", "POST"])
+@secretary_bp.route("/new", methods=["POST"])
 def new_memo():
-    if request.method == "POST":
+    try:
+        print("FORM:", request.form)
+
+        # 📅 Parse main date
+        raw_date = request.form.get("date")
+        parsed_date = None
+        if raw_date:
+            try:
+                parsed_date = datetime.strptime(raw_date, "%Y-%m-%d").date()
+            except ValueError:
+                parsed_date = None
+
+        # 📅 Parse released date (MISSING BEFORE ❗)
+        raw_release_date = request.form.get("released_date")
+        parsed_release_date = None
+        if raw_release_date:
+            try:
+                parsed_release_date = datetime.strptime(raw_release_date, "%Y-%m-%d").date()
+            except ValueError:
+                parsed_release_date = None
+
         data = {
-            "memo_number": request.form["memo_number"],
-            "subject": request.form["subject"],
+            "memo_number": request.form.get("memo_number"),
+            "date": parsed_date,
+            "subject": request.form.get("subject"),
             "source_type": request.form.get("source_type"),
-            "from_office": request.form["from_office"],
-            "forwarded_by": request.form["forwarded_by"],
-            "remarks": request.form["remarks"],
-            "notes": request.form["notes"]
+            "from_office": request.form.get("from_office"),
+            "forwarded_by": request.form.get("forwarded_by"),
+
+            # ✅ Incoming
+            "remarks": request.form.get("remarks"),
+            "notes": request.form.get("notes"),
+
+            # ✅ Released section (NOW COMPLETE)
+            "released_to": request.form.get("released_to"),
+            "released_date": parsed_release_date,
+            "status": request.form.get("status")
         }
 
         memo = MemoService.create_memo(data)
 
         LogService.add_log(
             memo,
-            request.form["remarks"],
-            request.form["notes"]
+            request.form.get("remarks"),
+            request.form.get("notes")
         )
 
-        return jsonify({
-            "success": True,
-            "memo_number": memo.memo_number,
-            "subject": memo.subject
-        })
+        return jsonify({"success": True})
 
-    return render_template("secretary/new_memo.html")
-
-@secretary_bp.route("/edit/<int:id>", methods=["GET", "POST"])
+    except Exception as e:
+        print("🔥 ERROR:", e)
+        return jsonify({"success": False, "error": str(e)}), 500
+    
+@secretary_bp.route("/edit/<int:id>", methods=["POST"])
 def edit_memo(id):
-
-    # Fetch by PRIMARY KEY
     memo = Memo.query.get_or_404(id)
 
-    if request.method == "POST":
-        memo.memo_number = request.form["memo_number"]
-        memo.subject = request.form["subject"]
-        memo.source_type = request.form["source_type"]
-        memo.from_office = request.form["from_office"]
-        memo.forwarded_by = request.form["forwarded_by"]
-        memo.remarks = request.form["remarks"]
-        memo.notes = request.form["notes"]
+    try:
+        memo.memo_number = request.form.get("memo_number")
+        memo.subject = request.form.get("subject")
+        memo.source_type = request.form.get("source_type")
+        memo.from_office = request.form.get("from_office")
+        memo.forwarded_by = request.form.get("forwarded_by")
+        memo.remarks = request.form.get("remarks")
+        memo.notes = request.form.get("notes")
 
-        if request.form.get("date"):
-            memo.date = datetime.strptime(
-                request.form["date"], "%Y-%m-%d"
-            ).date()
+        # ✅ ADD THESE
+        memo.released_to = request.form.get("released_to")
+        memo.status = request.form.get("status")
+
+        raw_release_date = request.form.get("released_date")
+        if raw_release_date:
+            memo.released_date = datetime.strptime(raw_release_date, "%Y-%m-%d").date()
+
+        raw_date = request.form.get("date")
+        if raw_date:
+            memo.date = datetime.strptime(raw_date, "%Y-%m-%d").date()
 
         db.session.commit()
 
-        flash("Memo updated successfully")
-        return redirect(url_for("secretary.dashboard"))
+        return jsonify({"success": True})
 
-    return render_template("secretary/edit_memo.html", memo=memo)
+    except Exception as e:
+        print("🔥 EDIT ERROR:", e)
+        return jsonify({"success": False, "error": str(e)}), 500
 
 # UPDATE EXISTING MEMO 
-@secretary_bp.route("/update/<memo_number>", methods=["GET", "POST"])
-def update_memo(memo_number):
-    # Get the original memo
-    memo = MemoService.get_by_number(memo_number)
+@secretary_bp.route("/update/<int:id>", methods=["POST"])
+def update_memo(id):
 
-    if not memo:
-        flash("Original memo not found")
-        return redirect(url_for("secretary.dashboard"))
+    original = Memo.query.get_or_404(id)
 
-    if request.method == "POST":
-        # Create a new memo with the same data, plus updated remarks/notes
+    try:
+        raw_date = request.form.get("date")
+        parsed_date = None
+
+        if raw_date:
+            parsed_date = datetime.strptime(raw_date, "%Y-%m-%d").date()
+
+        raw_release_date = request.form.get("released_date")
+        parsed_release_date = None
+
+        if raw_release_date:
+            parsed_release_date = datetime.strptime(raw_release_date, "%Y-%m-%d").date()
+
         new_data = {
-            "memo_number": memo.memo_number,  # or generate new number automatically
-            "subject": memo.subject,
-            "source_type": memo.source_type,
-            "from_office": memo.from_office,
-            "forwarded_by": memo.forwarded_by,
-            "remarks": request.form["remarks"],
-            "notes": request.form["notes"]
+            "memo_number": request.form.get("memo_number") or original.memo_number,
+            "date": parsed_date or original.date,
+            "subject": request.form.get("subject") or original.subject,
+            "source_type": request.form.get("source_type") or original.source_type,
+            "from_office": request.form.get("from_office") or original.from_office,
+            "forwarded_by": request.form.get("forwarded_by") or original.forwarded_by,
+
+            # ✅ ADD THESE
+            "released_to": request.form.get("released_to") or original.released_to,
+            "released_date": parsed_release_date or original.released_date,
+            "status": request.form.get("status") or original.status,
+
+            "remarks": request.form.get("remarks"),
+            "notes": request.form.get("notes")
         }
 
         MemoService.create_memo(new_data)
 
-        flash("New memo created successfully")
-        return redirect(url_for("secretary.dashboard"))
+        return jsonify({"success": True})
 
-    # GET: Show form prefilled with original memo
-    return render_template("secretary/update_memo.html", memo=memo)
+    except Exception as e:
+        print("🔥 UPDATE ERROR:", e)
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @secretary_bp.route("/delete/<int:id>", methods=["POST"])
+@login_required
 def delete_memo(id):
-    memo = Memo.query.get_or_404(id)
+    # permission check
+    if current_user.role != "admin":
+        return jsonify(error="Forbidden"), 403
 
+    memo = Memo.query.get_or_404(id)
     try:
         db.session.delete(memo)
         db.session.commit()
-        flash("Memo deleted successfully")
-    except Exception as e:
+        return jsonify(success=True)  # return JSON success
+    except Exception:
         db.session.rollback()
-        flash("Error deleting memo")
-
-    return redirect(url_for("secretary.dashboard"))
+        return jsonify(error="Database delete failed"), 500
