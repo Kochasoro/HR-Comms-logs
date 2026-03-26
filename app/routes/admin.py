@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
+from app.models.log_entry import LogEntry
 from app.models.user import User
 from app.models.settings import SystemSettings
 from app.models.holiday import Holiday
@@ -168,3 +169,11 @@ def delete_user(id):
     flash("User deleted")
 
     return redirect(url_for("admin.users"))
+
+
+
+@admin_bp.route("/logs")
+@login_required
+def logs_page():
+    logs = LogEntry.query.order_by(LogEntry.encoded_at.desc()).all()
+    return render_template("admin/logs.html", logs=logs)

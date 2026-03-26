@@ -1,21 +1,42 @@
 from flask import Blueprint, render_template, request
-from datetime import date
+from datetime import date, datetime
 from app.models.holiday import Holiday
+from app.models.memo import Memo
 from app.services.memo_service import MemoService
+from sqlalchemy import or_
 
 main = Blueprint("main", __name__)
 
 @main.route("/")
 def home():
-    # 👇 get selected type from URL
-    type_filter = request.args.get("type", "general")  # default = general
+    search = request.args.get("search", "")
+    date_filter = request.args.get("date", "")
+    type_filter = request.args.get("type", "communication")
 
-    if type_filter == "General":
-        memos = MemoService.get_by_type("General")
-    elif type_filter == "OP":
-        memos = MemoService.get_by_type("OP")
-    else:
-        memos = MemoService.get_by_type("General")  # fallback
+    query = Memo.query.filter_by(source_type=type_filter)
+
+    # 🔍 search filter (EXPANDED)
+    if search:
+        query = query.filter(
+            or_(
+                Memo.subject.ilike(f"%{search}%"),
+                Memo.memo_number.ilike(f"%{search}%"),
+                Memo.from_office.ilike(f"%{search}%"),
+                Memo.forwarded_by.ilike(f"%{search}%")
+            )
+        )
+
+    # 📅 date filter
+    month_filter = request.args.get("month")
+    year_filter = request.args.get("year")
+
+    if month_filter:
+        query = query.filter(Memo.month == int(month_filter))
+
+    if year_filter:
+        query = query.filter(Memo.year == int(year_filter))
+
+    memos = query.order_by(Memo.serial_number.desc()).all()
 
     holidays = Holiday.query.filter(
         Holiday.date >= date.today()
@@ -25,5 +46,5 @@ def home():
         "home.html",
         memos=memos,
         holidays=holidays,
-        selected_type=type_filter  # 👈 pass this for button highlight
+        selected_type=type_filter
     )

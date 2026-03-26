@@ -338,9 +338,29 @@
         
         <div class="top-controls">
             <div class="search-group">
-                <input type="text" placeholder="Search by Subject From" class="search-input">
-                <select class="date-dropdown">
-                    <option>Today</option>
+                <input type="text" id="searchInput" placeholder="Search subject, memo #, from..." class="search-input">
+
+                <select id="monthFilter" class="date-dropdown">
+                    <option value="">Month</option>
+                    <option value="1">Jan</option>
+                    <option value="2">Feb</option>
+                    <option value="3">Mar</option>
+                    <option value="4">Apr</option>
+                    <option value="5">May</option>
+                    <option value="6">Jun</option>
+                    <option value="7">Jul</option>
+                    <option value="8">Aug</option>
+                    <option value="9">Sep</option>
+                    <option value="10">Oct</option>
+                    <option value="11">Nov</option>
+                    <option value="12">Dec</option>
+                </select>
+
+                <select id="yearFilter" class="date-dropdown">
+                    <option value="">Year</option>
+                    {% for y in range(2024, 2050) %}
+                        <option value="{{ y }}">{{ y }}</option>
+                    {% endfor %}
                 </select>
             </div>
             {% if current_user.is_authenticated %}
@@ -376,101 +396,110 @@
         {% endfor %}
         </div>
 <div class="table-controls">
-    <a href="?type=General" class="filter-btn {{ 'active' if selected_type == 'General' else '' }}">
-        General
-    </a>
-    <a href="?type=OP" class="filter-btn {{ 'active' if selected_type == 'OP' else '' }}">
-        OP
-    </a>
+    <button class="filter-btn" onclick="setType('communication')">Communication</button>
+    <button class="filter-btn" onclick="setType('OP')">OP</button>
 </div>
-{% if memos %}
-<div class="table-container">
-    <table class="records-table" border="1" cellpadding="8" cellspacing="0">
-        <thead>
-            <tr>
-                <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Serial No.</th>
-                <th colspan="4" style="background-color:#e53935; color:#fff;">Incoming</th>
-                <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Remarks</th>
-                <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Notes</th>
-                <th colspan="2" style="background-color:#e53935; color:#fff;">Released</th>
-                <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Actions</th>
-            </tr>
-            <tr>
-                <th style="background-color:#fdecea; color:#333;">Date</th>
-                <th style="background-color:#fdecea; color:#333;">From</th>
-                <th style="background-color:#fdecea; color:#333;">Forwarded By</th>
-                <th style="background-color:#fdecea; color:#333;">Subject</th>
 
-                <th style="background-color:#fdecea; color:#333;">Date</th>
-                <th style="background-color:#fdecea; color:#333;">To</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for memo in memos %}
-            <tr>
-                <!-- Serial No. -->
-                <td>{{ memo.serial_number }}</td>
+<div  id="tableContainer">
+    {% if memos %}
+    <div class="table-container">
+        <table class="records-table" border="1" cellpadding="8" cellspacing="0">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Serial No.</th>
+                    <th colspan="4" style="background-color:#e53935; color:#fff;">Incoming</th>
+                    <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Remarks</th>
+                    <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Notes</th>
+                    <th colspan="2" style="background-color:#e53935; color:#fff;">Released</th>
+                    <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Actions</th>
+                </tr>
+                <tr>
+                    <th style="background-color:#fdecea; color:#333;">Date</th>
+                    <th style="background-color:#fdecea; color:#333;">From</th>
+                    <th style="background-color:#fdecea; color:#333;">Forwarded By</th>
+                    <th style="background-color:#fdecea; color:#333;">Subject</th>
 
-                <!-- Incoming Section -->
-                <td>{{ memo.date }}</td>
-                <td>{{ memo.from_office }}</td>
-                <td>{{ memo.forwarded_by }}</td>
-                <td>
-                    {% if current_user.is_authenticated %}
-                    <button class="update-new-btn"
-                        data-id="{{ memo.id }}"
-                        data-number="{{ memo.memo_number }}"
-                        data-from="{{ memo.from_office }}"
-                        data-forwarded="{{ memo.forwarded_by }}"
-                        data-subject="{{ memo.subject }}"
-                        data-remarks="{{ memo.remarks }}"
-                        data-notes="{{ memo.notes }}"
-                        data-date="{{ memo.date }}"
-                        data-released_to="{{ memo.released_to }}"
-                        data-released_date="{{ memo.released_date }}"
-                        data-status="{{ memo.status }}">
-                        {{ memo.subject }}
-                    </button>
-                    {% else %}
-                    {{ memo.subject }}
-                    {% endif %}
-                </td>
+                    <th style="background-color:#fdecea; color:#333;">Date</th>
+                    <th style="background-color:#fdecea; color:#333;">To</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for memo in memos %}
+                <tr>
+                    <!-- Serial No. -->
+                    <td>{{ memo.serial_number }}</td>
 
-                <!-- Remarks / Notes -->
-                <td>{{ memo.remarks }}</td>
-                <td>{{ memo.notes }}</td>
+                    <!-- Incoming Section -->
+                    <td>{{ memo.date }}</td>
+                    <td>{{ memo.from_office }}</td>
+                    <td>{{ memo.forwarded_by }}</td>
+                    <td>
+                        {% if current_user.is_authenticated %}
+                        <button class="update-new-btn"
+                            data-id="{{ memo.id }}"
+                            data-source_type="{{ memo.source_type }}"
+                            data-number="{{ memo.memo_number }}"
+                            data-from="{{ memo.from_office }}"
+                            data-forwarded="{{ memo.forwarded_by }}"
+                            data-subject="{{ memo.subject }}"
+                            data-remarks="{{ memo.remarks }}"
+                            data-notes="{{ memo.notes }}"
+                            data-date="{{ memo.date }}"
+                            data-released_to="{{ memo.released_to }}"
+                            data-released_date="{{ memo.released_date }}"
+                            data-status="{{ memo.status }}">
+                            {% if memo.memo_number %}
+                                {{ memo.memo_number }} - {{ memo.subject }}
+                            {% else %}
+                                {{ memo.subject }}
+                            {% endif %}                    
+                        </button>
+                        {% else %}
+                            {% if memo.memo_number %}
+                                {{ memo.memo_number }} - {{ memo.subject }}
+                            {% else %}
+                                {{ memo.subject }}
+                            {% endif %}                    
+                        {% endif %}
+                    </td>
 
-                <!-- Released Section -->
-                <td>{{ memo.released_date }}</td>
-                <td>{{ memo.released_to }}</td>
+                    <!-- Remarks / Notes -->
+                    <td>{{ memo.remarks }}</td>
+                    <td>{{ memo.notes }}</td>
 
-                <!-- Actions -->
-                <td class="actions">
-                    <button class="update-btn"
-                        data-id="{{ memo.id }}"
-                        data-number="{{ memo.memo_number }}"
-                        data-from="{{ memo.from_office }}"
-                        data-forwarded="{{ memo.forwarded_by }}"
-                        data-subject="{{ memo.subject }}"
-                        data-remarks="{{ memo.remarks }}"
-                        data-notes="{{ memo.notes }}"
-                        data-date="{{ memo.date }}"
-                        data-released_to="{{ memo.released_to }}"
-                        data-released_date="{{ memo.released_date }}"
-                        data-status="{{ memo.status }}"
-                    >
-                        ⚙️
-                    </button>
-                    <button class="delete-btn" data-id="{{ memo.id }}">🗑️</button>              
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                    <!-- Released Section -->
+                    <td>{{ memo.released_date or "" }}</td>                
+                    <td>{{ memo.released_to }}</td>
+
+                    <!-- Actions -->
+                    <td class="actions">
+                        <button class="update-btn"
+                            data-id="{{ memo.id }}"
+                            data-source_type="{{ memo.source_type }}"
+                            data-number="{{ memo.memo_number }}"
+                            data-from="{{ memo.from_office }}"
+                            data-forwarded="{{ memo.forwarded_by }}"
+                            data-subject="{{ memo.subject }}"
+                            data-remarks="{{ memo.remarks }}"
+                            data-notes="{{ memo.notes }}"
+                            data-date="{{ memo.date }}"
+                            data-released_to="{{ memo.released_to }}"
+                            data-released_date="{{ memo.released_date }}"
+                            data-status="{{ memo.status }}"
+                        >
+                            ⚙️
+                        </button>
+                        <button class="delete-btn" data-id="{{ memo.id }}">🗑️</button>              
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>No memos found.</p>
+    {% endif %}
 </div>
-{% else %}
-<p>No memos found.</p>
-{% endif %}
 <br><br>
 
 {% endblock %}
