@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Activity Logs</h2>
+
+<div class="timeline">
+  {% for log in logs %}
+    <div class="timeline-item">
+      
+      <div class="timeline-time">
+        {{ log.encoded_at.strftime("%B %d, %Y") }} • 
+        {{ log.encoded_at.strftime("%I:%M %p") }}
+      </div>
+
+      <div class="timeline-content">
+        <strong>{{ log.remarks }}</strong><br>
+        <small>{{ log.notes }}</small>
+      </div>
+
+    </div>
+  {% endfor %}
+</div>
+<style>
+.timeline {
+  max-width: 700px;
+  margin: auto;
+}
+
+.timeline-item {
+  padding: 10px 0;
+  border-left: 3px solid #ccc;
+  margin-left: 10px;
+  padding-left: 15px;
+  position: relative;
+}
+
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  left: -7px;
+  top: 10px;
+  width: 10px;
+  height: 10px;
+  background: #333;
+  border-radius: 50%;
+}
+
+.timeline-time {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.timeline-content {
+  font-size: 14px;
+}
+</style>
+{% endblock %}

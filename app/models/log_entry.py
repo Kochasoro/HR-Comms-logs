@@ -15,3 +15,10 @@ class LogEntry(db.Model):
     encoded_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     memo_id = db.Column(db.Integer, db.ForeignKey("memos.id"))
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", name="fk_log_entries_user_id"),
+        nullable=True   # 👈 TEMPORARY
+    )
+    user = db.relationship("User", backref="logs")

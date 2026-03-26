@@ -25,6 +25,9 @@ class MemoService:
         return LogEntry.query.filter_by(memo_number=memo_number)\
                             .order_by(LogEntry.id.desc())\
                             .first()
+    @staticmethod
+    def get_by_type(source_type):
+        return Memo.query.filter_by(source_type=source_type).all()
     
     @staticmethod
     def close_memo(memo):

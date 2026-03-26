@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}HR Logger{% endblock %}</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+     {% block page_css %}{% endblock %}
+</head>
+
+<body>
+
+    <!-- Top bar -->
+    <header style="padding:10px;background:#2d3748;color:white;">
+        <h2>HR Comms Logger System</h2>
+        <nav>
+            <a href="{{ url_for('main.home') }}" style="color:white;">Home</a> |
+            <a href="{{ url_for('secretary.dashboard') }}" style="color:white;">Dashboard</a>
+            <a href="{{ url_for('admin.users') }}">User Management</a>
+            <h1>THIS WOULD BE LOGIN SOON</h1>
+        </nav>
+    </header>
+
+    <!-- Main content area -->
+    <main style="padding:20px;">
+        <!-- Login will be added later -->
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Scripts -->
+    {% block scripts %}{% endblock %}
+
+</body>
+</html>

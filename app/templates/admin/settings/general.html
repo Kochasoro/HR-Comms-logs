@@ -1,4 +1,4 @@
-{% extends "admin/admin_base.html" %}
+{% extends "base.html" %}
 {% block page_css3 %}
 <style>
 
@@ -117,48 +117,64 @@ label { font-size: 0.85rem; color: #555; width: 300px; }
   <div class="section-badge">Settings</div>
 
   <div class="tabs-container">
-    <button class="tab-btn active">General</button>
-    <button class="tab-btn">Security</button>
-    <button class="tab-btn">Holidays</button>
-    <button class="tab-btn">Appearance</button>
+    <button class="tab-btn active" data-tab="general">General</button>
+    <button class="tab-btn" data-tab="security">Security</button>
+    <button class="tab-btn" data-tab="holidays">Holidays</button>
+    <button class="tab-btn" data-tab="appearance">Appearance</button>
   </div>
 
   <div class="settings-card">
     
-    <div class="settings-section">
+    <div class="settings-section" id="general">
       <div class="section-header">GENERAL</div>
-      <form method="POST">
+
+      <form method="POST" enctype="multipart/form-data">
         <input type="hidden" name="form_type" value="general">
-      <div class="form-body">
-        <div class="form-group">
-          <label>University Name:</label>
-          <input type="text" value="Western Mindanao State University" class="wide-input">
-        </div>
-        <div class="form-group">
-          <label>System Name:</label>
-          <input name="system_name" value="{{ settings.system_name }}"class="wide-input">
-        </div>
-        <div class="form-group">
-          <label>Upload Logo:</label>
-          <div class="file-box">
-            <label class="yellow-choose">Choose File:</label>
-            <input type="text" placeholder="ex. wmsu.png" class="file-path">
+
+        <div class="form-body">
+
+          <div class="form-group">
+            <label>System Name:</label>
+            <input name="system_name"
+                  value="{{ settings.system_name }}"
+                  class="wide-input">
           </div>
+
+          <div class="form-group">
+            <label>Upload Logo:</label>
+            <input type="file" name="logo" class="wide-input">
+          </div>
+
+          <div class="form-group">
+            <label>Timezone:</label>
+            <select name="timezone" class="wide-input">
+              <option value="Asia/Manila"
+                {% if settings.timezone == "Asia/Manila" %}selected{% endif %}>
+                Asia/Manila
+              </option>
+              <option value="UTC"
+                {% if settings.timezone == "UTC" %}selected{% endif %}>
+                UTC
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Language:</label>
+            <select name="language" class="wide-input">
+              <option>English</option>
+            </select>
+          </div>
+
+          <div class="btn-right">
+            <button class="btn-save" type="submit">Save Changes</button>
+          </div>
+
         </div>
-        <div class="form-group">
-          <label>Timezone:</label>
-          <select name="timezone" class="wide-input"><option value="Asia/Manila">Asia/Manila</option><option value="UTC">UTC</option></select>
-        </div>
-        <div class="form-group">
-          <label>Language:</label>
-          <select class="wide-input"><option>English</option></select>
-        </div>
-        <div class="btn-right"><button class="btn-save" type="submit">Save Changes</button></div>
-        </form>
-      </div>
+      </form>
     </div>
 
-    <div class="settings-section">
+    <div class="settings-section" id="security">
       <div class="section-header">SECURITY</div>
       <div class="form-body">
         <div class="form-group">
@@ -177,78 +193,45 @@ label { font-size: 0.85rem; color: #555; width: 300px; }
       </div>
     </div>
 
-    <div class="settings-section">
+    <div class="settings-section" id="holidays">
       <div class="section-header">HOLIDAY</div>
       <div class="form-body">
         <table class="holiday-table">
           <tr>
-<th>Date</th>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Action</th>
-</tr>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Action</th>
+          </tr>
 
-{% for holiday in holidays %}
-<tr>
+          {% for holiday in holidays %}
+          <tr>
 
-<td>{{ holiday.date }}</td>
-<td>{{ holiday.name }}</td>
-<td>{{ holiday.type }}</td>
-<td>{{ holiday.description }}</td>
+          <td>{{ holiday.date }}</td>
+          <td>{{ holiday.name }}</td>
+          <td>{{ holiday.type }}</td>
+          <td>{{ holiday.description }}</td>
 
-<td>
-<form method="POST" action="{{ url_for('admin.delete_holiday', id=holiday.id) }}">
-<button type="submit" style="background: none; border: none; outline: none; padding: 0; cursor: pointer;">❌</button>
-</form>
-</td>
+          <td>
+          <form method="POST" action="{{ url_for('admin.delete_holiday', id=holiday.id) }}">
+          <button type="submit" style="background: none; border: none; outline: none; padding: 0; cursor: pointer;">❌</button>
+          </form>
+          </td>
 
-</tr>
-{% endfor %}
+          </tr>
+          {% endfor %}
 
           </tbody>
         </table>
-        <div class="btn-right"><button class="btn-save" onclick="openHolidayModal()">Add Holiday</button></div>
+        <div class="btn-right"><button class="btn-save" onclick="openAddHoliday()">Add Holiday</button></div>
         
-<div id="holidayModal" class="modal">
 
-<div class="modal-content">
-
-<span class="close" onclick="closeHolidayModal()">&times;</span>
-
-<h3>Add Holiday</h3>
-
-<form method="POST">
-
-<input type="hidden" name="form_type" value="holiday">
-
-<label>Date</label>
-<input type="date" name="date" required>
-
-<label>Holiday Name</label>
-<input name="name" required>
-
-<label>Type</label>
-<select name="type">
-<option>University Holiday</option>
-<option>Special Holiday</option>
-<option>Local Holiday</option>
-</select>
-
-<label>Description</label>
-<textarea name="description"></textarea>
-
-<button type="submit">Add Holiday</button>
-
-</form>
-
-</div>
-</div>
 
       </div>
     </div>
 
-    <div class="settings-section">
+    <div class="settings-section"  id="appearance">
       <div class="section-header">APPEARANCE</div>
       <div class="form-body">
         <div class="form-group">
@@ -269,50 +252,100 @@ label { font-size: 0.85rem; color: #555; width: 300px; }
   </div>
 </div>
 
+<!-- ADD HOLIDAY MODAL -->
+<div id="addHolidayModal" class="modal">
+  <div class="modal-content">
 
-<style>
-    .modal {
-display:none;
-position:fixed;
-z-index:1000;
-left:0;
-top:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.5);
-}
+    <h2>Add Holiday</h2>
 
-.modal-content {
-background:white;
-margin:10% auto;
-padding:20px;
-width:400px;
-border-radius:8px;
-}
+    <form method="POST" action="{{ url_for('admin.settings_general') }}">
 
-.close {
-float:right;
-font-size:20px;
-cursor:pointer;
-}
-</style>
+      <!-- 🔑 tells backend which form -->
+      <input type="hidden" name="form_type" value="holiday">
+
+      <div class="form-group">
+        <label>Holiday Name</label>
+        <input type="text" name="name" required>
+      </div>
+
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" name="date" required>
+      </div>
+
+      <div class="form-group">
+        <label>Holiday Type</label>
+        <select name="type">
+          <option value="University Holiday">University Holiday</option>
+          <option value="Regular Holiday">Regular Holiday</option>
+          <option value="Special Holiday">Special Holiday</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea name="description" placeholder="Optional notes..."></textarea>
+      </div>
+
+      <div class="modal-buttons">
+        <button type="button" class="btn cancel" onclick="closeModals()">Cancel</button>
+        <button type="submit" class="btn">Save Holiday</button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
 
 <script>
-
-function openHolidayModal(){
-document.getElementById("holidayModal").style.display="block";
+function openAddHoliday(){
+  const modal = document.getElementById('addHolidayModal');
+  modal.classList.add('show');
 }
 
-function closeHolidayModal(){
-document.getElementById("holidayModal").style.display="none";
+function closeModals(){
+  document.querySelectorAll(".modal").forEach(modal => {
+    modal.classList.remove("show");
+  });
 }
 
-window.onclick = function(event){
-let modal = document.getElementById("holidayModal");
-if(event.target == modal){
-modal.style.display = "none";
-}
+const tabs = document.querySelectorAll(".tab-btn");
+const sections = document.querySelectorAll(".settings-section");
+
+// 👉 function to show a tab
+function showTab(tabName) {
+  // remove active state
+  tabs.forEach(t => t.classList.remove("active"));
+  sections.forEach(sec => sec.style.display = "none");
+
+  // activate correct tab
+  const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
+  if (activeTab) {
+    activeTab.classList.add("active");
+    document.getElementById(tabName).style.display = "block";
+  }
 }
 
+// 👉 click event
+tabs.forEach(tab => {
+  tab.addEventListener("click", () => {
+    const target = tab.dataset.tab;
+
+    // show tab
+    showTab(target);
+
+    // 🔥 save to localStorage
+    localStorage.setItem("activeTab", target);
+  });
+});
+
+// 👉 on load (restore previous tab)
+const savedTab = localStorage.getItem("activeTab");
+
+if (savedTab) {
+  showTab(savedTab);
+} else {
+  showTab("general"); // default
+}
 </script>
 {% endblock %}

@@ -1,13 +1,505 @@
 {% extends "base.html" %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Secretary Dashboard{% endblock %}
+{% block page_css %}
+<style>
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    border: 1px solid #eee;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+}
 
+/* Top Controls */
+.top-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.search-group {
+    display: flex;
+    gap: 10px;
+}
+
+.search-input {
+    padding: 8px 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 250px;
+    font-size: 14px;
+}
+
+.date-dropdown {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+}
+
+.btn-red {
+    background-color: #A12222;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 5px;
+    text-decoration: none;
+}
+
+/* Announcement */
+.announcement-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.card {
+    flex: 1;
+    background-color: #F8D7DA; /* Light red tint */
+    border: 1px solid #f5c2c7;
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.card-icon {
+    font-size: 20px;
+    opacity: 0.6;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.card-date {
+    font-weight: bold;
+    color: #842029;
+    font-size: 14px;
+}
+
+.badge {
+    background-color: #A12222;
+    color: white;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: capitalize;
+}
+
+.card-sub {
+    margin: 0;
+    font-size: 12px;
+    color: #666;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+/* TABLE BASE */
+.records-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    background: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* HEADER (MAIN) */
+.records-table thead tr:first-child {
+    background: #b71c1c; /* deep red */
+    color: #ffffff;
+}
+
+/* SUB HEADER */
+.records-table thead tr:nth-child(2) {
+    background: #fdecea; /* soft red */
+    color: #333;
+}
+
+/* HEADERS */
+.records-table th {
+    text-align: center;
+    vertical-align: middle;
+    padding: 12px 10px;
+    font-weight: 600;
+    border: 1px solid #f1dada;
+}
+
+/* CELLS */
+.records-table td {
+    text-align: left;
+    padding: 12px 10px;
+    border-bottom: 1px solid #eee;
+    color: #333;
+}
+
+/* ROW STRIPES */
+.records-table tbody tr:nth-child(even) {
+    background-color: #fff5f5;
+}
+
+/* HOVER EFFECT */
+.records-table tbody tr:hover {
+    background-color: #fdecea;
+    transition: 0.2s ease;
+}
+
+/* BUTTON STYLE (matches theme) */
+.update-new-btn {
+    background: none;
+    border: none;
+    color: #b71c1c;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.update-new-btn:hover {
+    color: #e53935;
+    text-decoration: underline;
+}
+
+/* SETTINGS BUTTON */
+.update-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+/* ACTION CELL ALIGNMENT */
+.actions {
+    text-align: center;
+}
+
+.actions a {
+    text-decoration: none;  /* remove underline */
+    color: #28a745;         /* green like before */
+    cursor: pointer;
+    font-size: 16px;
+    white-space: nowrap;
+}
+.actions a:hover {
+    color: #19692c;         /* darker green on hover */
+}
+/* Modal Overlay Background */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.1); /* Subtle dimming */
+    backdrop-filter: blur(2px);     /* Blurs the dashboard behind it */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Modal Card */
+.modal-card {
+    background: white;
+    width: 450px;
+    border: 3px solid #3498db; /* The blue border from your screenshot */
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    padding: 30px;
+}
+
+.modal-title {
+    color: #611212; /* Darker red/maroon title */
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 1.5rem;
+}
+
+/* Form Styling inside Modal */
+.modal-group {
+    margin-bottom: 18px;
+}
+
+.modal-group label {
+    display: block;
+    color: #8a3333; /* Reddish label text */
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.modal-group input, 
+.modal-group select, 
+.modal-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.modal-group textarea {
+    height: 100px;
+    resize: none;
+}
+
+/* Modal Buttons */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.btn-cancel {
+    background-color: #717171;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-save-holiday {
+    background-color: #A12222;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-save-holiday:hover { background-color: #801a1a; }
+.btn-cancel:hover { background-color: #5a5a5a; }
+/* Hidden state by default */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    
+    /* Animation properties */
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease-in-out;
+}
+
+/* State when active (clicked) */
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Pop effect for the card itself */
+.modal-card {
+    background: white;
+    width: 450px;
+    border: 3px solid #3498db;
+    border-radius: 8px;
+    padding: 30px;
+    transform: scale(0.8); /* Starts slightly smaller */
+    transition: transform 0.3s ease-in-out;
+}
+
+.modal-overlay.active .modal-card {
+    transform: scale(1); /* Grows to full size */
+}
+
+/* CSS example for fade-out effect */
+.row-fade {
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+</style>
+{% endblock %}
 {% block content %}
-<h2>HR Memorandum Tracking System</h2>
+<br><br>
+  <div class="dashboard-container">
+        
+        <div class="top-controls">
+            <div class="search-group">
+                <input type="text" id="searchInput" placeholder="Search subject, memo #, from..." class="search-input">
 
-<p>
-Search memorandums or proceed to the dashboard.
-</p>
+                <select id="monthFilter" class="date-dropdown">
+                    <option value="">Month</option>
+                    <option value="1">Jan</option>
+                    <option value="2">Feb</option>
+                    <option value="3">Mar</option>
+                    <option value="4">Apr</option>
+                    <option value="5">May</option>
+                    <option value="6">Jun</option>
+                    <option value="7">Jul</option>
+                    <option value="8">Aug</option>
+                    <option value="9">Sep</option>
+                    <option value="10">Oct</option>
+                    <option value="11">Nov</option>
+                    <option value="12">Dec</option>
+                </select>
 
+                <select id="yearFilter" class="date-dropdown">
+                    <option value="">Year</option>
+                    {% for y in range(2024, 2050) %}
+                        <option value="{{ y }}">{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if current_user.is_authenticated %}
+
+            <button class="btn" onclick="openAddMemo()">+ Add Memo</button>
+            {% endif %}
+        </div>
+
+        <div class="announcement-row">
+        {% for holiday in holidays %}
+        <div class="card">
+            <div class="card-icon">
+            {% if holiday.type == "Regular" %}🎉
+            {% elif holiday.type == "Special" %}✨
+            {% else %}📅
+            {% endif %}
+            </div>            
+            <div class="card-content">
+            <div class="card-header">
+                <span class="card-date">
+                {{ holiday.date.strftime('%B %d, %Y') }} - {{ holiday.name }}
+                </span>
+                <span class="badge">{{ holiday.type or "Holiday" }}</span>
+            </div>
+            <p class="card-sub">
+                {{ holiday.description or "No Office Transaction on this date" }}
+            </p>
+            </div>
+        </div>
+        {% else %}
+        <!-- fallback if no holidays -->
+        <p>No holidays available.</p>
+        {% endfor %}
+        </div>
+<div class="table-controls">
+    <button class="filter-btn" onclick="setType('communication')">Communication</button>
+    <button class="filter-btn" onclick="setType('OP')">OP</button>
+</div>
+
+<div  id="tableContainer">
+    {% if memos %}
+    <div class="table-container">
+        <table class="records-table" border="1" cellpadding="8" cellspacing="0">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Serial No.</th>
+                    <th colspan="4" style="background-color:#e53935; color:#fff;">Incoming</th>
+                    <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Remarks</th>
+                    <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Notes</th>
+                    <th colspan="2" style="background-color:#e53935; color:#fff;">Released</th>
+                    <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Actions</th>
+                </tr>
+                <tr>
+                    <th style="background-color:#fdecea; color:#333;">Date</th>
+                    <th style="background-color:#fdecea; color:#333;">From</th>
+                    <th style="background-color:#fdecea; color:#333;">Forwarded By</th>
+                    <th style="background-color:#fdecea; color:#333;">Subject</th>
+
+                    <th style="background-color:#fdecea; color:#333;">Date</th>
+                    <th style="background-color:#fdecea; color:#333;">To</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for memo in memos %}
+                <tr>
+                    <!-- Serial No. -->
+                    <td>{{ memo.serial_number }}</td>
+
+                    <!-- Incoming Section -->
+                    <td>{{ memo.date }}</td>
+                    <td>{{ memo.from_office }}</td>
+                    <td>{{ memo.forwarded_by }}</td>
+                    <td>
+                        {% if current_user.is_authenticated %}
+                        <button class="update-new-btn"
+                            data-id="{{ memo.id }}"
+                            data-source_type="{{ memo.source_type }}"
+                            data-number="{{ memo.memo_number }}"
+                            data-from="{{ memo.from_office }}"
+                            data-forwarded="{{ memo.forwarded_by }}"
+                            data-subject="{{ memo.subject }}"
+                            data-remarks="{{ memo.remarks }}"
+                            data-notes="{{ memo.notes }}"
+                            data-date="{{ memo.date }}"
+                            data-released_to="{{ memo.released_to }}"
+                            data-released_date="{{ memo.released_date }}"
+                            data-status="{{ memo.status }}">
+                            {% if memo.memo_number %}
+                                {{ memo.memo_number }} - {{ memo.subject }}
+                            {% else %}
+                                {{ memo.subject }}
+                            {% endif %}                    
+                        </button>
+                        {% else %}
+                            {% if memo.memo_number %}
+                                {{ memo.memo_number }} - {{ memo.subject }}
+                            {% else %}
+                                {{ memo.subject }}
+                            {% endif %}                    
+                        {% endif %}
+                    </td>
+
+                    <!-- Remarks / Notes -->
+                    <td>{{ memo.remarks }}</td>
+                    <td>{{ memo.notes }}</td>
+
+                    <!-- Released Section -->
+                    <td>{{ memo.released_date or "" }}</td>                
+                    <td>{{ memo.released_to }}</td>
+
+                    <!-- Actions -->
+                    <td class="actions">
+                        <button class="update-btn"
+                            data-id="{{ memo.id }}"
+                            data-source_type="{{ memo.source_type }}"
+                            data-number="{{ memo.memo_number }}"
+                            data-from="{{ memo.from_office }}"
+                            data-forwarded="{{ memo.forwarded_by }}"
+                            data-subject="{{ memo.subject }}"
+                            data-remarks="{{ memo.remarks }}"
+                            data-notes="{{ memo.notes }}"
+                            data-date="{{ memo.date }}"
+                            data-released_to="{{ memo.released_to }}"
+                            data-released_date="{{ memo.released_date }}"
+                            data-status="{{ memo.status }}"
+                        >
+                            ⚙️
+                        </button>
+                        <button class="delete-btn" data-id="{{ memo.id }}">🗑️</button>              
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>No memos found.</p>
+    {% endif %}
+</div>
+<br><br>
 
 {% endblock %}

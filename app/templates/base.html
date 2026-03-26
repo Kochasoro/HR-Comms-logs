@@ -1,35 +1,737 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>{% block title %}HR Logger{% endblock %}</title>
+<meta charset="UTF-8">
+<title>WMSU Memo Tracking</title>
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-     {% block page_css %}{% endblock %}
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    {% block page_css %}
+     
+    {% endblock %}
+    {% block page_css2 %}{% endblock %}
+    {% block page_css3 %}{% endblock %}
+    {% block page_css4 %}{% endblock %}
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; font-size:15px; }
+body { background:#f4f6f9; }
+/* TOPBAR */
+.topbar { height:65px; background:#B22222; display:flex; align-items:center; justify-content:space-between; padding:0 20px; color:white; }
+.topbar-left { display:flex; align-items:center; gap:15px; }
+.logo { height:40px; }
+.title { font-size:20px; font-weight:500; }
+.topbar-right { font-size:13px; }
+/* SIDEBAR */
+.sidebar { position:fixed; top:65px; left:0; width:60px; height:100%; background:#B22222; display:flex; flex-direction:column; align-items:center; padding-top:20px; gap:20px; z-index:500; }
+.sidebar iconify-icon { font-size:24px; color:#6F1020; padding:10px; border-radius:6px; transition:.2s; cursor:pointer; }
+.sidebar iconify-icon:hover { background:white; }
+/* CONTENT */
+.content { margin-left:60px; padding:25px; max-width:1400px; }
+/* SEARCH BAR */
+.search-bar { display:flex; gap:10px; margin-bottom:15px; }
+.search-bar input, .search-bar select { padding:7px 10px; border:1px solid #ccc; border-radius:4px; }
+/* BUTTONS */
+.buttons { margin-left:auto; display:flex; gap:10px; }
+.btn { background:#B22222; color:white; border:none; padding:7px 14px; border-radius:6px; cursor:pointer; }
+/* HOLIDAY PANEL */
+.holiday-panel { background:white; border-radius:6px; padding:10px; display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:15px; min-height:70px; }
+/* HOLIDAY CARDS */
+.holiday-card { display:flex; gap:10px; background:#fdeaea; padding:10px; border-radius:6px; align-items:flex-start; }
+.holiday-card iconify-icon { font-size:20px; color:#B22222; margin-top:2px; }
+.holiday-top { display:flex; gap:6px; align-items:center; }
+.holiday-title { font-weight:600; font-size:13px; color:#B22222; }
+.holiday-badge { background:#B22222; color:white; font-size:10px; padding:2px 6px; border-radius:4px; }
+.holiday-card p { font-size:11px; margin-top:2px; color:#444; }
+/* TABLE */
+.table-container {
+    background: white;
+    border-radius: 6px;
+    overflow-x: auto; /* only scroll if REALLY needed */
+    width: 100%;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* 🔥 keeps columns stable */
+}
+
+thead {
+    background: #E9EDF2;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+
+    /* ✅ allow text to wrap */
+    white-space: normal;
+    word-break: break-word;
+}
+
+th:nth-child(1), td:nth-child(1) {
+    width: 64px;
+}
+/* SUBJECT (make it wider 📢) */
+th:nth-child(2){
+    width: 55%; /* flexible and bigger */
+}
+
+/* LAST COLUMN (Actions - compact) */
+th:last-child, td:last-child {
+    width: 90px;        /* smaller */
+    white-space: nowrap; /* keep buttons in one line */
+}
+tbody tr {
+    border-top: 1px solid #eee;
+}
+.action-icons { display:flex; gap:10px; align-items:center; }
+.action-icons iconify-icon { font-size:20px; cursor:pointer; color:#6F1020; }
+.action-icons iconify-icon.delete-btn { color: #f44336 !important; }
+.delete-btn:hover { transform: scale(1.1); }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+tr.row-fade { animation: fadeOut 0.3s forwards; }
+/* GEAR OPTIONS */
+.option-menu { position:absolute; background:white; box-shadow:0 6px 20px rgba(0,0,0,0.15); border-radius:10px; padding:10px 20px; display:none; gap:20px; }
+.option-menu iconify-icon { font-size:26px; cursor:pointer; }
+/* MODALS */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+
+  /* animation base */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.modal.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background: white;
+  width: 600px;
+  max-width: 90vw;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  max-height: 90vh;
+  overflow-y: auto;
+
+  /* start hidden animation */
+  transform: scale(0.85) translateY(20px);
+  opacity: 0;
+  transition: all 0.25s ease;
+}
+
+.modal.show .modal-content {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+.modal h2 { margin-bottom:20px; }
+.form-row { display:flex; gap:15px; margin-bottom:15px; }
+.form-group { flex:1; display:flex; flex-direction:column; gap:5px; margin-bottom:15px; }
+input,textarea,select { border:1px solid #ccc; border-radius:4px; padding:7px; }
+textarea { resize:vertical; height:70px; }
+.modal-buttons { display:flex; justify-content:center; gap:20px; margin-top:15px; }
+.cancel { background:#777; }
+
+
+.locked {
+    background: #f5f5f5;
+    cursor: not-allowed;
+}
+</style>
 </head>
-
 <body>
+<!-- TOPBAR -->
+<div class="topbar">
+<div class="topbar-left">
+<img src="{{ url_for('static', filename='img/logo.png') }}" class="logo">
+<div class="title">Western Mindanao State University</div>
+</div>
 
-    <!-- Top bar -->
-    <header style="padding:10px;background:#2d3748;color:white;">
-        <h2>HR Comms Logger System</h2>
-        <nav>
-            <a href="{{ url_for('main.home') }}" style="color:white;">Home</a> |
-            <a href="{{ url_for('secretary.dashboard') }}" style="color:white;">Dashboard</a>
-            <a href="{{ url_for('admin.users') }}">User Management</a>
-            <h1>THIS WOULD BE LOGIN SOON</h1>
-        </nav>
-    </header>
+<div class="topbar-right">
+  Logged in as: 
+  <span id="userRole">
+    {% if current_user.is_authenticated %}
+      {{ current_user.role|capitalize }}
+    {% else %}
+      Guest
+    {% endif %}
+  </span> | |
 
-    <!-- Main content area -->
-    <main style="padding:20px;">
-        <!-- Login will be added later -->
+  {% if current_user.is_authenticated %}
+    <a href="{{ url_for('auth.logout') }}" style="color:white; text-decoration:none;">
+      Logout
+    </a>
+  {% else %}
+    <a href="{{ url_for('auth.login') }}" style="color:white; text-decoration:none;">
+      Login
+    </a>
+  {% endif %}
+</div>
+
+</div>
+<!-- SIDEBAR -->
+        {% if current_user.is_authenticated %}
+        <div class="sidebar">
+
+        <a href="{{ url_for('admin.dashboard') }}" title="Dashboard">
+            <iconify-icon icon="mdi:home-outline"></iconify-icon>
+        </a>
+
+        <a href="{{ url_for('admin.users') }}" title="Manage Users">
+            <iconify-icon icon="mdi:account-outline"></iconify-icon>
+        </a>
+        <a href="{{ url_for('main.home') }}" title="Memos">
+            <iconify-icon icon="mdi:file-document-outline"></iconify-icon>
+        </a>
+
+        <a href="{{ url_for('admin.logs_page') }}" title="Reports">
+            <iconify-icon icon="mdi:history"></iconify-icon>
+        </a>
+
+        <a href="{{ url_for('admin.import_page') }}" title="Import/Export">
+            <iconify-icon icon="mdi:database-import-outline"></iconify-icon>
+        </a>
+
+        <a href="{{ url_for('admin.settings_general') }}" title="Settings">
+            <iconify-icon icon="mdi:cog-outline"></iconify-icon>
+        </a>
+
+        <a href="{{ url_for('auth.logout') }}" title="Logout">
+            <iconify-icon icon="mdi:logout"></iconify-icon>
+        </a>
+
+        </div>
+        {% endif %}
+<!-- CONTENT -->
+
         {% block content %}{% endblock %}
-    </main>
 
-    <!-- Scripts -->
-    {% block scripts %}{% endblock %}
+<!-- OPTION MENU -->
+<div id="optionMenu" class="option-menu">
+  <iconify-icon icon="mdi:delete-outline" class="delete-btn"></iconify-icon>
+<iconify-icon icon="mdi:pencil-outline" onclick="openEditMemo()"></iconify-icon>
+</div>
+<!-- ADD MEMO MODAL -->
+ 
+<div id="addMemoModal" class="modal">
+  <div class="modal-content">
 
+    <h2>Add Memo</h2>
+
+    <form id="memo_form">
+
+      <!-- Source Type -->
+      <div class="form-group">
+        <label>Source Type</label>
+        <select name="source_type" id="source_type_outside" onchange="updateFormFields()">
+          <option value="communication" selected>communication</option>
+          <option value="OP">OP</option>
+        </select>
+      </div>
+
+      <!-- Memo Number -->
+      <div class="form-group" id="memoNumberGroup" style="display: none;">
+        <label>Memo #</label>
+        <input name="memo_number" id="memoNumber">
+      </div>
+
+      <!-- Date -->
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" name="date" id="memoDate">
+      </div>
+
+      <!-- From + Forwarded -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>From</label>
+          <input name="from_office" id="memoFrom">
+        </div>
+        <div class="form-group">
+          <label>Forwarded By</label>
+          <input name="forwarded_by" id="memoForwarded">
+        </div>
+      </div>
+
+      <!-- Subject -->
+      <div class="form-group">
+        <label>Subject</label>
+        <input name="subject" id="memoSubject">
+      </div>
+
+      <!-- Remarks -->
+      <div class="form-group">
+        <label>Remarks</label>
+        <textarea name="remarks" id="memoRemarks"></textarea>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea name="notes" id="memoNotes"></textarea>
+      </div>
+
+      <!-- Release Section -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Released To</label>
+          <input name="released_to" id="memoReleaseTo">
+        </div>
+        <div class="form-group">
+          <label>Released Date</label>
+          <input type="date" name="released_date" id="memoReleaseDate">
+        </div>
+      </div>
+
+      <div class="modal-buttons">
+        <button type="submit" class="btn">Submit</button>
+        <button type="button" class="btn cancel" onclick="closeModals()">Cancel</button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+<!-- EDIT MEMO MODAL -->
+<div id="editMemoModal" class="modal">
+  <form method="POST" id="editMemoForm" class="modal-content">
+
+    <h2>Edit Memo</h2>
+
+    <!-- From + Forwarded -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>From</label>
+        <input name="from_office" id="editMemoFrom">
+      </div>
+
+      <div class="form-group">
+        <label>Forwarded By</label>
+        <input name="forwarded_by" id="editMemoForwarded">
+      </div>
+    </div>
+
+    <!-- Date -->
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" name="date" id="editMemoDate">
+    </div>
+
+    <!-- Subject -->
+    <div class="form-group">
+      <label>Subject</label>
+      <input name="subject" id="editMemoSubject">
+    </div>
+
+    <!-- Remarks -->
+    <div class="form-group">
+      <label>Remarks</label>
+      <textarea name="remarks" id="editMemoRemarks"></textarea>
+    </div>
+
+    <!-- Notes -->
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea name="notes" id="editMemoNotes"></textarea>
+    </div>
+
+    <!-- Release Section -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>Released To</label>
+        <input name="released_to" id="editMemoReleaseTo">
+      </div>
+
+      <div class="form-group">
+        <label>Released Date</label>
+        <input type="date" name="released_date" id="editMemoReleaseDate">
+      </div>
+    </div>
+
+    <div class="moda-bluttons">
+      <button type="submit" class="btn">Save Changes</button>
+      <button type="button" class="btn cancel" onclick="closeModals()">Cancel</button>
+    </div>
+
+  </form>
+</div>
+
+
+
+<!-- DELETE CONFIRM MODAL -->
+<div id="deleteConfirmModal" class="modal">
+  <div class="modal-content" style="width:400px; padding:25px; text-align:center;">
+    <iconify-icon icon="mdi:alert-circle" style="font-size:48px; color:#f44336; margin-bottom:15px;"></iconify-icon>
+    <h2>Confirm Delete</h2>
+    <p>Are you sure you want to delete this memo permanently?</p>
+    <p style="font-weight:500; color:#B22222;">This action cannot be undone.</p>
+    <div class="modal-buttons" style="gap:15px;">
+      <button class="btn cancel" onclick="closeDeleteConfirm()" style="background:#6c757d;">Cancel</button>
+      <button class="btn" onclick="confirmDelete()" style="background:#f44336;">Delete Memo</button>
+    </div>
+  </div>
+</div>
+{% block scripts %}{% endblock %}
+
+<script>
+
+/* =========================
+HOLIDAY FUNCTIONS
+========================= */
+
+
+function renderHolidayCard(holiday){
+
+const panel=document.querySelector('.holiday-panel');
+
+const card=document.createElement('div');
+
+card.className='holiday-card';
+
+card.innerHTML=`
+<iconify-icon icon="mdi:calendar"></iconify-icon>
+<div>
+<div class="holiday-top">
+<span class="holiday-title">${holiday.title}</span>
+<span class="holiday-badge">${holiday.badge}</span>
+</div>
+<p>${holiday.desc}</p>
+</div>
+`;
+
+panel.insertBefore(card,panel.firstChild);
+
+}
+
+function loadHolidays(){
+
+const holidays=JSON.parse(localStorage.getItem('holidays')||'[]');
+
+holidays.forEach(renderHolidayCard);
+
+}
+
+
+/* =========================
+MEMO FUNCTIONS
+========================= */
+
+let editingSeries=null;
+let deleteSeries=null;
+let deleteRow=null;
+let deleteId = null;
+
+function openAddMemo(){
+  const modal = document.getElementById("addMemoModal");
+  modal.classList.add("show");
+}
+function openEditMemo(){
+  const modal = document.getElementById("editMemoModal");
+  console.log("Opening edit modal", modal);
+  modal.classList.add("show");
+}
+function closeModals(){
+  document.querySelectorAll(".modal").forEach(modal => {
+    modal.classList.remove("show");
+  });
+}
+document.addEventListener("click", function(e) {
+  if (e.target.classList.contains("modal")) {
+    closeModals();
+  }
+});
+/* ADD MEMO */
+const form = document.getElementById("memo_form");
+
+form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+
+    // basic validation
+    const from = formData.get("from_office")?.trim();
+    const subject = formData.get("subject")?.trim();
+
+    if (!from || !subject) {
+        alert("Please fill From and Subject");
+        return;
+    }
+
+    try {
+        const res = await fetch("/secretary/new", {
+            method: "POST",
+            body: formData
+        });
+
+        if (!res.ok) {
+            throw new Error("HTTP error " + res.status);
+        }
+
+        const data = await res.json(); // ✅ backend already returns JSON
+
+        console.log("Server response:", data);
+
+        if (data.success) {
+            form.reset();
+            closeModals();
+        } else {
+            alert("Failed to save memo.");
+        }
+
+    } catch (err) {
+        console.error("ERROR:", err);
+        alert("Something went wrong.");
+    }
+});
+function updateFormFields(){
+    const type = document.getElementById("source_type_outside").value;
+
+    const memoFrom = document.getElementById("memoFrom");
+    const memoForwarded = document.getElementById("memoForwarded");
+    const memoNumberGroup = document.getElementById("memoNumberGroup");
+
+    if(type === "OP"){
+        memoFrom.value = "OP";
+        memoForwarded.value = "Records";
+
+        // 🔒 lock fields
+        memoFrom.readOnly = true;
+        memoForwarded.readOnly = true;
+
+        // 🙈 hide Memo #
+        memoNumberGroup.style.display = "block";
+
+    } else {
+        memoFrom.value = "";
+        memoForwarded.value = "";
+
+        // 🔓 unlock fields
+        memoFrom.readOnly = false;
+        memoForwarded.readOnly = false;
+
+        // 👀 show Memo #
+        memoNumberGroup.style.display = "none";
+    }
+}
+
+
+/* =========================
+EDIT MEMO
+========================= */
+// HANDLE BUTTON CLICK (set form + fill data)
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest(".update-new-btn, .update-btn");
+    if (!btn) return;
+
+    const form = document.getElementById("editMemoForm");
+    const id = btn.dataset.id;
+
+    const sourceType = btn.dataset.source_type;
+
+    const memoFrom = document.getElementById("editMemoFrom");
+    const memoForwarded = document.getElementById("editMemoForwarded");
+
+    // Fill fields
+    memoFrom.value = btn.dataset.from || "";
+    memoForwarded.value = btn.dataset.forwarded || "";
+    document.getElementById("editMemoSubject").value = btn.dataset.subject || "";
+    document.getElementById("editMemoRemarks").value = btn.dataset.remarks || "";
+    document.getElementById("editMemoNotes").value = btn.dataset.notes || "";
+    document.getElementById("editMemoDate").value = btn.dataset.date || "";
+    document.getElementById("editMemoReleaseTo").value = btn.dataset.released_to || "";
+    document.getElementById("editMemoReleaseDate").value = btn.dataset.released_date || "";
+
+    // 🔒 Lock if OP
+    if (sourceType === "OP") {
+        // 🔒 lock
+        memoFrom.disabled = true;
+        memoForwarded.disabled = true;
+
+        // 🎨 style
+        memoFrom.classList.add("locked");
+        memoForwarded.classList.add("locked");
+
+    } else {
+        // 🔓 unlock
+        memoFrom.disabled = false;
+        memoForwarded.disabled = false;
+
+        // remove style
+        memoFrom.classList.remove("locked");
+        memoForwarded.classList.remove("locked");
+    }
+
+    // Decide route
+    if (btn.classList.contains("update-btn")) {
+        form.action = `/secretary/edit/${id}`;
+    } else if (btn.classList.contains("update-new-btn")) {
+        form.action = `/secretary/update/${id}`;
+    }
+
+    openEditMemo();
+});
+
+
+// 🚀 HANDLE FORM SUBMIT (AJAX - no page redirect)
+document.getElementById("editMemoForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const url = form.action;
+    const formData = new FormData(form);
+
+    fetch(url, {
+        method: "POST",
+        body: formData
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error("HTTP error " + res.status);
+        }
+        return res.json(); // ✅ ONLY once
+    })
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert("Error: " + (data.error || "Unknown error"));
+        }
+    })
+    .catch(err => {
+        console.error("Submit error:", err);
+        alert("Something went wrong");
+    });
+});
+/* =========================
+DELETE MEMO WITH WARNING
+========================= */
+let rowToDelete = null;
+let memoIdToDelete = null;
+
+document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener('click', function(e){ 
+        const btn = e.target.closest(".delete-btn");
+        if(!btn) return;
+
+        console.log("Delete button clicked!", btn.dataset.id);
+
+        rowToDelete = btn.closest("tr");
+        memoIdToDelete = btn.dataset.id;
+
+        const modal = document.getElementById("deleteConfirmModal");
+        if(modal){
+            modal.classList.add("show");   // ✅ show the modal
+            console.log("Modal opened");
+        } else {
+            console.error("Modal not found!");
+        }
+    });
+});
+
+function confirmDelete() {
+    if (!memoIdToDelete) return;
+
+    fetch(`/secretary/delete/${memoIdToDelete}`, { method: "POST" })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success){
+            if(rowToDelete){
+                rowToDelete.classList.add("row-fade");
+                setTimeout(() => rowToDelete.remove(), 300);
+            }
+        } else {
+            alert(data.error || "Delete failed");
+        }
+    })
+    .catch(err => console.error(err))
+    .finally(() => closeDeleteConfirm());
+}
+
+function closeDeleteConfirm(){
+    const modal = document.getElementById("deleteConfirmModal");
+    if(modal){
+        modal.classList.remove("show");  // ✅ hide the modal
+    }
+
+    rowToDelete = null;
+    memoIdToDelete = null;
+}
+
+/* =========================
+INITIAL LOAD
+========================= */
+
+document.addEventListener("DOMContentLoaded",function(){
+
+loadHolidays();
+
+});
+
+let timeout = null;
+
+let currentType = new URLSearchParams(window.location.search).get("type") || "communication";
+
+function setType(type) {
+    currentType = type;
+    fetchTable();
+}
+
+function fetchTable() {
+    const search = document.getElementById("searchInput").value;
+    const month = document.getElementById("monthFilter").value;
+    const year = document.getElementById("yearFilter").value;
+
+    const url = `/?search=${encodeURIComponent(search)}&month=${month}&year=${year}&type=${currentType}`;
+
+    fetch(url)
+        .then(res => res.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+
+            const newTable = doc.querySelector("#tableContainer");
+            if (newTable) {
+                document.querySelector("#tableContainer").innerHTML = newTable.innerHTML;
+            }
+        });
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    const monthFilter = document.getElementById("monthFilter");
+    const yearFilter = document.getElementById("yearFilter");
+
+    const today = new Date();
+
+    monthFilter.value = today.getMonth() + 1;
+    yearFilter.value = today.getFullYear();
+});
+
+const searchInput = document.getElementById("searchInput");
+// 🔍 typing (debounce)
+searchInput.addEventListener("input", () => {
+    clearTimeout(timeout);
+    timeout = setTimeout(fetchTable, 300);
+});
+
+// 📅 filters
+monthFilter.addEventListener("change", fetchTable);
+yearFilter.addEventListener("change", fetchTable);
+</script>
 </body>
 </html>
