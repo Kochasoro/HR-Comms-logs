@@ -329,7 +329,167 @@
   transition: opacity 0.3s ease;
   opacity: 0;
 }
+.memo-drawer {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100%;
+    background: #fff;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+    transition: right 0.3s ease;
+    z-index: 2000;
+}
 
+.memo-drawer.active {
+    right: 0;
+}
+
+.drawer-content {
+    padding: 20px;
+}
+
+.close-drawer {
+    background: none;
+    border: none;
+    font-size: 18px;
+    float: right;
+    cursor: pointer;
+}
+
+.drawer-section p {
+    font-size: 14px;
+    margin: 6px 0;
+}
+
+#relatedMemos {
+    padding-left: 15px;
+}
+
+#relatedMemos li {
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+.memo-row.active-row {
+    background-color: #fdecea !important;
+}
+/* Base Drawer Styles */
+.memo-drawer {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #374151; /* Dark gray */
+  background: #ffffff;
+  max-width: 400px; /* Adjust based on your layout needs */
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+}
+
+.drawer-content p {
+  margin: 4px 0;
+}
+
+/* Typography & Colors */
+.text-secondary {
+  color: #4b5563;
+}
+
+/* Header Row */
+.drawer-header-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+/* Badge */
+.badge {
+  display: inline-block;
+  padding: 4px 16px;
+  border-radius: 9999px; /* Pill shape */
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.badge-urgent {
+  background-color: #d97706; /* Orange */
+  color: #ffffff;
+}
+
+/* Subject & Meta */
+.drawer-subject {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: #1f2937;
+}
+
+.drawer-meta {
+  font-size: 15px;
+  margin-bottom: 16px;
+}
+
+/* Notes Box */
+.drawer-notes {
+  background-color: #f3f4f6; /* Light gray background */
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 15px;
+}
+
+/* Release Info Row */
+.drawer-release-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  font-size: 15px;
+}
+
+.release-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Divider */
+.divider {
+  border: 0;
+  border-top: 1px solid #e5e7eb;
+  margin: 20px 0;
+}
+
+/* Related Memos Table */
+.related-memos-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 4px; /* Adds space between rows */
+  text-align: left;
+  font-size: 15px;
+}
+
+.related-memos-table th {
+  color: #6b7280;
+  font-weight: normal;
+  padding: 8px 16px;
+}
+
+.related-memos-table td {
+  background-color: #e2e8f0; /* Slight blue/gray tint matching image */
+  padding: 12px 16px;
+  color: #374151;
+}
+
+/* Rounded corners for table rows */
+.related-memos-table td:first-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.related-memos-table td:last-child {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
 </style>
 {% endblock %}
 {% block content %}
@@ -425,7 +585,17 @@
             </thead>
             <tbody>
                 {% for memo in memos %}
-                <tr>
+                <tr class="memo-row"
+                    data-serial="{{ memo.serial_number }}"
+                    data-subject="{{ memo.subject }}"
+                    data-number="{{ memo.memo_number }}"
+                    data-from="{{ memo.from_office }}"
+                    data-forwarded="{{ memo.forwarded_by }}"
+                    data-date="{{ memo.date }}"
+                    data-remarks="{{ memo.remarks }}"
+                    data-notes="{{ memo.notes }}"
+                    data-released_date="{{ memo.released_date }}"
+                    data-released_to="{{ memo.released_to }}">
                     <!-- Serial No. -->
                     <td>{{ memo.serial_number }}</td>
 
@@ -495,6 +665,51 @@
                 {% endfor %}
             </tbody>
         </table>
+        <!-- SIDE PANEL -->
+<div id="memoDrawer" class="memo-drawer">
+    <div class="drawer-content">
+        
+
+        <div class="drawer-header-row">
+            <span class="text-secondary"># <span id="drawerNumber"></span></span>
+            <span class="text-secondary" id="drawerDate"></span>
+        </div>
+
+        <span class="badge badge-urgent"id="drawerRemarks"></span>
+
+        <h2 class="drawer-subject" id="drawerSubject"></h2>
+
+        <div class="drawer-meta">
+            <p>From: <span id="drawerFrom"></span></p>
+            <p>Forwarded by: <span id="drawerForwarded"></span></p>
+        </div>
+
+        <div class="drawer-notes">
+            Notes: <span id="drawerNotes"></span>
+        </div>
+
+        <div class="drawer-release-row">
+            <div class="release-col">
+                <span class="text-secondary">Released to:</span>
+                <span id="drawerReleasedTo"></span>
+            </div>
+            <div class="release-col">
+                <span class="text-secondary">Released Date:</span>
+                <span id="drawerReleasedDate"></span>
+            </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="memos-list-header">
+            <div></div> <div>Action</div>
+            <div>Date</div>
+        </div>
+
+        <ul id="relatedMemos" class="memos-list">
+            </ul>
+    </div>
+</div>
     </div>
     {% else %}
     <p>No memos found.</p>
@@ -502,4 +717,74 @@
 </div>
 <br><br>
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    let activeRow = null;
+
+    // 🔥 MAIN CLICK (delegated — works after tab switch)
+    document.addEventListener("click", function (e) {
+
+        const drawer = document.getElementById("memoDrawer");
+
+        // 🚫 Ignore buttons
+        if (e.target.closest(".actions button") || e.target.closest(".update-new-btn")) {
+            return;
+        }
+
+        // ✅ CLICK ON ROW
+        const row = e.target.closest(".memo-row");
+        if (row) {
+
+            // remove highlight
+            document.querySelectorAll(".memo-row").forEach(r => r.classList.remove("active-row"));
+
+            row.classList.add("active-row");
+            activeRow = row;
+
+            const subject = row.dataset.subject;
+
+            // fill drawer
+            document.getElementById("drawerSubject").innerText = subject;
+            document.getElementById("drawerNumber").innerText = row.dataset.serial || "-";
+            document.getElementById("drawerFrom").innerText = row.dataset.from;
+            document.getElementById("drawerForwarded").innerText = row.dataset.forwarded;
+            document.getElementById("drawerDate").innerText = row.dataset.date;
+            document.getElementById("drawerRemarks").innerText = row.dataset.remarks;
+            document.getElementById("drawerNotes").innerText = row.dataset.notes;
+            document.getElementById("drawerReleasedDate").innerText = row.dataset.released_date || "-";
+            document.getElementById("drawerReleasedTo").innerText = row.dataset.released_to || "-";
+            // related memos
+            const relatedList = document.getElementById("relatedMemos");
+            relatedList.innerHTML = "";
+
+            document.querySelectorAll(".memo-row").forEach(r => {
+                if (r.dataset.subject === subject && r !== row) {
+                    const li = document.createElement("li");
+                    li.innerText = (r.dataset.number || "") + " - " + r.dataset.date;
+                    relatedList.appendChild(li);
+                }
+            });
+
+            drawer.classList.add("active");
+            return;
+        }
+        const isInsideDrawer = drawer && drawer.contains(e.target);
+
+        if (!isInsideDrawer) {
+            closeDrawer();
+        }
+
+    });
+
+    window.closeDrawer = function () {
+        const drawer = document.getElementById("memoDrawer");
+        if (drawer) drawer.classList.remove("active");
+
+        document.querySelectorAll(".memo-row").forEach(r => r.classList.remove("active-row"));
+        activeRow = null;
+    };
+
+});
+</script>
 {% endblock %}
