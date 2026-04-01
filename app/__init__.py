@@ -4,7 +4,8 @@ from app.config import Config
 from app import models
 from app.routes.secretary import secretary_bp
 from app.routes.auth import auth_bp   
-from app.routes.admin import admin_bp 
+from app.routes.admin import admin_bp
+from app.seed_memo import seed_memos 
 from .routes.main import main
 from app.models.user import User   
 from app.seed import seed_command  
@@ -32,7 +33,8 @@ def create_app():
 
     # ✅ Register CLI command
     app.cli.add_command(seed_command)
-
+    app.cli.add_command(seed_memos)
+    
     print(app.url_map)
 
     return app

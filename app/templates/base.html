@@ -17,17 +17,92 @@
 * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; font-size:15px; }
 body { background:#f4f6f9; }
 /* TOPBAR */
-.topbar { height:65px; background:#B22222; display:flex; align-items:center; justify-content:space-between; padding:0 20px; color:white; }
+.topbar {
+    position: fixed; /* 🔥 make it fixed */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 65px;
+
+    background: #B22222;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+
+    z-index: 1000; /* above sidebar */
+}
 .topbar-left { display:flex; align-items:center; gap:15px; }
 .logo { height:40px; }
 .title { font-size:20px; font-weight:500; }
 .topbar-right { font-size:13px; }
 /* SIDEBAR */
-.sidebar { position:fixed; top:65px; left:0; width:60px; height:100%; background:#B22222; display:flex; flex-direction:column; align-items:center; padding-top:20px; gap:20px; z-index:500; }
-.sidebar iconify-icon { font-size:24px; color:#6F1020; padding:10px; border-radius:6px; transition:.2s; cursor:pointer; }
-.sidebar iconify-icon:hover { background:white; }
+.sidebar {
+    position: fixed;
+    top: 65px;
+    left: 0;
+
+    width: clamp(55px, 6vw, 70px);
+    height: calc(100vh - 65px);
+
+    background: #B22222;
+    border-right: 1px solid rgba(0,0,0,0.1);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+    gap: clamp(20px, 3.5vw, 32px);
+
+    z-index: 500;
+}
+.sidebar a {
+    width: 32px;
+    height: 32px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border-radius: 8px;
+
+    transition: 0.2s;
+}
+
+/* icon fills container */
+.sidebar img {
+    width: 70%;
+    height: 70%;
+    object-fit: contain; 
+
+    filter: brightness(0) invert(1); /* makes it white */
+    transition: 0.2s;
+}
+/* HOVER = same feel as before */
+.sidebar a:hover {
+    background: #ffffff;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.sidebar a:hover img {
+    filter: brightness(0) invert(0); /* black */
+}
 /* CONTENT */
-.content { margin-left:60px; padding:25px; max-width:1400px; }
+/* DEFAULT: no sidebar → full width */
+.content {
+    margin-left: 0;
+    margin-top: 20px;
+    width: 100%;
+    padding: clamp(12px, 2vw, 25px);
+}
+
+/* IF sidebar exists → push content */
+body:has(.sidebar) .content {
+    margin-left: clamp(55px, 6vw, 70px);
+    width: calc(100% - clamp(55px, 6vw, 70px));
+}
 /* SEARCH BAR */
 .search-bar { display:flex; gap:10px; margin-bottom:15px; }
 .search-bar input, .search-bar select { padding:7px 10px; border:1px solid #ccc; border-radius:4px; }
@@ -43,55 +118,7 @@ body { background:#f4f6f9; }
 .holiday-title { font-weight:600; font-size:13px; color:#B22222; }
 .holiday-badge { background:#B22222; color:white; font-size:10px; padding:2px 6px; border-radius:4px; }
 .holiday-card p { font-size:11px; margin-top:2px; color:#444; }
-/* TABLE */
-.table-container {
-    background: white;
-    border-radius: 6px;
-    overflow-x: auto; /* only scroll if REALLY needed */
-    width: 100%;
-}
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed; /* 🔥 keeps columns stable */
-}
-
-thead {
-    background: #E9EDF2;
-}
-
-th, td {
-    padding: 10px;
-    text-align: left;
-
-    /* ✅ allow text to wrap */
-    white-space: normal;
-    word-break: break-word;
-}
-
-th:nth-child(1), td:nth-child(1) {
-    width: 64px;
-}
-/* SUBJECT (make it wider 📢) */
-th:nth-child(2){
-    width: 55%; /* flexible and bigger */
-}
-
-/* LAST COLUMN (Actions - compact) */
-th:last-child, td:last-child {
-    width: 90px;        /* smaller */
-    white-space: nowrap; /* keep buttons in one line */
-}
-tbody tr {
-    border-top: 1px solid #eee;
-}
-.action-icons { display:flex; gap:10px; align-items:center; }
-.action-icons iconify-icon { font-size:20px; cursor:pointer; color:#6F1020; }
-.action-icons iconify-icon.delete-btn { color: #f44336 !important; }
-.delete-btn:hover { transform: scale(1.1); }
-@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-tr.row-fade { animation: fadeOut 0.3s forwards; }
 /* GEAR OPTIONS */
 .option-menu { position:absolute; background:white; box-shadow:0 6px 20px rgba(0,0,0,0.15); border-radius:10px; padding:10px 20px; display:none; gap:20px; }
 .option-menu iconify-icon { font-size:26px; cursor:pointer; }
@@ -185,41 +212,44 @@ textarea { resize:vertical; height:70px; }
 
 </div>
 <!-- SIDEBAR -->
-        {% if current_user.is_authenticated %}
-        <div class="sidebar">
+{% if current_user.is_authenticated %}
+<div class="sidebar">
 
-        <a href="{{ url_for('admin.dashboard') }}" title="Dashboard">
-            <iconify-icon icon="mdi:home-outline"></iconify-icon>
-        </a>
+    <a href="{{ url_for('admin.dashboard') }}" title="Dashboard">
+        <img src="{{ url_for('static', filename='img/dashboard.svg') }}" alt="Dashboard">
+    </a>
 
-        <a href="{{ url_for('admin.users') }}" title="Manage Users">
-            <iconify-icon icon="mdi:account-outline"></iconify-icon>
-        </a>
-        <a href="{{ url_for('main.home') }}" title="Memos">
-            <iconify-icon icon="mdi:file-document-outline"></iconify-icon>
-        </a>
+    <a href="{{ url_for('admin.users') }}" title="Manage Users">
+        <img src="{{ url_for('static', filename='img/users.svg') }}" alt="Users">
+    </a>
 
-        <a href="{{ url_for('admin.logs_page') }}" title="Reports">
-            <iconify-icon icon="mdi:history"></iconify-icon>
-        </a>
+    <a href="{{ url_for('main.home') }}" title="Memos">
+        <img src="{{ url_for('static', filename='img/memos.svg') }}" alt="Memos">
+    </a>
 
-        <a href="{{ url_for('admin.import_page') }}" title="Import/Export">
-            <iconify-icon icon="mdi:database-import-outline"></iconify-icon>
-        </a>
+    <a href="{{ url_for('admin.logs_page') }}" title="Reports">
+        <img src="{{ url_for('static', filename='img/reports.svg') }}" alt="Reports">
+    </a>
 
-        <a href="{{ url_for('admin.settings_general') }}" title="Settings">
-            <iconify-icon icon="mdi:cog-outline"></iconify-icon>
-        </a>
+    <a href="{{ url_for('admin.import_page') }}" title="Import/Export">
+        <img src="{{ url_for('static', filename='img/import.svg') }}" alt="Import">
+    </a>
 
-        <a href="{{ url_for('auth.logout') }}" title="Logout">
-            <iconify-icon icon="mdi:logout"></iconify-icon>
-        </a>
+    <a href="{{ url_for('admin.settings_general') }}" title="Settings">
+        <img src="{{ url_for('static', filename='img/settings.svg') }}" alt="Settings">
+    </a>
 
-        </div>
-        {% endif %}
+    <a href="{{ url_for('auth.logout') }}" title="Logout">
+        <img src="{{ url_for('static', filename='img/logout.svg') }}" alt="Logout">
+    </a>
+
+</div>
+{% endif %}
 <!-- CONTENT -->
-
-        {% block content %}{% endblock %}
+<div class="content">
+  {% block content %}{% endblock %}
+</div>
+        
 
 <!-- OPTION MENU -->
 <div id="optionMenu" class="option-menu">

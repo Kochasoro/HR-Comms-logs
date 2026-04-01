@@ -23,11 +23,7 @@ body{
     box-shadow:0 4px 10px rgba(0,0,0,0.2);
 }
 
-/* logo */
-.logo{
-    width:90px;
-    margin-bottom:20px;
-}
+
 
 /* input fields */
 .login-card input{
@@ -92,11 +88,14 @@ display:flex;
 align-items:center;
 gap:12px;
 }
+/* logo */
+.logo {
+    width: clamp(70px, 8vw, 100px);
+    height: auto;              /* keep ratio */
 
-.logo{
-height:35px;
+    display: block;            /* needed for margin auto */
+    margin: 0 auto 15px auto;  /* 🔥 centers horizontally */
 }
-
 .title{
 font-weight:bold;
 font-size:18px;
