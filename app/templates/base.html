@@ -681,15 +681,38 @@ document.addEventListener("DOMContentLoaded",function(){
 loadHolidays();
 
 });
+const toggle = document.getElementById("typeToggle");
 
 let timeout = null;
 
+const toggleOptions = document.querySelectorAll(".toggle-option");
+
+// default from URL
 let currentType = new URLSearchParams(window.location.search).get("type") || "communication";
 
-function setType(type) {
-    currentType = type;
-    fetchTable();
-}
+// 🔥 initialize active state
+toggleOptions.forEach(btn => {
+    if (btn.dataset.type === currentType) {
+        btn.classList.add("active");
+    } else {
+        btn.classList.remove("active");
+    }
+});
+
+// 🔥 click handler
+toggleOptions.forEach(btn => {
+    btn.addEventListener("click", function () {
+        // remove active from all
+        toggleOptions.forEach(b => b.classList.remove("active"));
+
+        // add active to clicked
+        this.classList.add("active");
+
+        currentType = this.dataset.type;
+
+        fetchTable();
+    });
+});
 
 function fetchTable() {
     const search = document.getElementById("searchInput").value;
