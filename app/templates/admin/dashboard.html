@@ -1,126 +1,119 @@
 {% extends "base.html" %}
+
 {% block page_css3 %}
 <style>
-
-
+/* MAIN */
 .main-content {
   padding: 40px;
   max-width: 1200px;
+  margin-left: 80px; /* space for sidebar */
 }
 
-/* Section Badge */
-.section-badge {
-  background-color: #f2dede;
-  color: #a42323;
-  display: inline-block;
-  padding: 12px 25px;
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 1.2rem;
-  margin-bottom: 35px;
-}
-
-/* Grid Layout */
-.cards-grid {
-  display: flex;
-  gap: 30px;
-  margin-bottom: 40px;
-}
-
-.ui-card {
-  flex: 1;
-  background-color: #eef1f6;
-  border-radius: 15px;
-  padding: 30px;
-  text-align: center;
-}
-
-.card-header {
-  color: #a42323;
-  font-weight: 600;
-  font-size: 1.4rem;
-  margin-top: 0;
-  margin-bottom: 20px;
-}
-
-/* Import UI Components */
-.instruction {
-  font-size: 0.85rem;
-  margin-bottom: 15px;
-}
-
-.input-row {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 10px;
-}
-
-.btn-choose {
-  background-color: #f7e6b5;
-  padding: 10px 15px;
-  border: 1px solid #ccc;
-  border-radius: 8px 0 0 8px;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.file-display {
-  border: 1px solid #ccc;
-  border-left: none;
-  border-radius: 0 8px 8px 0;
-  padding: 10px;
-  width: 220px;
-  font-size: 0.8rem;
-}
-
-.validation-text {
-  font-size: 0.75rem;
-  color: #888;
-  margin-bottom: 25px;
-}
-
-/* Export UI Components */
-.form-item {
+/* HEADER */
+.dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
-  font-size: 0.9rem;
-  text-align: left;
+  margin-bottom: 25px;
 }
 
-.check-group, .format-group {
+/* GRID LAYOUT */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* STAT CARDS */
+.stat-card {
   display: flex;
-  gap: 10px;
+  justify-content: space-between;
   align-items: center;
+
+  border-radius: 12px;
+  padding: 20px;
+  background: #fff;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
 
-.v-line { color: #ccc; margin: 0 2px; }
+.stat-label {
+  color: #777;
+  font-size: 0.85rem;
+}
 
-.input-field {
-  padding: 8px;
+.stat-value {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.stat-icon {
+  background: #f2dede;
+  color: #a42323;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+}
+
+.pending-card {
+  border-left: 4px solid #a42323;
+}
+
+/* CHART CARD */
+.chart-card {
+  grid-column: span 2;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* CHART */
+.chart-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 140px;
+  margin-top: 15px;
+  width: 100%;
+}
+
+.bar {
+  flex: 1 1 0;
+  background: #a42323;
   border-radius: 6px;
-  border: 1px solid #ccc;
-  width: 200px;
+  min-height: 6px;
+  transition: 0.3s;
+  animation: grow 0.7s ease;
 }
 
-.btn-action {
-  background-color: #a42323;
-  color: white;
-  border: none;
-  padding: 12px 30px;
-  border-radius: 8px;
-  font-family: 'Poppins', sans-serif;
-  font-weight: 500;
-  cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+.bar:hover {
+  opacity: 0.8;
 }
 
-/* Recent Activity */
+@keyframes grow {
+  from { height: 0; }
+}
+
+/* CHART LABELS */
+.chart-labels {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.7rem;
+  color: #777;
+  margin-top: 5px;
+}
+
+/* ACTIVITY */
 .activity-log {
   border: 1px solid #eee;
   border-radius: 15px;
   padding: 25px;
+  margin-top: 30px;
 }
 
 .log-header {
@@ -136,7 +129,13 @@
   font-weight: 500;
 }
 
-.search-input, .sort-select {
+.controls {
+  display: flex;
+  gap: 10px;
+}
+
+.search-input,
+.sort-select {
   padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 8px;
@@ -144,6 +143,7 @@
   font-size: 0.85rem;
 }
 
+/* TABLE */
 .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -164,63 +164,92 @@
   font-size: 0.85rem;
   color: #444;
 }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-card {
+    grid-column: span 1;
+  }
+}
+
 </style>
 {% endblock %}
+
 {% block content %}
 
-        <div class="col-md-10 content">
+<div class="main-content">
 
-            <!-- Top Navbar -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>Dashboard</h2>
-                <div>
-                    Welcome, <strong>{{ current_user.username }}</strong>
-                </div>
-            </div>
+  <!-- HEADER -->
+  <div class="dashboard-header">
+    <h2>Dashboard</h2>
+    <div>Welcome, <strong>AdminUser</strong></div>
+  </div>
 
-            <!-- Dashboard Cards -->
-            <div class="row">
+  <!-- CARDS -->
+  <div class="dashboard-grid">
 
-                <div class="col-md-4">
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-body">
-                            <h5>Total Users</h5>
-                            <h2>120</h2>
-                        </div>
-                    </div>
-                </div>
+    <!-- USERS -->
+    <div class="stat-card">
+      <div>
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value">12</div>
+      </div>
+      <div class="stat-icon">👤</div>
+    </div>
 
-                <div class="col-md-4">
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-body">
-                            <h5>Total Memos</h5>
-                            <h2>45</h2>
-                        </div>
-                    </div>
-                </div>
+    <!-- PENDING -->
+    <div class="stat-card pending-card">
+      <div>
+        <div class="stat-label">Pending Approvals</div>
+        <div class="stat-value">5</div>
+      </div>
+      <div class="stat-icon">⏳</div>
+    </div>
 
-                <div class="col-md-4">
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-body">
-                            <h5>Pending Approvals</h5>
-                            <h2>8</h2>
-                        </div>
-                    </div>
-                </div>
+    <!-- CHART -->
+    <div class="stat-card chart-card">
+      <div class="stat-label">Memos (This Week)</div>
 
-            </div>
+      <div class="chart-container">
+        <div class="bar" style="height: 40%;"></div>
+        <div class="bar" style="height: 70%;"></div>
+        <div class="bar" style="height: 30%;"></div>
+        <div class="bar" style="height: 90%;"></div>
+        <div class="bar" style="height: 60%;"></div>
+        <div class="bar" style="height: 20%;"></div>
+        <div class="bar" style="height: 50%;"></div>
+      </div>
 
-            <!-- Example Table -->
-          <div class="activity-log">
+      <div class="chart-labels">
+        <span>Mon</span>
+        <span>Tue</span>
+        <span>Wed</span>
+        <span>Thu</span>
+        <span>Fri</span>
+        <span>Sat</span>
+        <span>Sun</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ACTIVITY -->
+  <div class="activity-log">
     <div class="log-header">
       <h2 class="log-title">Recent Activity</h2>
-      <div class="log-filters">
+
+      <div class="controls">
         <input type="text" placeholder="Search" class="search-input">
         <select class="sort-select">
           <option>Sort by</option>
         </select>
       </div>
     </div>
+
     <table class="data-table">
       <thead>
         <tr>
@@ -240,21 +269,23 @@
           <td>11:26 AM</td>
         </tr>
         <tr>
-          <td>EXP-0001</td>
+          <td>EXP-0002</td>
           <td>Export</td>
-          <td>logs_01-01-2026.pdf</td>
-          <td>March 02, 2026</td>
+          <td>logs_february.pdf</td>
+          <td>March 03, 2026</td>
           <td>03:49 PM</td>
         </tr>
         <tr>
-          <td>IMP-0002</td>
+          <td>IMP-0003</td>
           <td>Import</td>
-          <td>records_february.csv</td>
-          <td>March 03, 2026</td>
+          <td>records_march.csv</td>
+          <td>March 04, 2026</td>
           <td>01:11 PM</td>
         </tr>
       </tbody>
     </table>
   </div>
+
 </div>
+
 {% endblock %}

@@ -103,9 +103,113 @@
     color: #666;
 }
 
+
+
+
+/* TABLE CONTAINER */
 .table-container {
+    background: white;
+    border-radius: 8px;
     overflow-x: auto;
+    overflow: visible;
+    width: 100%;
 }
+
+/* TABLE */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto; /* 🔥 allow flexibility */
+}
+
+/* HEADER */
+thead {
+    background: #E9EDF2;
+}
+
+/* DEFAULT CELL STYLE */
+th, td {
+    padding: clamp(6px, 1vw, 14px); /* 🔥 auto adjust spacing */
+    text-align: left;
+    white-space: normal;
+    word-break: break-word;
+    font-size: clamp(12px, 0.9vw, 14px); /* 🔥 responsive text */
+}
+
+/* COLUMN WIDTHS (FLEXIBLE) */
+th:nth-child(1), td:nth-child(1) {
+    width: 60px;
+}
+
+th:nth-child(2), td:nth-child(2) {
+    min-width: 200px;
+}
+
+
+/* ROWS */
+tbody tr {
+    border-top: 1px solid #eee;
+    transition: background 0.2s ease;
+}
+
+tbody tr:hover {
+    background: #f9fbfd;
+}
+@media (max-width: 1024px) {
+    th, td {
+        padding: 8px;
+        font-size: 13px;
+    }
+
+    th:nth-child(2) {
+        min-width: 150px;
+    }
+}
+@media (max-width: 768px) {
+    th, td {
+        padding: 6px;
+        font-size: 12px;
+    }
+
+    /* shrink less important columns */
+    th:nth-child(1), td:nth-child(1) {
+        width: 50px;
+    }
+
+    /* subject still readable */
+    th:nth-child(2) {
+        min-width: 140px;
+    }
+
+    /* actions tighter */
+/* ACTION COLUMN (tight + consistent) */
+th:last-child,
+td:last-child {
+    width: 90px;          /* fixed for stability */
+    min-width: 90px;
+    max-width: 90px;
+    white-space: nowrap;
+    text-align: center;
+    padding: 4px;
+}
+}
+
+@media (max-width: 480px) {
+    th, td {
+        padding: 5px;
+        font-size: 11px;
+    }
+
+    .actions {
+        gap: 4px;
+    }
+}
+.action-icons { display:flex; gap:10px; align-items:center; }
+.action-icons iconify-icon { font-size:20px; cursor:pointer; color:#6F1020; }
+.action-icons iconify-icon.delete-btn { color: #f44336 !important; }
+.delete-btn:hover { transform: scale(1.1); }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+tr.row-fade { animation: fadeOut 0.3s forwards; }
 
 /* TABLE BASE */
 .records-table {
@@ -183,7 +287,20 @@
 .actions {
     text-align: center;
 }
-
+td.actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+}
+.action-btn {
+    padding: 2px 5px;
+    font-size: 11px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    line-height: 1;
+}
 .actions a {
     text-decoration: none;  /* remove underline */
     color: #28a745;         /* green like before */
@@ -262,6 +379,107 @@
     gap: 12px;
     margin-top: 25px;
 }
+
+.actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* MENU */
+.action-menu {
+    position: relative;
+}
+td.actions {
+    width: 50px;
+    text-align: center;
+    padding: 2px;
+}
+
+.menu-btn {
+    padding: 2px 6px;
+    font-size: 14px;
+}
+
+.menu-dropdown {
+    min-width: 120px;
+    right: 0;
+}
+.menu-btn {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* DROPDOWN */
+.menu-dropdown {
+    position: absolute;
+    top: 30px;
+    right: 0; /* anchor to right side */
+
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 6px; /* smaller = more square */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+
+    display: none;
+    flex-direction: column;
+
+    /* 💥 KEY FIXES */
+    width: max-content;     /* exact fit to content */
+    max-width: 150px;       /* prevent overflow */
+    padding: 3px;           /* tighter box */
+    gap: 2px;
+
+    overflow: hidden;       /* no spill */
+    z-index: 100;
+}
+
+/* BUTTONS */
+.menu-dropdown button {
+    padding: 4px 6px;
+    border: none;
+    background: none;
+    cursor: pointer;
+
+    font-size: 12px;
+    line-height: 1.2;
+
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    white-space: nowrap;    /* keep text in one line */
+}
+
+/* HOVER */
+.menu-dropdown button:hover {
+    background: #f5f5f5;
+    border-radius: 4px;
+}
+
+.vertical-header {
+    writing-mode: vertical-rl;   /* 🔥 makes text vertical */
+    transform: rotate(180deg);   /* so it reads top → bottom */
+
+    text-align: center;
+    vertical-align: middle;
+
+    background-color: #b71c1c;
+    color: #fff;
+
+    padding: 10px 4px;           /* adjust spacing */
+    width: 40px;                 /* narrow column */
+}
+/* HISTORY BUTTON */
+.history-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 16px;
+}
+
 
 .btn-cancel {
     background-color: #717171;
@@ -618,7 +836,9 @@
                     <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Remarks</th>
                     <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Notes</th>
                     <th colspan="2" style="background-color:#e53935; color:#fff;">Released</th>
-                    <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Actions</th>
+                    {% if current_user.is_authenticated %}
+                    <th rowspan="2" class="vertical-header" style="background-color:#b71c1c; color:#fff;">Actions</th>
+                    {% endif %}
                 </tr>
                 <tr>
                     <th style="background-color:#fdecea; color:#333;">Date</th>
@@ -689,25 +909,39 @@
                     <td>{{ memo.released_to }}</td>
 
                     <!-- Actions -->
-                    <td class="actions">
-                        <button class="update-btn"
-                            data-id="{{ memo.id }}"
-                            data-source_type="{{ memo.source_type }}"
-                            data-number="{{ memo.memo_number }}"
-                            data-from="{{ memo.from_office }}"
-                            data-forwarded="{{ memo.forwarded_by }}"
-                            data-subject="{{ memo.subject }}"
-                            data-remarks="{{ memo.remarks }}"
-                            data-notes="{{ memo.notes }}"
-                            data-date="{{ memo.date }}"
-                            data-released_to="{{ memo.released_to }}"
-                            data-released_date="{{ memo.released_date }}"
-                            data-status="{{ memo.status }}"
-                        >
-                            ⚙️
-                        </button>
-                        <button class="delete-btn" data-id="{{ memo.id }}">🗑️</button>              
-                    </td>
+                    {% if current_user.is_authenticated %}
+                        <td>
+
+                            <!-- ACTION MENU -->
+                            <div lass="action-menu">
+                                <button class="menu-btn">⋮</button>
+
+                                <div class="menu-dropdown">
+                                    <button class="update-btn"
+                                        data-id="{{ memo.id }}"
+                                        data-source_type="{{ memo.source_type }}"
+                                        data-number="{{ memo.memo_number }}"
+                                        data-from="{{ memo.from_office }}"
+                                        data-forwarded="{{ memo.forwarded_by }}"
+                                        data-subject="{{ memo.subject }}"
+                                        data-remarks="{{ memo.remarks }}"
+                                        data-notes="{{ memo.notes }}"
+                                        data-date="{{ memo.date }}"
+                                        data-released_to="{{ memo.released_to }}"
+                                        data-released_date="{{ memo.released_date }}"
+                                        data-status="{{ memo.status }}">
+                                        ✏️ Update
+                                    </button>
+
+                                    <button class="delete-btn" data-id="{{ memo.id }}">
+                                        🗑️ Delete
+                                    </button>
+                                </div>
+                            </div>
+
+                        </td>
+                    {% endif %}
+
                 </tr>
                 {% endfor %}
             </tbody>
@@ -765,6 +999,32 @@
 <br><br>
 
 <script>
+
+document.querySelectorAll(".menu-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+
+        document.querySelectorAll(".menu-dropdown")
+            .forEach(m => m.style.display = "none");
+
+        const menu = btn.nextElementSibling;
+
+        menu.style.display = "flex"; // show first so width is known
+
+        const rect = btn.getBoundingClientRect();
+
+        menu.style.position = "fixed";
+        menu.style.top = rect.bottom + "px";
+
+        // ✅ LEFT side of button
+        menu.style.left = (rect.left - menu.offsetWidth + btn.offsetWidth) + "px";
+    });
+});
+
+document.addEventListener("click", () => {
+    document.querySelectorAll(".menu-dropdown")
+        .forEach(m => m.style.display = "none");
+});
 document.addEventListener("DOMContentLoaded", function () {
 
     let activeRow = null;
@@ -775,7 +1035,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const drawer = document.getElementById("memoDrawer");
 
         // 🚫 Ignore buttons
-        if (e.target.closest(".actions button") || e.target.closest(".update-new-btn")) {
+        if (e.target.closest(".actions") || e.target.closest(".update-new-btn")) {
             return;
         }
 

@@ -7,15 +7,21 @@ from sqlalchemy import or_
 
 main = Blueprint("main", __name__)
 
+from datetime import date
+
 @main.route("/")
 def home():
     search = request.args.get("search", "")
-    date_filter = request.args.get("date", "")
     type_filter = request.args.get("type", "communication")
+
+    # 📅 get filters OR default to current month/year
+    today = date.today()
+    month_filter = request.args.get("month") or today.month
+    year_filter = request.args.get("year") or today.year
 
     query = Memo.query.filter_by(source_type=type_filter)
 
-    # 🔍 search filter (EXPANDED)
+    # 🔍 search filter
     if search:
         query = query.filter(
             or_(
@@ -26,25 +32,21 @@ def home():
             )
         )
 
-    # 📅 date filter
-    month_filter = request.args.get("month")
-    year_filter = request.args.get("year")
-
-    if month_filter:
-        query = query.filter(Memo.month == int(month_filter))
-
-    if year_filter:
-        query = query.filter(Memo.year == int(year_filter))
+    # 📅 ALWAYS apply month/year (default = current)
+    query = query.filter(Memo.month == int(month_filter))
+    query = query.filter(Memo.year == int(year_filter))
 
     memos = query.order_by(Memo.serial_number.desc()).all()
 
     holidays = Holiday.query.filter(
-        Holiday.date >= date.today()
+        Holiday.date >= today
     ).order_by(Holiday.date.asc()).limit(3).all()
 
     return render_template(
         "home.html",
         memos=memos,
         holidays=holidays,
-        selected_type=type_filter
+        selected_type=type_filter,
+        selected_month=month_filter,   # 👈 optional (for UI)
+        selected_year=year_filter      # 👈 optional
     )
