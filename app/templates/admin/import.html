@@ -74,9 +74,17 @@
 }
 
 .validation-text {
-  font-size: 0.75rem;
-  color: #888;
-  margin-bottom: 25px;
+  display: none;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.validation-text.success {
+  color: #2ecc71;
+}
+
+.validation-text.error {
+  color: #e74c3c;
 }
 
 /* Export UI Components */
@@ -164,6 +172,8 @@
   font-size: 0.85rem;
   color: #444;
 }
+
+
 </style>
 {% endblock %}
 {% block content %}
@@ -181,44 +191,161 @@
         <div class="input-row">
           <label for="file-upload" class="btn-choose">Choose File:</label>
           <input type="file" id="file-upload" hidden>
-          <input type="text" class="file-display" placeholder="Ex: filename.csv / filename.xlsx" readonly>
+          <input type="text" id="file-display" class="file-display" placeholder="Ex: filename.csv / filename.xlsx" readonly>
+          <button id="upload-btn" class="btn-action">Upload</button>
         </div>
-        <p class="validation-text">(Error/Validation Messages will appear below)</p>
-        <button class="btn-action">Upload</button>
       </div>
-    </div>
+        <p id="import-message" class="validation-text" style="display:none;"></p>
+      <div class="ui-card">
+        <h2 class="card-header">Export Data</h2>
+        <div class="card-content">
+          <div class="form-item">
+            <label>Memo Type:</label>
+            <div class="check-group">
+              <label><input type="checkbox" id="type-cm"> Communications (CM)</label>
+              <label><input type="checkbox" id="type-op"> Memo (OP)</label>
+            </div>
+          </div>
 
-    <div class="ui-card">
-      <h2 class="card-header">Export Data</h2>
-      <div class="card-content">
-        <div class="form-item">
-          <label>Export Type:</label>
-          <div class="check-group">
-            <label><input type="checkbox"> Records</label>
-            <label><input type="checkbox"> System Logs</label>
+          <div class="form-item">
+            <label>Date From:</label>
+            <input type="date" id="date-from" class="input-field">
           </div>
-        </div>
-        <div class="form-item">
-          <label>Date From:</label>
-          <input type="date" class="input-field">
-        </div>
-        <div class="form-item">
-          <label>Date To:</label>
-          <input type="date" class="input-field">
-        </div>
-        <div class="form-item">
-          <label>Format:</label>
-          <div class="format-group">
-            <label><input type="checkbox"> Excel</label>
-            <span class="v-line">|</span>
-            <label><input type="checkbox"> CSV</label>
-            <span class="v-line">|</span>
-            <label><input type="checkbox"> PDF</label>
+
+          <div class="form-item">
+            <label>Date To:</label>
+            <input type="date" id="date-to" class="input-field">
           </div>
+
+          <div class="form-item">
+            <label>Format:</label>
+            <div class="format-group">
+              <label><input type="checkbox" id="format-excel"> Excel</label>
+              <span class="v-line">|</span>
+              <label><input type="checkbox" id="format-csv"> CSV</label>
+              <span class="v-line">|</span>
+              <label><input type="checkbox" id="format-pdf"> PDF</label>
+            </div>
+          </div>
+
+          <button id="generate-export" class="btn-action">Generate Export</button>
         </div>
-        <button class="btn-action">Generate Export</button>
       </div>
     </div>
   </div>
 </div>
+<script>
+document.getElementById("generate-export").addEventListener("click", () => {
+
+  const cm = document.getElementById("type-cm").checked;
+  const op = document.getElementById("type-op").checked;
+
+  const dateFrom = document.getElementById("date-from").value;
+  const dateTo = document.getElementById("date-to").value;
+
+  const excel = document.getElementById("format-excel").checked;
+  const csv = document.getElementById("format-csv").checked;
+  const pdf = document.getElementById("format-pdf").checked;
+
+  if(!cm && !op){
+    alert("Select at least one memo type.");
+    return;
+  }
+
+  if(!excel && !csv && !pdf){
+    alert("Select export format.");
+    return;
+  }
+
+  const params = new URLSearchParams({
+    cm,
+    op,
+    excel,
+    csv,
+    pdf,
+    dateFrom,
+    dateTo
+  });
+
+  window.location.href = "/admin/export-memos?" + params.toString();
+
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const fileInput = document.getElementById("file-upload");
+  const fileDisplay = document.getElementById("file-display");
+  const uploadBtn = document.getElementById("upload-btn");
+  const message = document.getElementById("import-message");
+
+  /* Show filename */
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".csv")) {
+      showMessage("⚠ Only .xlsx or .csv files allowed.");
+      fileInput.value = "";
+      fileDisplay.value = "";
+      return;
+    }
+
+    fileDisplay.value = file.name;
+    hideMessage();
+  });
+
+  /* Upload file */
+  uploadBtn.addEventListener("click", async () => {
+    const file = fileInput.files[0];
+
+    if (!file) {
+      showMessage("⚠ Please choose a file first.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    showMessage("Uploading...");
+
+    try {
+      const response = await fetch("/admin/import-memos", {
+        method: "POST",
+        body: formData
+      });
+
+      // ⚠ handle non-JSON errors (important)
+      if (!response.ok) {
+        throw new Error("Server error");
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        showMessage(`✔ Imported ${data.imported} records. Skipped ${data.skipped}.`);
+
+        fileInput.value = "";
+        fileDisplay.value = "";
+      } else {
+        showMessage(`⚠ ${data.error}`);
+      }
+
+    } catch (err) {
+      console.error(err);
+      showMessage("❌ Upload failed. Check server.");
+    }
+  });
+
+  const showMessage = (text) => {
+    message.style.display = "block";
+    message.textContent = text;
+  };
+
+  const hideMessage = () => {
+    message.style.display = "none";
+    message.textContent = "";
+  };
+
+});
+</script>
 {% endblock %}

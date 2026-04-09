@@ -22,7 +22,8 @@ python -m venv venv
 .\venv\Scripts\activate
 
 pip install flask flask-sqlalchemy flask-login flask-migrate flask-wtf python-dotenv
-
+pip install openpyxl pandas
+pip install reportlab
 pip freeze > requirements.txt
 
 flask db init

@@ -5,7 +5,8 @@ class Memo(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     source_type = db.Column(db.String(20))  # OP or General
-
+    thread_id = db.Column(db.String(50), nullable=False)    
+    
     memo_number = db.Column(db.String(50))
 
     serial_number = db.Column(db.Integer, nullable=True) 

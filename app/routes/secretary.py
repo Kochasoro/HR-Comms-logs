@@ -1,3 +1,5 @@
+import uuid
+
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app.models.memo import Memo
 from app.services.memo_service import MemoService
@@ -14,18 +16,15 @@ secretary_bp = Blueprint("secretary", __name__, url_prefix="/secretary")
 
 
 
-@secretary_bp.route("/")
-@role_required("secretary")
-def dashboard():
-    memos = MemoService.get_all()
-    return render_template("home.html", memos=memos)
+
 
 @secretary_bp.route("/new", methods=["POST"])
 @login_required
 def new_memo():
     try:
         print("FORM:", request.form)
-
+        thread_id = str(uuid.uuid4())
+        
         # 📅 Parse dates
         raw_date = request.form.get("date")
         parsed_date = datetime.strptime(raw_date, "%Y-%m-%d").date() if raw_date else None
@@ -76,6 +75,7 @@ def new_memo():
             "serial_number": next_serial,
             "month": month,
             "year": year,
+            "thread_id": thread_id,
 
             "date": parsed_date,
             "subject": request.form.get("subject"),
@@ -109,6 +109,8 @@ def new_memo():
 @login_required
 def edit_memo(id):
     memo = Memo.query.get_or_404(id)
+
+    thread_memos = Memo.query.filter_by(thread_id=memo.thread_id).all()    
     original_data = {
         "memo_number": memo.memo_number,
         "subject": memo.subject,
@@ -154,7 +156,11 @@ def edit_memo(id):
             "remarks", "notes", "released_to", "status",
             "released_date", "date"
         ]
-
+        for m in thread_memos:
+            m.subject = request.form.get("subject")
+            m.from_office = request.form.get("from_office")
+            m.forwarded_by = request.form.get("forwarded_by")
+            
         for field in fields:
             old = normalize(original_data[field])
             new = normalize(getattr(memo, field))
@@ -198,10 +204,9 @@ def update_memo(id):
         # 🔑 Type
         source_type = request.form.get("source_type") or original.source_type
 
-        today = datetime.now()
-        month = today.month
-        year = today.year
-
+        month = parsed_date.month
+        year = parsed_date.year
+        
         # 🔢 Get next serial (DO NOT exclude self — this is a new entry)
         last_memo = Memo.query.filter_by(
             month=month,
@@ -223,6 +228,7 @@ def update_memo(id):
             "serial_number": next_serial,
             "month": month,
             "year": year,
+            "thread_id": original.thread_id,
 
             "date": parsed_date,
             "subject": request.form.get("subject") or original.subject,

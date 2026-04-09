@@ -12,7 +12,7 @@ from datetime import date
 @main.route("/")
 def home():
     search = request.args.get("search", "")
-    type_filter = request.args.get("type", "communication")
+    type_filter = request.args.get("type", "CM")
 
     # 📅 get filters OR default to current month/year
     today = date.today()
