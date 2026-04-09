@@ -130,46 +130,17 @@ label { font-size: 0.85rem; color: #555; width: 300px; }
       <form method="POST" enctype="multipart/form-data">
         <input type="hidden" name="form_type" value="general">
 
-        <div class="form-body">
-
-          <div class="form-group">
-            <label>System Name:</label>
-            <input name="system_name"
-                  value="{{ settings.system_name }}"
-                  class="wide-input">
-          </div>
-
-          <div class="form-group">
-            <label>Upload Logo:</label>
-            <input type="file" name="logo" class="wide-input">
-          </div>
-
-          <div class="form-group">
-            <label>Timezone:</label>
-            <select name="timezone" class="wide-input">
-              <option value="Asia/Manila"
-                {% if settings.timezone == "Asia/Manila" %}selected{% endif %}>
-                Asia/Manila
-              </option>
-              <option value="UTC"
-                {% if settings.timezone == "UTC" %}selected{% endif %}>
-                UTC
-              </option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Language:</label>
-            <select name="language" class="wide-input">
-              <option>English</option>
-            </select>
-          </div>
-
-          <div class="btn-right">
-            <button class="btn-save" type="submit">Save Changes</button>
-          </div>
-
+        <div class="form-group">
+          <label>System Name:</label>
+          <input name="system_name" value="{{ settings.system_name }}" class="wide-input">
         </div>
+
+        <div class="form-group">
+          <label>Upload Logo:</label>
+          <input type="file" name="logo" class="wide-input">
+        </div>
+
+        <button class="btn-save" type="submit">Save Changes</button>
       </form>
     </div>
 

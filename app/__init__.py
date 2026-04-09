@@ -2,6 +2,7 @@ from flask import Flask
 from app.extensions import db, login_manager, migrate
 from app.config import Config
 from app import models
+from app.models.settings import SystemSettings
 from app.routes.secretary import secretary_bp
 from app.routes.auth import auth_bp   
 from app.routes.admin import admin_bp
@@ -34,6 +35,11 @@ def create_app():
     # ✅ Register CLI command
     app.cli.add_command(seed_command)
     app.cli.add_command(seed_memos)
+
+    @app.context_processor
+    def inject_settings():
+        settings = SystemSettings.query.first()
+        return dict(settings=settings)
     
     print(app.url_map)
 

@@ -49,7 +49,7 @@ def login():
             if user.role == "admin":
                 return redirect(url_for("admin.dashboard"))
             elif user.role == "secretary":
-                return redirect(url_for("secretary.dashboard"))
+                return redirect(url_for("main.home"))
 
         flash("Invalid username or password")
 

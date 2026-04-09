@@ -185,8 +185,12 @@ textarea { resize:vertical; height:70px; }
 <!-- TOPBAR -->
 <div class="topbar">
 <div class="topbar-left">
-<img src="{{ url_for('static', filename='img/logo.png') }}" class="logo">
-<div class="title">Western Mindanao State University</div>
+{% if settings and settings.logo %}
+  <img src="{{ url_for('static', filename=settings.logo) }}" class="logo">
+{% else %}
+  <img src="{{ url_for('static', filename='img/logo.png') }}" class="logo">
+{% endif %}
+<div class="title"> {{ settings.system_name }}</div>
 </div>
 
 <div class="topbar-right">
@@ -197,17 +201,13 @@ textarea { resize:vertical; height:70px; }
     {% else %}
       Guest
     {% endif %}
-  </span> | |
-
-  {% if current_user.is_authenticated %}
-    <a href="{{ url_for('auth.logout') }}" style="color:white; text-decoration:none;">
-      Logout
-    </a>
-  {% else %}
-    <a href="{{ url_for('auth.login') }}" style="color:white; text-decoration:none;">
-      Login
-    </a>
-  {% endif %}
+  </span> 
+    {% if not current_user.is_authenticated %}
+      ||
+      <a href="{{ url_for('auth.login') }}" style="color:white; text-decoration:none;">
+        Login
+      </a>
+    {% endif %}
 </div>
 
 </div>
@@ -215,6 +215,8 @@ textarea { resize:vertical; height:70px; }
 {% if current_user.is_authenticated %}
 <div class="sidebar">
 
+    {% if current_user.role == "admin" %}
+    
     <a href="{{ url_for('admin.dashboard') }}" title="Dashboard">
         <img src="{{ url_for('static', filename='img/dashboard.svg') }}" alt="Dashboard">
     </a>
@@ -223,22 +225,32 @@ textarea { resize:vertical; height:70px; }
         <img src="{{ url_for('static', filename='img/users.svg') }}" alt="Users">
     </a>
 
-    <a href="{{ url_for('main.home') }}" title="Memos">
-        <img src="{{ url_for('static', filename='img/memos.svg') }}" alt="Memos">
-    </a>
+
 
     <a href="{{ url_for('admin.logs_page') }}" title="Reports">
         <img src="{{ url_for('static', filename='img/reports.svg') }}" alt="Reports">
     </a>
 
+    {% endif %}
+
+    {% if current_user.role == "admin" or current_user.role == "secretary" %}
+    <a href="{{ url_for('main.home') }}" title="Memos">
+        <img src="{{ url_for('static', filename='img/memos.svg') }}" alt="Memos">
+    </a>
+
+    {% endif %}
+
+    {% if current_user.role == "admin" %}
     <a href="{{ url_for('admin.import_page') }}" title="Import/Export">
         <img src="{{ url_for('static', filename='img/import.svg') }}" alt="Import">
     </a>
-
     <a href="{{ url_for('admin.settings_general') }}" title="Settings">
         <img src="{{ url_for('static', filename='img/settings.svg') }}" alt="Settings">
     </a>
 
+    {% endif %}
+
+    <!-- Logout ALWAYS visible -->
     <a href="{{ url_for('auth.logout') }}" title="Logout">
         <img src="{{ url_for('static', filename='img/logout.svg') }}" alt="Logout">
     </a>
@@ -256,535 +268,9 @@ textarea { resize:vertical; height:70px; }
   <iconify-icon icon="mdi:delete-outline" class="delete-btn"></iconify-icon>
 <iconify-icon icon="mdi:pencil-outline" onclick="openEditMemo()"></iconify-icon>
 </div>
-<!-- ADD MEMO MODAL -->
- 
-<div id="addMemoModal" class="modal">
-  <div class="modal-content">
 
-    <h2>Add Memo</h2>
-
-    <form id="memo_form">
-
-      <!-- Source Type -->
-      <div class="form-group">
-        <label>Source Type</label>
-        <select name="source_type" id="source_type_outside" onchange="updateFormFields()">
-          <option value="communication" selected>communication</option>
-          <option value="OP">OP</option>
-        </select>
-      </div>
-
-      <!-- Memo Number -->
-      <div class="form-group" id="memoNumberGroup" style="display: none;">
-        <label>Memo #</label>
-        <input name="memo_number" id="memoNumber">
-      </div>
-
-      <!-- Date -->
-      <div class="form-group">
-        <label>Date</label>
-        <input type="date" name="date" id="memoDate">
-      </div>
-
-      <!-- From + Forwarded -->
-      <div class="form-row">
-        <div class="form-group">
-          <label>From</label>
-          <input name="from_office" id="memoFrom">
-        </div>
-        <div class="form-group">
-          <label>Forwarded By</label>
-          <input name="forwarded_by" id="memoForwarded">
-        </div>
-      </div>
-
-      <!-- Subject -->
-      <div class="form-group">
-        <label>Subject</label>
-        <input name="subject" id="memoSubject">
-      </div>
-
-      <!-- Remarks -->
-      <div class="form-group">
-        <label>Remarks</label>
-        <textarea name="remarks" id="memoRemarks"></textarea>
-      </div>
-
-      <!-- Notes -->
-      <div class="form-group">
-        <label>Notes</label>
-        <textarea name="notes" id="memoNotes"></textarea>
-      </div>
-
-      <!-- Release Section -->
-      <div class="form-row">
-        <div class="form-group">
-          <label>Released To</label>
-          <input name="released_to" id="memoReleaseTo">
-        </div>
-        <div class="form-group">
-          <label>Released Date</label>
-          <input type="date" name="released_date" id="memoReleaseDate">
-        </div>
-      </div>
-
-      <div class="modal-buttons">
-        <button type="submit" class="btn">Submit</button>
-        <button type="button" class="btn cancel" onclick="closeModals()">Cancel</button>
-      </div>
-
-    </form>
-
-  </div>
-</div>
-<!-- EDIT MEMO MODAL -->
-<div id="editMemoModal" class="modal">
-  <form method="POST" id="editMemoForm" class="modal-content">
-
-    <h2>Edit Memo</h2>
-
-    <!-- From + Forwarded -->
-    <div class="form-row">
-      <div class="form-group">
-        <label>From</label>
-        <input name="from_office" id="editMemoFrom">
-      </div>
-
-      <div class="form-group">
-        <label>Forwarded By</label>
-        <input name="forwarded_by" id="editMemoForwarded">
-      </div>
-    </div>
-
-    <!-- Date -->
-    <div class="form-group">
-      <label>Date</label>
-      <input type="date" name="date" id="editMemoDate">
-    </div>
-
-    <!-- Subject -->
-    <div class="form-group">
-      <label>Subject</label>
-      <input name="subject" id="editMemoSubject">
-    </div>
-
-    <!-- Remarks -->
-    <div class="form-group">
-      <label>Remarks</label>
-      <textarea name="remarks" id="editMemoRemarks"></textarea>
-    </div>
-
-    <!-- Notes -->
-    <div class="form-group">
-      <label>Notes</label>
-      <textarea name="notes" id="editMemoNotes"></textarea>
-    </div>
-
-    <!-- Release Section -->
-    <div class="form-row">
-      <div class="form-group">
-        <label>Released To</label>
-        <input name="released_to" id="editMemoReleaseTo">
-      </div>
-
-      <div class="form-group">
-        <label>Released Date</label>
-        <input type="date" name="released_date" id="editMemoReleaseDate">
-      </div>
-    </div>
-
-    <div class="moda-bluttons">
-      <button type="submit" class="btn">Save Changes</button>
-      <button type="button" class="btn cancel" onclick="closeModals()">Cancel</button>
-    </div>
-
-  </form>
-</div>
-
-
-
-<!-- DELETE CONFIRM MODAL -->
-<div id="deleteConfirmModal" class="modal">
-  <div class="modal-content" style="width:400px; padding:25px; text-align:center;">
-    <iconify-icon icon="mdi:alert-circle" style="font-size:48px; color:#f44336; margin-bottom:15px;"></iconify-icon>
-    <h2>Confirm Delete</h2>
-    <p>Are you sure you want to delete this memo permanently?</p>
-    <p style="font-weight:500; color:#B22222;">This action cannot be undone.</p>
-    <div class="modal-buttons" style="gap:15px;">
-      <button class="btn cancel" onclick="closeDeleteConfirm()" style="background:#6c757d;">Cancel</button>
-      <button class="btn" onclick="confirmDelete()" style="background:#f44336;">Delete Memo</button>
-    </div>
-  </div>
-</div>
 {% block scripts %}{% endblock %}
 
-<script>
 
-/* =========================
-HOLIDAY FUNCTIONS
-========================= */
-
-
-function renderHolidayCard(holiday){
-
-const panel=document.querySelector('.holiday-panel');
-
-const card=document.createElement('div');
-
-card.className='holiday-card';
-
-card.innerHTML=`
-<iconify-icon icon="mdi:calendar"></iconify-icon>
-<div>
-<div class="holiday-top">
-<span class="holiday-title">${holiday.title}</span>
-<span class="holiday-badge">${holiday.badge}</span>
-</div>
-<p>${holiday.desc}</p>
-</div>
-`;
-
-panel.insertBefore(card,panel.firstChild);
-
-}
-
-function loadHolidays(){
-
-const holidays=JSON.parse(localStorage.getItem('holidays')||'[]');
-
-holidays.forEach(renderHolidayCard);
-
-}
-
-
-/* =========================
-MEMO FUNCTIONS
-========================= */
-
-let editingSeries=null;
-let deleteSeries=null;
-let deleteRow=null;
-let deleteId = null;
-
-function openAddMemo(){
-  const modal = document.getElementById("addMemoModal");
-  modal.classList.add("show");
-}
-function openEditMemo(){
-  const modal = document.getElementById("editMemoModal");
-  console.log("Opening edit modal", modal);
-  modal.classList.add("show");
-}
-function closeModals(){
-  document.querySelectorAll(".modal").forEach(modal => {
-    modal.classList.remove("show");
-  });
-}
-document.addEventListener("click", function(e) {
-  if (e.target.classList.contains("modal")) {
-    closeModals();
-  }
-});
-/* ADD MEMO */
-const form = document.getElementById("memo_form");
-
-form.addEventListener("submit", async function (e) {
-    e.preventDefault();
-
-    const formData = new FormData(form);
-
-    // basic validation
-    const from = formData.get("from_office")?.trim();
-    const subject = formData.get("subject")?.trim();
-
-    if (!from || !subject) {
-        alert("Please fill From and Subject");
-        return;
-    }
-
-    try {
-        const res = await fetch("/secretary/new", {
-            method: "POST",
-            body: formData
-        });
-
-        if (!res.ok) {
-            throw new Error("HTTP error " + res.status);
-        }
-
-        const data = await res.json(); // ✅ backend already returns JSON
-
-        console.log("Server response:", data);
-
-        if (data.success) {
-            form.reset();
-            closeModals();
-        } else {
-            alert("Failed to save memo.");
-        }
-
-    } catch (err) {
-        console.error("ERROR:", err);
-        alert("Something went wrong.");
-    }
-});
-function updateFormFields(){
-    const type = document.getElementById("source_type_outside").value;
-
-    const memoFrom = document.getElementById("memoFrom");
-    const memoForwarded = document.getElementById("memoForwarded");
-    const memoNumberGroup = document.getElementById("memoNumberGroup");
-
-    if(type === "OP"){
-        memoFrom.value = "OP";
-        memoForwarded.value = "Records";
-
-        // 🔒 lock fields
-        memoFrom.readOnly = true;
-        memoForwarded.readOnly = true;
-
-        // 🙈 hide Memo #
-        memoNumberGroup.style.display = "block";
-
-    } else {
-        memoFrom.value = "";
-        memoForwarded.value = "";
-
-        // 🔓 unlock fields
-        memoFrom.readOnly = false;
-        memoForwarded.readOnly = false;
-
-        // 👀 show Memo #
-        memoNumberGroup.style.display = "none";
-    }
-}
-
-
-/* =========================
-EDIT MEMO
-========================= */
-// HANDLE BUTTON CLICK (set form + fill data)
-document.addEventListener('click', function(e) {
-    const btn = e.target.closest(".update-new-btn, .update-btn");
-    if (!btn) return;
-
-    const form = document.getElementById("editMemoForm");
-    const id = btn.dataset.id;
-
-    const sourceType = btn.dataset.source_type;
-
-    const memoFrom = document.getElementById("editMemoFrom");
-    const memoForwarded = document.getElementById("editMemoForwarded");
-
-    // Fill fields
-    memoFrom.value = btn.dataset.from || "";
-    memoForwarded.value = btn.dataset.forwarded || "";
-    document.getElementById("editMemoSubject").value = btn.dataset.subject || "";
-    document.getElementById("editMemoRemarks").value = btn.dataset.remarks || "";
-    document.getElementById("editMemoNotes").value = btn.dataset.notes || "";
-    document.getElementById("editMemoDate").value = btn.dataset.date || "";
-    document.getElementById("editMemoReleaseTo").value = btn.dataset.released_to || "";
-    document.getElementById("editMemoReleaseDate").value = btn.dataset.released_date || "";
-
-    // 🔒 Lock if OP
-    if (sourceType === "OP") {
-        // 🔒 lock
-        memoFrom.disabled = true;
-        memoForwarded.disabled = true;
-
-        // 🎨 style
-        memoFrom.classList.add("locked");
-        memoForwarded.classList.add("locked");
-
-    } else {
-        // 🔓 unlock
-        memoFrom.disabled = false;
-        memoForwarded.disabled = false;
-
-        // remove style
-        memoFrom.classList.remove("locked");
-        memoForwarded.classList.remove("locked");
-    }
-
-    // Decide route
-    if (btn.classList.contains("update-btn")) {
-        form.action = `/secretary/edit/${id}`;
-    } else if (btn.classList.contains("update-new-btn")) {
-        form.action = `/secretary/update/${id}`;
-    }
-
-    openEditMemo();
-});
-
-
-// 🚀 HANDLE FORM SUBMIT (AJAX - no page redirect)
-document.getElementById("editMemoForm").addEventListener("submit", function(e) {
-    e.preventDefault();
-
-    const form = e.target;
-    const url = form.action;
-    const formData = new FormData(form);
-
-    fetch(url, {
-        method: "POST",
-        body: formData
-    })
-    .then(res => {
-        if (!res.ok) {
-            throw new Error("HTTP error " + res.status);
-        }
-        return res.json(); // ✅ ONLY once
-    })
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert("Error: " + (data.error || "Unknown error"));
-        }
-    })
-    .catch(err => {
-        console.error("Submit error:", err);
-        alert("Something went wrong");
-    });
-});
-/* =========================
-DELETE MEMO WITH WARNING
-========================= */
-let rowToDelete = null;
-let memoIdToDelete = null;
-
-document.addEventListener("DOMContentLoaded", function() {
-    document.addEventListener('click', function(e){ 
-        const btn = e.target.closest(".delete-btn");
-        if(!btn) return;
-
-        console.log("Delete button clicked!", btn.dataset.id);
-
-        rowToDelete = btn.closest("tr");
-        memoIdToDelete = btn.dataset.id;
-
-        const modal = document.getElementById("deleteConfirmModal");
-        if(modal){
-            modal.classList.add("show");   // ✅ show the modal
-            console.log("Modal opened");
-        } else {
-            console.error("Modal not found!");
-        }
-    });
-});
-
-function confirmDelete() {
-    if (!memoIdToDelete) return;
-
-    fetch(`/secretary/delete/${memoIdToDelete}`, { method: "POST" })
-    .then(res => res.json())
-    .then(data => {
-        if(data.success){
-            if(rowToDelete){
-                rowToDelete.classList.add("row-fade");
-                setTimeout(() => rowToDelete.remove(), 300);
-            }
-        } else {
-            alert(data.error || "Delete failed");
-        }
-    })
-    .catch(err => console.error(err))
-    .finally(() => closeDeleteConfirm());
-}
-
-function closeDeleteConfirm(){
-    const modal = document.getElementById("deleteConfirmModal");
-    if(modal){
-        modal.classList.remove("show");  // ✅ hide the modal
-    }
-
-    rowToDelete = null;
-    memoIdToDelete = null;
-}
-
-/* =========================
-INITIAL LOAD
-========================= */
-
-document.addEventListener("DOMContentLoaded",function(){
-
-loadHolidays();
-
-});
-const toggle = document.getElementById("typeToggle");
-
-let timeout = null;
-
-const toggleOptions = document.querySelectorAll(".toggle-option");
-
-// default from URL
-let currentType = new URLSearchParams(window.location.search).get("type") || "communication";
-
-// 🔥 initialize active state
-toggleOptions.forEach(btn => {
-    if (btn.dataset.type === currentType) {
-        btn.classList.add("active");
-    } else {
-        btn.classList.remove("active");
-    }
-});
-
-// 🔥 click handler
-toggleOptions.forEach(btn => {
-    btn.addEventListener("click", function () {
-        // remove active from all
-        toggleOptions.forEach(b => b.classList.remove("active"));
-
-        // add active to clicked
-        this.classList.add("active");
-
-        currentType = this.dataset.type;
-
-        fetchTable();
-    });
-});
-
-function fetchTable() {
-    const search = document.getElementById("searchInput").value;
-    const month = document.getElementById("monthFilter").value;
-    const year = document.getElementById("yearFilter").value;
-
-    const url = `/?search=${encodeURIComponent(search)}&month=${month}&year=${year}&type=${currentType}`;
-
-    fetch(url)
-        .then(res => res.text())
-        .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, "text/html");
-
-            const newTable = doc.querySelector("#tableContainer");
-            if (newTable) {
-                document.querySelector("#tableContainer").innerHTML = newTable.innerHTML;
-            }
-        });
-}
-
-
-document.addEventListener("DOMContentLoaded", () => {
-    const monthFilter = document.getElementById("monthFilter");
-    const yearFilter = document.getElementById("yearFilter");
-
-    const today = new Date();
-
-    monthFilter.value = today.getMonth() + 1;
-    yearFilter.value = today.getFullYear();
-});
-
-const searchInput = document.getElementById("searchInput");
-// 🔍 typing (debounce)
-searchInput.addEventListener("input", () => {
-    clearTimeout(timeout);
-    timeout = setTimeout(fetchTable, 300);
-});
-
-// 📅 filters
-monthFilter.addEventListener("change", fetchTable);
-yearFilter.addEventListener("change", fetchTable);
-</script>
 </body>
 </html>

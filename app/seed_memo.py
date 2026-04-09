@@ -1,3 +1,5 @@
+import uuid
+
 import click
 from flask.cli import with_appcontext
 from datetime import date, timedelta
@@ -6,12 +8,11 @@ import random
 from app.extensions import db
 from app.models.memo import Memo
 
-
 @click.command("seed-memos")
 @click.option("--force", is_flag=True, help="Force reseed (delete existing memos)")
 @with_appcontext
 def seed_memos(force):
-    """Seed the database with sample memos (March–April 2026)."""
+    """Seed the database with sample memos (Feb–April 2026 with updates)."""
 
     if force:
         Memo.query.delete()
@@ -22,135 +23,122 @@ def seed_memos(force):
         click.echo("Memos already exist. Use --force to reseed.")
         return
 
+    import random
+    from datetime import date, timedelta
+
     # -------------------------
     # DATA POOLS
     # -------------------------
     subjects = [
-        "Hiring of Administrative Aide",
+        "Employee Attendance Concern",
         "Budget Request for Office Supplies",
-        "Submission of Project Proposal",
-        "Request for Vehicle Use",
-        "Staff Meeting Schedule",
         "IT Equipment Procurement",
-        "Training Seminar Approval",
-        "Quarterly Performance Review",
         "Legal Case Filing Review",
-        "Contract Agreement Processing",
-        "Client Consultation Schedule",
-        "Document Authentication Request",
-        "Case Status Follow-up",
-        "Office Renovation Proposal",
-        "Procurement of Medical Supplies"
+        "Contract Agreement Processing"
     ]
 
-    remarks_list = [
-        "For review", "For signature of attorney", "Please evaluate",
-        "For approval", "For appropriate action", "Please coordinate",
-        "For record purposes", "Urgent review required",
-        "Kindly prioritize", "Awaiting compliance"
-    ]
-
-    notes_list = [
-        "", "Urgent matter", "Follow up next week",
-        "Coordinate with accounting", "Pending documents",
-        "Requires legal review", "Client waiting for update",
-        "Attach supporting files", ""
-    ]
-
-    offices = [
-        "HR Department", "Finance Office", "Planning Division",
-        "Administrative Office", "Records Section",
-        "Legal Department", "Procurement Unit"
-    ]
-
-    released_people = [
-        "Juan Dela Cruz", "Maria Santos", "Pedro Reyes",
-        "Ana Lopez", "Carlos Mendoza", ""
-    ]
-
-    forwarded_roles = [
-        "Clerk", "Secretary", "Records Officer", "Admin Staff"
-    ]
+    offices = ["HR Office", "Finance Office", "Records Section"]
+    people = ["Maria Santos", "Juan Dela Cruz", "Pedro Reyes"]
 
     # -------------------------
-    # DATE RANGE
+    # DATE RANGE (FEB → APRIL)
     # -------------------------
-    start_date = date(2026, 3, 1)
+    start_date = date(2026, 2, 1)
     end_date = date(2026, 4, 30)
     delta_days = (end_date - start_date).days
 
     temp_memos = []
 
     # -------------------------
-    # GENERATE RAW DATA FIRST
+    # GENERATE DATA
     # -------------------------
-    for i in range(50):
-        source_type = random.choice(["OP", "communication"])
+    for i in range(30):
 
-        memo_number = None
-        from_office = random.choice(offices)
-        forwarded_by = random.choice(forwarded_roles)
+        source_type = random.choice(["CM", "OP"])
+        thread_id = str(uuid.uuid4())
+        memo_date = start_date + timedelta(days=random.randint(0, delta_days))
+        subject = random.choice(subjects)
 
         if source_type == "OP":
             memo_number = f"OP-2026-{random.randint(100, 999)}"
             from_office = "OP"
             forwarded_by = "Record"
+        else:
+            memo_number = None
+            from_office = random.choice(offices)
+            forwarded_by = random.choice(people)
 
-        memo_date = start_date + timedelta(days=random.randint(0, delta_days))
-
-        memo_month = memo_date.month
-        memo_year = memo_date.year
-
-        released_to = random.choice(released_people)
-        released_date = None
-
-        if released_to != "":
-            release_offset = random.randint(1, 5)
-            temp_date = memo_date + timedelta(days=release_offset)
-            released_date = temp_date if temp_date <= end_date else end_date
-
-        temp_memos.append({
+        # -------------------------
+        # FIRST ENTRY
+        # -------------------------
+        base_entry = {
+            "thread_id": thread_id, 
             "source_type": source_type,
             "memo_number": memo_number,
             "date": memo_date,
-            "month": memo_month,
-            "year": memo_year,
+            "month": memo_date.month,
+            "year": memo_date.year,
             "from_office": from_office,
             "forwarded_by": forwarded_by,
-            "subject": random.choice(subjects),
-            "remarks": random.choice(remarks_list),
-            "notes": random.choice(notes_list),
-            "released_to": released_to if released_to else None,
-            "released_date": released_date
-        })
+            "subject": subject,
+            "remarks": "Received",
+            "notes": "Initial entry",
+            "released_to": None,
+            "released_date": None
+        }
+
+        temp_memos.append(base_entry)
+
+        # -------------------------
+        # UPDATE ENTRY
+        # -------------------------
+        if random.random() < 0.6:  # 60% chance
+
+            update_date = memo_date + timedelta(days=random.randint(1, 3))
+            if update_date > end_date:
+                update_date = end_date
+
+            updated_entry = {
+                "thread_id": thread_id,
+                "source_type": source_type,
+                "memo_number": memo_number,  # 🔥 SAME memo number
+                "date": update_date,
+                "month": update_date.month,
+                "year": update_date.year,
+                "from_office": from_office,
+                "forwarded_by": forwarded_by,
+                "subject": subject,
+                "remarks": "Approved / Passed",
+                "notes": "Processed by attorney",
+                "released_to": "Records",
+                "released_date": update_date
+            }
+
+            temp_memos.append(updated_entry)
 
     # -------------------------
-    # SORT BY DATE (IMPORTANT)
+    # SORT BY DATE
     # -------------------------
     temp_memos.sort(key=lambda x: x["date"])
 
     # -------------------------
     # SERIAL NUMBER PER MONTH
     # -------------------------
-    counters = {}  # {(year, month): count}
+    counters = {}  # {(type, year, month): count}
 
     for data in temp_memos:
-        key = (data["year"], data["month"])
+        key = (data["source_type"], data["year"], data["month"])
 
-        if key not in counters:
-            counters[key] = 1
-        else:
-            counters[key] += 1
-
-        serial_number = counters[key]
+        counters[key] = counters.get(key, 0) + 1
 
         memo = Memo(
+            thread_id=data["thread_id"],  
             source_type=data["source_type"],
             memo_number=data["memo_number"],
             date=data["date"],
             month=data["month"],
             year=data["year"],
-            serial_number=serial_number,  # 🔥 HERE
+            serial_number=counters[key], 
             from_office=data["from_office"],
             forwarded_by=data["forwarded_by"],
             subject=data["subject"],
@@ -161,6 +149,6 @@ def seed_memos(force):
         )
 
         db.session.add(memo)
-
+        
     db.session.commit()
-    click.echo("✅ 50 memos seeded with monthly serial numbers!")
+    click.echo("✅ Seeded memos (Feb–April) with realistic updates!")

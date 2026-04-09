@@ -547,42 +547,6 @@ td.actions {
   transition: opacity 0.3s ease;
   opacity: 0;
 }
-.memo-drawer {
-    position: fixed;
-    top: 0;
-    right: -400px;
-    width: 400px;
-    height: 100%;
-    background: #fff;
-    box-shadow: -5px 0 15px rgba(0,0,0,0.1);
-    transition: right 0.3s ease;
-    z-index: 2000;
-}
-
-.memo-drawer.active {
-    right: 0;
-}
-
-.drawer-content {
-    padding: 20px;
-}
-
-.close-drawer {
-    background: none;
-    border: none;
-    font-size: 18px;
-    float: right;
-    cursor: pointer;
-}
-
-.drawer-section p {
-    font-size: 14px;
-    margin: 6px 0;
-}
-
-#relatedMemos {
-    padding-left: 15px;
-}
 
 
 .toggle-wrapper {
@@ -627,6 +591,53 @@ td.actions {
 }
 
 
+
+.memo-drawer {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100vh;              /* 🔥 full viewport height */
+    background: #fff;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+    transition: right 0.3s ease;
+    z-index: 2000;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: #374151;
+
+    display: flex;            
+    flex-direction: column;    
+    overflow: hidden;         
+}
+
+.memo-drawer.active {
+    right: 0;
+}
+
+.drawer-content {
+    padding: 20px;
+    overflow-y: auto;        
+    flex: 1;    
+    scroll-behavior: smooth;       
+}
+
+.close-drawer {
+    background: none;
+    border: none;
+    font-size: 18px;
+    float: right;
+    cursor: pointer;
+}
+
+.drawer-section p {
+    font-size: 14px;
+    margin: 6px 0;
+}
+
+#relatedMemos {
+    padding-left: 15px;
+}
+
 #relatedMemos li {
     font-size: 13px;
     margin-bottom: 5px;
@@ -634,17 +645,6 @@ td.actions {
 .memo-row.active-row {
     background-color: #fdecea !important;
 }
-/* Base Drawer Styles */
-.memo-drawer {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  color: #374151; /* Dark gray */
-  background: #ffffff;
-  max-width: 400px; /* Adjust based on your layout needs */
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 24px;
-}
-
 .drawer-content p {
   margin: 4px 0;
 }
@@ -751,6 +751,85 @@ td.actions {
   border-top-right-radius: 4px;
   border-bottom-right-radius: 4px;
 }
+
+.thread-group {
+    margin-bottom: 10px;
+}
+
+.thread-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: #f9fafb;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.thread-header:hover {
+    background: #f3f4f6;
+}
+
+.thread-content {
+    margin-top: 6px;
+    padding-left: 8px;
+}
+
+.memo-line {
+    display: grid;
+    grid-template-columns: 60px 1fr 100px;
+    background: #e2e8f0;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    cursor: pointer;
+}
+
+.memo-line.active {
+    background: #fdecea;
+}
+
+.toggle-icon {
+    font-size: 12px;
+}
+
+
+.memo-collapse {
+    margin-bottom: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+}
+
+.memo-collapse-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #f9fafb;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.memo-collapse-header:hover {
+    background: #f3f4f6;
+}
+
+.memo-collapse-body {
+    padding: 14px;
+    background: #ffffff;
+}
+
+.memo-collapse-body .drawer-subject {
+    font-size: 16px;
+    margin: 8px 0;
+}
+
+.toggle-icon {
+    font-size: 12px;
+}
 </style>
 {% endblock %}
 {% block content %}
@@ -818,7 +897,7 @@ td.actions {
         </div>
 <div class="table-controls toggle-wrapper">
     <div id="typeToggle" class="toggle-pill">
-        <div class="toggle-option active" data-type="communication">Communication</div>
+        <div class="toggle-option active" data-type="CM">Communication</div>
         <div class="toggle-option" data-type="OP">OP</div>
     </div>
 </div>
@@ -853,6 +932,7 @@ td.actions {
             <tbody>
                 {% for memo in memos %}
                 <tr class="memo-row"
+                    data-thread="{{ memo.thread_id }}"
                     data-serial="{{ memo.serial_number }}"
                     data-subject="{{ memo.subject }}"
                     data-number="{{ memo.memo_number }}"
@@ -873,6 +953,7 @@ td.actions {
                     <td>
                         {% if current_user.is_authenticated %}
                         <button class="update-new-btn"
+                            data-thread="{{ memo.thread_id }}"
                             data-id="{{ memo.id }}"
                             data-source_type="{{ memo.source_type }}"
                             data-number="{{ memo.memo_number }}"
@@ -919,6 +1000,7 @@ td.actions {
                                 <div class="menu-dropdown">
                                     <button class="update-btn"
                                         data-id="{{ memo.id }}"
+                                        data-thread="{{ memo.thread_id }}"
                                         data-source_type="{{ memo.source_type }}"
                                         data-number="{{ memo.memo_number }}"
                                         data-from="{{ memo.from_office }}"
@@ -983,7 +1065,7 @@ td.actions {
         <hr class="divider">
 
         <div class="memos-list-header">
-            <div></div> <div>Action</div>
+            <div></div>
             <div>Date</div>
         </div>
 
@@ -997,6 +1079,164 @@ td.actions {
     {% endif %}
 </div>
 <br><br>
+<!-- ADD MEMO MODAL -->
+ 
+<div id="addMemoModal" class="modal">
+  <div class="modal-content">
+
+    <h2>Add Memo</h2>
+
+    <form id="memo_form">
+
+      <!-- Source Type -->
+      <div class="form-group">
+        <label>Source Type</label>
+        <select name="source_type" id="source_type_outside" onchange="updateFormFields()">
+          <option value="CM" selected>communication</option>
+          <option value="OP">OP</option>
+        </select>
+      </div>
+
+      <!-- Memo Number -->
+      <div class="form-group" id="memoNumberGroup" style="display: none;">
+        <label>Memo #</label>
+        <input name="memo_number" id="memoNumber">
+      </div>
+
+      <!-- Date -->
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" name="date" id="memoDate">
+      </div>
+
+      <!-- From + Forwarded -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>From</label>
+          <input name="from_office" id="memoFrom">
+        </div>
+        <div class="form-group">
+          <label>Forwarded By</label>
+          <input name="forwarded_by" id="memoForwarded">
+        </div>
+      </div>
+
+      <!-- Subject -->
+      <div class="form-group">
+        <label>Subject</label>
+        <input name="subject" id="memoSubject">
+      </div>
+
+      <!-- Remarks -->
+      <div class="form-group">
+        <label>Remarks</label>
+        <textarea name="remarks" id="memoRemarks"></textarea>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea name="notes" id="memoNotes"></textarea>
+      </div>
+
+      <!-- Release Section -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Released To</label>
+          <input name="released_to" id="memoReleaseTo">
+        </div>
+        <div class="form-group">
+          <label>Released Date</label>
+          <input type="date" name="released_date" id="memoReleaseDate">
+        </div>
+      </div>
+
+      <div class="modal-buttons">
+        <button type="submit" class="btn">Submit</button>
+        <button type="button" class="btn cancel" onclick="closeModals()">Cancel</button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+<!-- EDIT MEMO MODAL -->
+<div id="editMemoModal" class="modal">
+  <form method="POST" id="editMemoForm" class="modal-content">
+
+    <h2>Edit Memo</h2>
+
+    <!-- From + Forwarded -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>From</label>
+        <input name="from_office" id="editMemoFrom">
+      </div>
+
+      <div class="form-group">
+        <label>Forwarded By</label>
+        <input name="forwarded_by" id="editMemoForwarded">
+      </div>
+    </div>
+
+    <!-- Date -->
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" name="date" id="editMemoDate">
+    </div>
+
+    <!-- Subject -->
+    <div class="form-group">
+      <label>Subject</label>
+      <input name="subject" id="editMemoSubject">
+    </div>
+
+    <!-- Remarks -->
+    <div class="form-group">
+      <label>Remarks</label>
+      <textarea name="remarks" id="editMemoRemarks"></textarea>
+    </div>
+
+    <!-- Notes -->
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea name="notes" id="editMemoNotes"></textarea>
+    </div>
+
+    <!-- Release Section -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>Released To</label>
+        <input name="released_to" id="editMemoReleaseTo">
+      </div>
+
+      <div class="form-group">
+        <label>Released Date</label>
+        <input type="date" name="released_date" id="editMemoReleaseDate">
+      </div>
+    </div>
+
+    <div class="moda-bluttons">
+      <button type="submit" class="btn">Save Changes</button>
+      <button type="button" class="btn cancel" onclick="closeModals()">Cancel</button>
+    </div>
+
+  </form>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div id="deleteConfirmModal" class="modal">
+  <div class="modal-content" style="width:400px; padding:25px; text-align:center;">
+    <iconify-icon icon="mdi:alert-circle" style="font-size:48px; color:#f44336; margin-bottom:15px;"></iconify-icon>
+    <h2>Confirm Delete</h2>
+    <p>Are you sure you want to delete this memo permanently?</p>
+    <p style="font-weight:500; color:#B22222;">This action cannot be undone.</p>
+    <div class="modal-buttons" style="gap:15px;">
+      <button class="btn cancel" onclick="closeDeleteConfirm()" style="background:#6c757d;">Cancel</button>
+      <button class="btn" onclick="confirmDelete()" style="background:#f44336;">Delete Memo</button>
+    </div>
+  </div>
+</div>
 
 <script>
 
@@ -1029,7 +1269,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let activeRow = null;
 
-    // 🔥 MAIN CLICK (delegated — works after tab switch)
     document.addEventListener("click", function (e) {
 
         const drawer = document.getElementById("memoDrawer");
@@ -1039,43 +1278,136 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        // ✅ CLICK ON ROW
         const row = e.target.closest(".memo-row");
+
+        // =========================
+        // ✅ CLICK ROW
+        // =========================
         if (row) {
 
-            // remove highlight
-            document.querySelectorAll(".memo-row").forEach(r => r.classList.remove("active-row"));
+            document.querySelectorAll(".memo-row")
+                .forEach(r => r.classList.remove("active-row"));
 
             row.classList.add("active-row");
             activeRow = row;
 
+            const threadId = row.dataset.thread;
             const subject = row.dataset.subject;
 
-            // fill drawer
-            document.getElementById("drawerSubject").innerText = subject;
+            // 🔥 FILL DETAILS
+            document.getElementById("drawerSubject").innerText = subject || "-";
             document.getElementById("drawerNumber").innerText = row.dataset.serial || "-";
-            document.getElementById("drawerFrom").innerText = row.dataset.from;
-            document.getElementById("drawerForwarded").innerText = row.dataset.forwarded;
-            document.getElementById("drawerDate").innerText = row.dataset.date;
-            document.getElementById("drawerRemarks").innerText = row.dataset.remarks;
-            document.getElementById("drawerNotes").innerText = row.dataset.notes;
-            document.getElementById("drawerReleasedDate").innerText = row.dataset.released_date || "-";
+            document.getElementById("drawerDate").innerText = row.dataset.date || "-";
+            document.getElementById("drawerRemarks").innerText = row.dataset.remarks || "-";
+
+            document.getElementById("drawerFrom").innerText = row.dataset.from || "-";
+            document.getElementById("drawerForwarded").innerText = row.dataset.forwarded || "-";
+
+            document.getElementById("drawerNotes").innerText = row.dataset.notes || "-";
             document.getElementById("drawerReleasedTo").innerText = row.dataset.released_to || "-";
-            // related memos
+            document.getElementById("drawerReleasedDate").innerText = row.dataset.released_date || "-";
+
+            // =========================
+            // 🔗 GROUP BY THREAD
+            // =========================
             const relatedList = document.getElementById("relatedMemos");
             relatedList.innerHTML = "";
 
+            // GET SAME THREAD ONLY
+            const related = [];
+
             document.querySelectorAll(".memo-row").forEach(r => {
-                if (r.dataset.subject === subject && r !== row) {
-                    const li = document.createElement("li");
-                    li.innerText = (r.dataset.number || "") + " - " + r.dataset.date;
-                    relatedList.appendChild(li);
+                if (r.dataset.thread === threadId) {
+                    related.push(r);
                 }
             });
 
+            // SORT
+            related.sort((a, b) =>
+                new Date(a.dataset.date) - new Date(b.dataset.date)
+            );
+
+            // RENDER EACH AS COLLAPSIBLE CARD
+            related.forEach((r) => {
+
+                const wrapper = document.createElement("li");
+                wrapper.classList.add("memo-collapse");
+
+                const isActive = r === row;
+
+                // =========================
+                // 🔥 HEADER (clickable)
+                // =========================
+                const header = document.createElement("div");
+                header.classList.add("memo-collapse-header");
+
+                header.innerHTML = `
+                    <span>#${r.dataset.serial || "-"}</span>
+                    <span>${r.dataset.date || "-"}</span>
+                    <span class="toggle-icon">${isActive ? "▼" : "▶"}</span>
+                `;
+
+                // =========================
+                // 🔥 FULL CONTENT (CLONE DESIGN)
+                // =========================
+                const content = document.createElement("div");
+                content.classList.add("memo-collapse-body");
+
+                content.style.display = isActive ? "block" : "none";
+
+                content.innerHTML = `
+                    <span class="badge badge-urgent">${r.dataset.remarks || "-"}</span>
+
+                    <h3 class="drawer-subject">${r.dataset.subject || "-"}</h3>
+
+                    <div class="drawer-meta">
+                        <p>From: ${r.dataset.from || "-"}</p>
+                        <p>Forwarded by: ${r.dataset.forwarded || "-"}</p>
+                    </div>
+
+                    <div class="drawer-notes">
+                        Notes: ${r.dataset.notes || "-"}
+                    </div>
+
+                    <div class="drawer-release-row">
+                        <div class="release-col">
+                            <span class="text-secondary">Released to:</span>
+                            <span>${r.dataset.released_to || "-"}</span>
+                        </div>
+                        <div class="release-col">
+                            <span class="text-secondary">Released Date:</span>
+                            <span>${r.dataset.released_date || "-"}</span>
+                        </div>
+                    </div>
+                `;
+
+                // =========================
+                // 🎯 TOGGLE
+                // =========================
+                header.addEventListener("click", () => {
+                    const isOpen = content.style.display === "block";
+
+                    content.style.display = isOpen ? "none" : "block";
+                    header.querySelector(".toggle-icon").innerText = isOpen ? "▶" : "▼";
+                });
+
+                // OPTIONAL: click content → switch main drawer focus
+                content.addEventListener("click", () => {
+                    r.click();
+                });
+
+                wrapper.appendChild(header);
+                wrapper.appendChild(content);
+                relatedList.appendChild(wrapper);
+            });
+            // ✅ OPEN DRAWER
             drawer.classList.add("active");
             return;
         }
+
+        // =========================
+        // ❌ CLICK OUTSIDE
+        // =========================
         const isInsideDrawer = drawer && drawer.contains(e.target);
 
         if (!isInsideDrawer) {
@@ -1086,12 +1418,385 @@ document.addEventListener("DOMContentLoaded", function () {
 
     window.closeDrawer = function () {
         const drawer = document.getElementById("memoDrawer");
+
         if (drawer) drawer.classList.remove("active");
 
-        document.querySelectorAll(".memo-row").forEach(r => r.classList.remove("active-row"));
+        document.querySelectorAll(".memo-row")
+            .forEach(r => r.classList.remove("active-row"));
+
         activeRow = null;
     };
 
 });
+
+
+
+
+/* =========================
+HOLIDAY FUNCTIONS
+========================= */
+
+
+function renderHolidayCard(holiday){
+
+const panel=document.querySelector('.holiday-panel');
+
+const card=document.createElement('div');
+
+card.className='holiday-card';
+
+card.innerHTML=`
+<iconify-icon icon="mdi:calendar"></iconify-icon>
+<div>
+<div class="holiday-top">
+<span class="holiday-title">${holiday.title}</span>
+<span class="holiday-badge">${holiday.badge}</span>
+</div>
+<p>${holiday.desc}</p>
+</div>
+`;
+
+panel.insertBefore(card,panel.firstChild);
+
+}
+
+function loadHolidays(){
+
+const holidays=JSON.parse(localStorage.getItem('holidays')||'[]');
+
+holidays.forEach(renderHolidayCard);
+
+}
+
+
+/* =========================
+MEMO FUNCTIONS
+========================= */
+
+let editingSeries=null;
+let deleteSeries=null;
+let deleteRow=null;
+let deleteId = null;
+
+function openAddMemo(){
+  const modal = document.getElementById("addMemoModal");
+  modal.classList.add("show");
+}
+function openEditMemo(){
+  const modal = document.getElementById("editMemoModal");
+  console.log("Opening edit modal", modal);
+  modal.classList.add("show");
+}
+function closeModals(){
+  document.querySelectorAll(".modal").forEach(modal => {
+    modal.classList.remove("show");
+  });
+}
+document.addEventListener("click", function(e) {
+  if (e.target.classList.contains("modal")) {
+    closeModals();
+  }
+});
+/* ADD MEMO */
+const form = document.getElementById("memo_form");
+
+form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+
+    // basic validation
+    const from = formData.get("from_office")?.trim();
+    const subject = formData.get("subject")?.trim();
+
+    if (!from || !subject) {
+        alert("Please fill From and Subject");
+        return;
+    }
+
+    try {
+        const res = await fetch("/secretary/new", {
+            method: "POST",
+            body: formData
+        });
+
+        if (!res.ok) {
+            throw new Error("HTTP error " + res.status);
+        }
+
+        const data = await res.json(); // ✅ backend already returns JSON
+
+        console.log("Server response:", data);
+
+        if (data.success) {
+            form.reset();
+            closeModals();
+        } else {
+            alert("Failed to save memo.");
+        }
+
+    } catch (err) {
+        console.error("ERROR:", err);
+        alert("Something went wrong.");
+    }
+});
+function updateFormFields(){
+    const type = document.getElementById("source_type_outside").value;
+
+    const memoFrom = document.getElementById("memoFrom");
+    const memoForwarded = document.getElementById("memoForwarded");
+    const memoNumberGroup = document.getElementById("memoNumberGroup");
+
+    if(type === "OP"){
+        memoFrom.value = "OP";
+        memoForwarded.value = "Records";
+
+        // 🔒 lock fields
+        memoFrom.readOnly = true;
+        memoForwarded.readOnly = true;
+
+        // 🙈 hide Memo #
+        memoNumberGroup.style.display = "block";
+
+    } else {
+        memoFrom.value = "";
+        memoForwarded.value = "";
+
+        // 🔓 unlock fields
+        memoFrom.readOnly = false;
+        memoForwarded.readOnly = false;
+
+        // 👀 show Memo #
+        memoNumberGroup.style.display = "none";
+    }
+}
+
+
+/* =========================
+EDIT MEMO
+========================= */
+// HANDLE BUTTON CLICK (set form + fill data)
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest(".update-new-btn, .update-btn");
+    if (!btn) return;
+
+    const form = document.getElementById("editMemoForm");
+    const id = btn.dataset.id;
+
+    const sourceType = btn.dataset.source_type;
+
+    const memoFrom = document.getElementById("editMemoFrom");
+    const memoForwarded = document.getElementById("editMemoForwarded");
+
+    // Fill fields
+    memoFrom.value = btn.dataset.from || "";
+    memoForwarded.value = btn.dataset.forwarded || "";
+    document.getElementById("editMemoSubject").value = btn.dataset.subject || "";
+    document.getElementById("editMemoRemarks").value = btn.dataset.remarks || "";
+    document.getElementById("editMemoNotes").value = btn.dataset.notes || "";
+    document.getElementById("editMemoDate").value = btn.dataset.date || "";
+    document.getElementById("editMemoReleaseTo").value = btn.dataset.released_to || "";
+    document.getElementById("editMemoReleaseDate").value = btn.dataset.released_date || "";
+
+    // 🔒 Lock if OP
+    if (sourceType === "OP") {
+        // 🔒 lock
+        memoFrom.disabled = true;
+        memoForwarded.disabled = true;
+
+        // 🎨 style
+        memoFrom.classList.add("locked");
+        memoForwarded.classList.add("locked");
+
+    } else {
+        // 🔓 unlock
+        memoFrom.disabled = false;
+        memoForwarded.disabled = false;
+
+        // remove style
+        memoFrom.classList.remove("locked");
+        memoForwarded.classList.remove("locked");
+    }
+
+    // Decide route
+    if (btn.classList.contains("update-btn")) {
+        form.action = `/secretary/edit/${id}`;
+    } else if (btn.classList.contains("update-new-btn")) {
+        form.action = `/secretary/update/${id}`;
+    }
+
+    openEditMemo();
+});
+
+
+// 🚀 HANDLE FORM SUBMIT (AJAX - no page redirect)
+document.getElementById("editMemoForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const url = form.action;
+    const formData = new FormData(form);
+
+    fetch(url, {
+        method: "POST",
+        body: formData
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error("HTTP error " + res.status);
+        }
+        return res.json(); // ✅ ONLY once
+    })
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert("Error: " + (data.error || "Unknown error"));
+        }
+    })
+    .catch(err => {
+        console.error("Submit error:", err);
+        alert("Something went wrong");
+    });
+});
+/* =========================
+DELETE MEMO WITH WARNING
+========================= */
+let rowToDelete = null;
+let memoIdToDelete = null;
+
+document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener('click', function(e){ 
+        const btn = e.target.closest(".delete-btn");
+        if(!btn) return;
+
+        console.log("Delete button clicked!", btn.dataset.id);
+
+        rowToDelete = btn.closest("tr");
+        memoIdToDelete = btn.dataset.id;
+
+        const modal = document.getElementById("deleteConfirmModal");
+        if(modal){
+            modal.classList.add("show");   // ✅ show the modal
+            console.log("Modal opened");
+        } else {
+            console.error("Modal not found!");
+        }
+    });
+});
+
+function confirmDelete() {
+    if (!memoIdToDelete) return;
+
+    fetch(`/secretary/delete/${memoIdToDelete}`, { method: "POST" })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success){
+            if(rowToDelete){
+                rowToDelete.classList.add("row-fade");
+                setTimeout(() => rowToDelete.remove(), 300);
+            }
+        } else {
+            alert(data.error || "Delete failed");
+        }
+    })
+    .catch(err => console.error(err))
+    .finally(() => closeDeleteConfirm());
+}
+
+function closeDeleteConfirm(){
+    const modal = document.getElementById("deleteConfirmModal");
+    if(modal){
+        modal.classList.remove("show");  // ✅ hide the modal
+    }
+
+    rowToDelete = null;
+    memoIdToDelete = null;
+}
+
+/* =========================
+INITIAL LOAD
+========================= */
+
+document.addEventListener("DOMContentLoaded",function(){
+
+loadHolidays();
+
+});
+const toggle = document.getElementById("typeToggle");
+
+let timeout = null;
+
+const toggleOptions = document.querySelectorAll(".toggle-option");
+
+// default from URL
+let currentType = new URLSearchParams(window.location.search).get("type") || "CM";
+
+// 🔥 initialize active state
+toggleOptions.forEach(btn => {
+    if (btn.dataset.type === currentType) {
+        btn.classList.add("active");
+    } else {
+        btn.classList.remove("active");
+    }
+});
+
+// 🔥 click handler
+toggleOptions.forEach(btn => {
+    btn.addEventListener("click", function () {
+        // remove active from all
+        toggleOptions.forEach(b => b.classList.remove("active"));
+
+        // add active to clicked
+        this.classList.add("active");
+
+        currentType = this.dataset.type;
+
+        fetchTable();
+    });
+});
+
+function fetchTable() {
+    const search = document.getElementById("searchInput").value;
+    const month = document.getElementById("monthFilter").value;
+    const year = document.getElementById("yearFilter").value;
+
+    const url = `/?search=${encodeURIComponent(search)}&month=${month}&year=${year}&type=${currentType}`;
+
+    fetch(url)
+        .then(res => res.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+
+            const newTable = doc.querySelector("#tableContainer");
+            if (newTable) {
+                document.querySelector("#tableContainer").innerHTML = newTable.innerHTML;
+            }
+        });
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    const monthFilter = document.getElementById("monthFilter");
+    const yearFilter = document.getElementById("yearFilter");
+
+    const today = new Date();
+
+    monthFilter.value = today.getMonth() + 1;
+    yearFilter.value = today.getFullYear();
+});
+
+const searchInput = document.getElementById("searchInput");
+// 🔍 typing (debounce)
+searchInput.addEventListener("input", () => {
+    clearTimeout(timeout);
+    timeout = setTimeout(fetchTable, 300);
+});
+
+// 📅 filters
+monthFilter.addEventListener("change", fetchTable);
+yearFilter.addEventListener("change", fetchTable);
 </script>
+
 {% endblock %}
