@@ -1,6 +1,7 @@
 import uuid
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash
+from app.models.autofill import MemoAutocomplete
 from app.models.memo import Memo
 from app.services.memo_service import MemoService
 from app.services.log_service import LogService
@@ -279,3 +280,45 @@ def delete_memo(id):
     except Exception:
         db.session.rollback()
         return jsonify(error="Database delete failed"), 500
+
+
+
+
+# autocomplete
+
+@secretary_bp.route("/autocomplete/<type>", methods=["GET"])
+def get_autocomplete(type):
+    items = MemoAutocomplete.query.filter_by(type=type).all()
+    return jsonify([i.value for i in items])
+
+@secretary_bp.route("/autocomplete", methods=["POST"])
+def save_autocomplete():
+    data = request.json
+    value = data.get("value")
+    type_ = data.get("type")
+
+    if not value:
+        return jsonify({"error": "Empty"}), 400
+
+    exists = MemoAutocomplete.query.filter_by(
+        value=value,
+        type=type_
+    ).first()
+    if not exists:
+        new_item = MemoAutocomplete(type=type_, value=value)
+        db.session.add(new_item)
+        db.session.commit()
+
+    return jsonify({"success": True})
+
+@secretary_bp.route("/autocomplete", methods=["DELETE"])
+def delete_autocomplete():
+    data = request.json
+    value = data.get("value")
+
+    item = MemoAutocomplete.query.filter_by(value=value).first()
+    if item:
+        db.session.delete(item)
+        db.session.commit()
+
+    return jsonify({"success": True})
