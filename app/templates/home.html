@@ -19,7 +19,7 @@
 
 .filter-btn{
     padding:6px 12px;
-    background:#444;
+    background:#A12222;
     color:white;
     border:none;
     border-radius:6px;
@@ -923,6 +923,43 @@ td.actions {
     color: red;
     cursor: pointer;
 }
+
+.success-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.success-modal.show {
+    display: flex;
+}
+
+.success-content {
+    background: #fff;
+    padding: 20px 30px;
+    border-radius: 12px;
+    text-align: center;
+    min-width: 250px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.success-content p {
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+.success-content button {
+    padding: 6px 16px;
+    border: none;
+    background: #b71c1c;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+}
 </style>
 {% endblock %}
 {% block content %}
@@ -1230,17 +1267,13 @@ td.actions {
       <!-- Source Type -->
       <div class="form-group">
         <label>Source Type</label>
-        <select name="source_type" id="source_type_outside" onchange="updateFormFields()">
-          <option value="CM" selected>communication</option>
-          <option value="OP">OP</option>
+        <input type="hidden" name="source_type" id="hiddenSourceType">
+        <select id="source_type_outside" onchange="updateFormFields()">
+            <option value="CM">communication</option>
+            <option value="OP">OP</option>
         </select>
       </div>
 
-      <!-- Memo Number -->
-      <div class="form-group" id="memoNumberGroup" style="display: none;">
-        <label>Memo #</label>
-        <input name="memo_number" id="memoNumber">
-      </div>
 
       <!-- Date -->
       <div class="form-group">
@@ -1265,6 +1298,13 @@ td.actions {
             <div class="dropdown" id="forwardedDropdown"></div>
         </div>
         </div>
+      </div>
+
+      
+      <!-- Memo Number -->
+      <div class="form-group" id="memoNumberGroup" style="display: none;">
+        <label>Memo #</label>
+        <input name="memo_number" id="memoNumber">
       </div>
 
       <!-- Subject -->
@@ -1400,7 +1440,19 @@ td.actions {
     </div>
   </div>
 </div>
+<div id="successModal" class="success-modal">
+    <div class="success-content">
+        <p id="successMessage">Success!</p>
+        <button onclick="closeSuccessModal()">OK</button>
+    </div>
+</div>
 
+<div id="errorModal" class="success-modal">
+    <div class="success-content">
+        <p id="errorMessage">Error</p>
+        <button onclick="closeErrorModal()">OK</button>
+    </div>
+</div>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -1825,15 +1877,74 @@ holidays.forEach(renderHolidayCard);
 /* =========================
 MEMO FUNCTIONS
 ========================= */
+function updateFormFields() {
+    const type = document.getElementById("source_type_outside").value;
+
+    const memoNumberGroup = document.getElementById("memoNumberGroup");
+
+    const fromInput = document.getElementById("memoFrom");
+    const forwardedInput = document.getElementById("memoForwarded");
+
+    // 🔥 SOURCE TYPE LOGIC
+    if (type === "OP") {
+        memoNumberGroup.style.display = "block";
+
+        // ✅ AUTO-FILL
+        fromInput.value = "OP";
+        forwardedInput.value = "RECORDS";
+
+        // 🔒 LOCK
+        fromInput.readOnly = true;
+        forwardedInput.readOnly = true;
+
+        // optional: style it so user knows it's locked
+        fromInput.classList.add("locked");
+        forwardedInput.classList.add("locked");
+
+    } else {
+        memoNumberGroup.style.display = "none";
+
+        // 🔄 UNLOCK
+        fromInput.readOnly = false;
+        forwardedInput.readOnly = false;
+
+        // optional: remove locked style
+        fromInput.classList.remove("locked");
+        forwardedInput.classList.remove("locked");
+
+        // 🔥 optional reset (only if you want clean fields)
+        fromInput.value = "";
+        forwardedInput.value = "";
+
+        document.getElementById("memoNumber").value = "";
+    }
+
+    // 🔥 SYNC HIDDEN INPUT
+    const hidden = document.getElementById("hiddenSourceType");
+    if (hidden) {
+        hidden.value = type;
+    }
+}
 
 let editingSeries=null;
 let deleteSeries=null;
 let deleteRow=null;
 let deleteId = null;
 
-function openAddMemo(){
-  const modal = document.getElementById("addMemoModal");
-  modal.classList.add("show");
+function openAddMemo() {
+    const modal = document.getElementById("addMemoModal");
+    const select = document.getElementById("source_type_outside");
+    const hidden = document.getElementById("hiddenSourceType");
+
+    if (!select.value) {
+        select.value = currentType;
+    }
+
+    hidden.value = select.value;
+
+    updateFormFields();
+
+    modal.classList.add("show");
 }
 function openEditMemo(){
   const modal = document.getElementById("editMemoModal");
@@ -1850,6 +1961,30 @@ document.addEventListener("click", function(e) {
     closeModals();
   }
 });
+
+function showSuccessModal(message) {
+    const modal = document.getElementById("successModal");
+    document.getElementById("successMessage").textContent = message;
+    modal.classList.add("show");
+
+    setTimeout(() => {
+        modal.classList.remove("show");
+    }, 1500);
+}
+
+function closeSuccessModal() {
+    document.getElementById("successModal").classList.remove("show");
+}
+
+function showErrorModal(message) {
+    const modal = document.getElementById("errorModal");
+    document.getElementById("errorMessage").textContent = message;
+    modal.classList.add("show");
+}
+
+function closeErrorModal() {
+    document.getElementById("errorModal").classList.remove("show");
+}
 /* ADD MEMO */
 const form = document.getElementById("memo_form");
 
@@ -1877,12 +2012,38 @@ form.addEventListener("submit", async function (e) {
             method: "POST",
             body: formData
         });
-
         const data = await res.json();
 
+        if (!res.ok) {
+            showErrorModal(data.error || "Something went wrong");
+
+            if (data.error.includes("memo number")) {
+                document.getElementById("memoNumber").focus();
+            }
+
+            return;
+        }
+
+        console.log("NEW RESPONSE:", data); // 🔍 debug
+
         if (data.success) {
+
+            const select = document.getElementById("source_type_outside");
+            const hidden = document.getElementById("hiddenSourceType");
+
+            // 🔥 CAPTURE CURRENT VALUE (REAL ONE USER USED)
+            const selectedType = select.value;
+
             form.reset();
-            closeModals();
+
+            // 🔥 RESTORE EXACT VALUE
+            select.value = selectedType;
+            hidden.value = selectedType;
+
+            updateFormFields();
+
+            fetchTable();
+            showSuccessModal("Memo added successfully!");
         } else {
             alert("Failed to save memo.");
         }
@@ -1994,22 +2155,25 @@ document.getElementById("editMemoForm").addEventListener("submit", async functio
         method: "POST",
         body: formData
     })
-    .then(res => {
+    .then(async res => {
+        const data = await res.json(); // ✅ only once
+
         if (!res.ok) {
-            throw new Error("HTTP error " + res.status);
+            showErrorModal(data.error || "Update failed");
+            throw new Error(data.error || "HTTP error " + res.status);
         }
-        return res.json(); // ✅ ONLY once
+
+        return data;
     })
     .then(data => {
         if (data.success) {
             location.reload();
         } else {
-            alert("Error: " + (data.error || "Unknown error"));
+            showErrorModal(data.error || "Unknown error");
         }
     })
     .catch(err => {
         console.error("Submit error:", err);
-        alert("Something went wrong");
     });
 });
 /* =========================

@@ -67,7 +67,7 @@ def new_memo():
             if existing:
                 return jsonify({
                     "success": False,
-                    "error": "OP memo number already exists!"
+                    "error": "Memorandum number already exists!"
                 }), 400
 
         # 📦 Data
@@ -100,8 +100,28 @@ def new_memo():
             f"Status: {memo.status}",
             current_user.id
         )
-        return jsonify({"success": True})
+        return jsonify({
+            "success": True,
+            "memo": {
+                "id": memo.id,
+                "serial_number": f"{memo.serial_number:04d}",
+                "source_type": memo.source_type,
+                "memo_number": memo.memo_number,
 
+                "subject": memo.subject,
+                "from": memo.from_office,
+                "forwarded_by": memo.forwarded_by,
+
+                "remarks": memo.remarks,
+                "notes": memo.notes,
+
+                "released_to": memo.released_to,
+                "status": memo.status,
+
+                "date": memo.date.strftime("%Y-%m-%d") if memo.date else "",
+                "released_date": memo.released_date.strftime("%Y-%m-%d") if memo.released_date else ""
+            }
+        })
     except Exception as e:
         print("🔥 ERROR:", e)
         return jsonify({"success": False, "error": str(e)}), 500
@@ -189,26 +209,51 @@ def edit_memo(id):
 # UPDATE EXISTING MEMO 
 @secretary_bp.route("/update/<int:id>", methods=["POST"])
 @login_required
-
 def update_memo(id):
 
     original = Memo.query.get_or_404(id)
 
     try:
-        # 📅 Parse dates
+        # =========================
+        # 📅 PARSE DATE (CLEAN)
+        # =========================
         raw_date = request.form.get("date")
-        parsed_date = datetime.strptime(raw_date, "%Y-%m-%d").date() if raw_date else original.date
 
-        raw_release_date = request.form.get("released_date")
-        parsed_release_date = datetime.strptime(raw_release_date, "%Y-%m-%d").date() if raw_release_date else original.released_date
+        parsed_date = None
+        if raw_date and raw_date != "None" and raw_date.strip():
+            parsed_date = datetime.strptime(raw_date, "%Y-%m-%d").date()
+        else:
+            parsed_date = original.date
 
-        # 🔑 Type
-        source_type = request.form.get("source_type") or original.source_type
+        if not parsed_date:
+            return jsonify({
+                "success": False,
+                "error": "Date is required"
+            }), 400
 
+        # 🔥 DEFINE MONTH & YEAR (YOU MISSED THIS)
         month = parsed_date.month
         year = parsed_date.year
-        
-        # 🔢 Get next serial (DO NOT exclude self — this is a new entry)
+
+        # =========================
+        # 📅 RELEASE DATE
+        # =========================
+        raw_release_date = request.form.get("released_date")
+
+        parsed_release_date = None
+        if raw_release_date and raw_release_date != "None" and raw_release_date.strip():
+            parsed_release_date = datetime.strptime(raw_release_date, "%Y-%m-%d").date()
+        else:
+            parsed_release_date = original.released_date
+
+        # =========================
+        # 🔑 SOURCE TYPE
+        # =========================
+        source_type = request.form.get("source_type") or original.source_type
+
+        # =========================
+        # 🔢 SERIAL NUMBER
+        # =========================
         last_memo = Memo.query.filter_by(
             month=month,
             year=year,
@@ -217,13 +262,14 @@ def update_memo(id):
 
         next_serial = (last_memo.serial_number or 0) + 1 if last_memo else 1
 
-        # 🧠 Memo number logic
-        if source_type == "OP":
-            memo_number = original.memo_number  # 🔥 stays same
-        else:
-            memo_number = None
+        # =========================
+        # 🧠 MEMO NUMBER
+        # =========================
+        memo_number = original.memo_number if source_type == "OP" else None
 
-        # 📦 New version (LOG ENTRY)
+        # =========================
+        # 📦 NEW VERSION DATA
+        # =========================
         new_data = {
             "memo_number": memo_number,
             "serial_number": next_serial,
@@ -245,6 +291,9 @@ def update_memo(id):
             "notes": request.form.get("notes")
         }
 
+        # =========================
+        # 💾 SAVE
+        # =========================
         new_memo = MemoService.create_memo(new_data)
 
         LogService.add_log(
@@ -253,11 +302,18 @@ def update_memo(id):
             f"Based on previous memo #{original.serial_number:04d}",
             current_user.id
         )
+
         return jsonify({"success": True})
 
     except Exception as e:
-        print("🔥 UPDATE ERROR:", e)
-        return jsonify({"success": False, "error": str(e)}), 500
+        import traceback
+        print("🔥 UPDATE ERROR:")
+        traceback.print_exc()
+
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
 
 @secretary_bp.route("/delete/<int:id>", methods=["POST"])
 @login_required
