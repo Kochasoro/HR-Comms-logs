@@ -13,15 +13,14 @@ from datetime import date
 def home():
     search = request.args.get("search", "")
     type_filter = request.args.get("type", "CM")
+    sort = request.args.get("sort", "")
 
-    # 📅 get filters OR default to current month/year
     today = date.today()
     month_filter = request.args.get("month") or today.month
     year_filter = request.args.get("year") or today.year
 
     query = Memo.query.filter_by(source_type=type_filter)
 
-    # 🔍 search filter
     if search:
         query = query.filter(
             or_(
@@ -32,11 +31,33 @@ def home():
             )
         )
 
-    # 📅 ALWAYS apply month/year (default = current)
     query = query.filter(Memo.month == int(month_filter))
     query = query.filter(Memo.year == int(year_filter))
 
-    memos = query.order_by(Memo.serial_number.desc()).all()
+    sort = request.args.get("sort", "")
+
+    if sort == "serial_desc":
+        query = query.order_by(Memo.serial_number.desc())
+
+    elif sort == "serial_asc":
+        query = query.order_by(Memo.serial_number.asc())
+
+    elif sort == "date_desc":
+        query = query.order_by(Memo.date.desc())
+
+    elif sort == "date_asc":
+        query = query.order_by(Memo.date.asc())
+
+    elif sort == "alpha_subject":
+        query = query.order_by(Memo.subject.asc())
+
+    elif sort == "alpha_forwarded":
+        query = query.order_by(Memo.forwarded_by.asc())
+
+    else:
+        query = query.order_by(Memo.serial_number.desc())
+
+    memos = query.all()
 
     holidays = Holiday.query.filter(
         Holiday.date >= today
@@ -47,6 +68,6 @@ def home():
         memos=memos,
         holidays=holidays,
         selected_type=type_filter,
-        selected_month=month_filter,   # 👈 optional (for UI)
-        selected_year=year_filter      # 👈 optional
+        selected_month=month_filter,
+        selected_year=year_filter
     )

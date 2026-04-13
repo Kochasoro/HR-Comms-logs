@@ -13,6 +13,43 @@
 }
 
 /* Top Controls */
+.filter-wrapper{
+    position:relative;
+}
+
+.filter-btn{
+    padding:6px 12px;
+    background:#444;
+    color:white;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.filter-panel{
+    position: absolute;
+    right: 0;
+    top: 40px;
+
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    width: 200px;
+
+    display: none;
+
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+
+    z-index: 9999; /* important */
+}
+
+.filter-panel label{
+    display:block;
+    font-size:14px;
+    margin-bottom:6px;
+    cursor:pointer;
+}
 .top-controls {
     display: flex;
     justify-content: space-between;
@@ -119,7 +156,7 @@
 table {
     width: 100%;
     border-collapse: collapse;
-    table-layout: auto; /* 🔥 allow flexibility */
+    table-layout: fixed;
 }
 
 /* HEADER */
@@ -144,7 +181,24 @@ th:nth-child(1), td:nth-child(1) {
 th:nth-child(2), td:nth-child(2) {
     min-width: 200px;
 }
+/* COLUMN RESIZER */
+th {
+    position: relative;
+}
 
+.column-resizer {
+    position: absolute;
+    top: 0;
+    right: -2px;
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+    user-select: none;
+}
+
+.column-resizer:hover {
+    background: rgba(0,0,0,0.15);
+}
 
 /* ROWS */
 tbody tr {
@@ -590,7 +644,12 @@ td.actions {
     box-shadow: 0 0 0 2px rgba(183,28,28,0.2);
 }
 
-
+.table-top-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+}
 
 .memo-drawer {
     position: fixed;
@@ -830,12 +889,46 @@ td.actions {
 .toggle-icon {
     font-size: 12px;
 }
+
+.autocomplete {
+    position: relative;
+}
+
+.dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    max-height: 150px;
+    overflow-y: auto;
+    display: none;
+    z-index: 9999;
+}
+
+.dropdown-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background: #f3f4f6;
+}
+
+.delete-auto {
+    color: red;
+    cursor: pointer;
+}
 </style>
 {% endblock %}
 {% block content %}
 <br><br>
   <div class="dashboard-container">
-        
+
         <div class="top-controls">
             <div class="search-group">
                 <input type="text" id="searchInput" placeholder="Search subject, memo #, from..." class="search-input">
@@ -895,15 +988,61 @@ td.actions {
         <p>No holidays available.</p>
         {% endfor %}
         </div>
-<div class="table-controls toggle-wrapper">
-    <div id="typeToggle" class="toggle-pill">
-        <div class="toggle-option active" data-type="CM">Communication</div>
-        <div class="toggle-option" data-type="OP">OP</div>
+<div class="table-top-bar">
+
+    <div class="table-controls toggle-wrapper">
+        <div id="typeToggle" class="toggle-pill">
+            <div class="toggle-option active" data-type="CM">Communication</div>
+            <div class="toggle-option" data-type="OP">OP</div>
+        </div>
     </div>
+
+    <div class="filter-wrapper">
+
+        <button id="filterBtn" class="filter-btn">⚙ Filters</button>
+
+        <div id="filterPanel" class="filter-panel">
+
+            <label>
+                <input type="checkbox" class="sort-option" value="serial_desc" checked>
+                Serial (Newest)
+            </label>
+
+            <label>
+                <input type="checkbox" class="sort-option" value="serial_asc">
+                Serial (Oldest)
+            </label>
+
+            <label>
+                <input type="checkbox" class="sort-option" value="date_desc">
+                Newest Date
+            </label>
+
+            <label>
+                <input type="checkbox" class="sort-option" value="date_asc">
+                Oldest Date
+            </label>
+
+            <label>
+                <input type="checkbox" class="sort-option" value="alpha_subject">
+                Subject A → Z
+            </label>
+
+            <label>
+                <input type="checkbox" class="sort-option" value="alpha_forwarded">
+                Forwarded By A → Z
+            </label>
+
+            <label>
+                <input type="checkbox" class="sort-option" value="alpha_from">
+                From Office A → Z
+            </label>
+
+        </div>
+
+    </div>
+
 </div>
-
-
-
 <div  id="tableContainer">
     {% if memos %}
     <div class="table-container">
@@ -1012,7 +1151,7 @@ td.actions {
                                         data-released_to="{{ memo.released_to }}"
                                         data-released_date="{{ memo.released_date }}"
                                         data-status="{{ memo.status }}">
-                                        ✏️ Update
+                                        ✏️ Edit
                                     </button>
 
                                     <button class="delete-btn" data-id="{{ memo.id }}">
@@ -1106,18 +1245,25 @@ td.actions {
       <!-- Date -->
       <div class="form-group">
         <label>Date</label>
-        <input type="date" name="date" id="memoDate">
+        <input type="date" name="date" id="memoDate"> 
       </div>
 
       <!-- From + Forwarded -->
       <div class="form-row">
         <div class="form-group">
-          <label>From</label>
-          <input name="from_office" id="memoFrom">
+        <label>From</label>
+        <div class="autocomplete">
+            <input name="from_office" id="memoFrom" autocomplete="off">
+            <div class="dropdown" id="fromDropdown"></div>
         </div>
+        </div>
+
         <div class="form-group">
-          <label>Forwarded By</label>
-          <input name="forwarded_by" id="memoForwarded">
+        <label>Forwarded By</label>
+        <div class="autocomplete">
+            <input name="forwarded_by" id="memoForwarded" autocomplete="off">
+            <div class="dropdown" id="forwardedDropdown"></div>
+        </div>
         </div>
       </div>
 
@@ -1130,7 +1276,10 @@ td.actions {
       <!-- Remarks -->
       <div class="form-group">
         <label>Remarks</label>
+        <div class="autocomplete">
         <textarea name="remarks" id="memoRemarks"></textarea>
+        <div class="dropdown" id="remarksDropdown"></div>
+        </div>
       </div>
 
       <!-- Notes -->
@@ -1142,8 +1291,11 @@ td.actions {
       <!-- Release Section -->
       <div class="form-row">
         <div class="form-group">
-          <label>Released To</label>
-          <input name="released_to" id="memoReleaseTo">
+        <label>Released To</label>
+            <div class="autocomplete">
+                <input name="released_to" id="memoReleaseTo" autocomplete="off">
+                <div class="dropdown" id="releaseToDropdown"></div>
+            </div>
         </div>
         <div class="form-group">
           <label>Released Date</label>
@@ -1170,12 +1322,18 @@ td.actions {
     <div class="form-row">
       <div class="form-group">
         <label>From</label>
-        <input name="from_office" id="editMemoFrom">
+        <div class="autocomplete">
+        <input name="from_office" id="editMemoFrom" autocomplete="off">
+        <div class="dropdown" id="editFromDropdown"></div>
+        </div>
       </div>
 
       <div class="form-group">
         <label>Forwarded By</label>
-        <input name="forwarded_by" id="editMemoForwarded">
+        <div class="autocomplete">
+          <input name="forwarded_by" id="editMemoForwarded" autocomplete="off">
+          <div class="dropdown" id="editForwardedDropdown"></div>
+        </div>
       </div>
     </div>
 
@@ -1193,8 +1351,11 @@ td.actions {
 
     <!-- Remarks -->
     <div class="form-group">
-      <label>Remarks</label>
-      <textarea name="remarks" id="editMemoRemarks"></textarea>
+        <label>Remarks</label>
+        <div class="autocomplete">
+            <textarea name="remarks" id="editMemoRemarks"></textarea>
+            <div class="dropdown" id="editRemarksDropdown"></div>
+        </div>
     </div>
 
     <!-- Notes -->
@@ -1205,11 +1366,13 @@ td.actions {
 
     <!-- Release Section -->
     <div class="form-row">
-      <div class="form-group">
+        <div class="form-group">
         <label>Released To</label>
-        <input name="released_to" id="editMemoReleaseTo">
-      </div>
-
+        <div class="autocomplete">
+            <input name="released_to" id="editMemoReleaseTo" autocomplete="off">
+            <div class="dropdown" id="editReleaseToDropdown"></div>
+        </div>
+        </div>
       <div class="form-group">
         <label>Released Date</label>
         <input type="date" name="released_date" id="editMemoReleaseDate">
@@ -1239,6 +1402,196 @@ td.actions {
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const table = document.querySelector(".records-table");
+    const headers = table.querySelectorAll("th");
+
+    headers.forEach((header, index) => {
+
+        const resizer = document.createElement("div");
+        resizer.classList.add("column-resizer");
+        header.appendChild(resizer);
+
+        let startX, startWidth;
+
+        resizer.addEventListener("mousedown", function (e) {
+
+            startX = e.pageX;
+            startWidth = header.offsetWidth;
+
+            function mouseMove(e) {
+                const newWidth = startWidth + (e.pageX - startX);
+                header.style.width = newWidth + "px";
+
+                const columnCells = table.querySelectorAll(
+                    `td:nth-child(${index + 1})`
+                );
+
+                columnCells.forEach(cell => {
+                    cell.style.width = newWidth + "px";
+                });
+            }
+
+            function mouseUp() {
+                document.removeEventListener("mousemove", mouseMove);
+                document.removeEventListener("mouseup", mouseUp);
+            }
+
+            document.addEventListener("mousemove", mouseMove);
+            document.addEventListener("mouseup", mouseUp);
+        });
+
+    });
+
+});
+
+
+/* =========================
+INITIAL LOAD
+========================= */
+
+let timeout = null;
+let currentType = new URLSearchParams(window.location.search).get("type") || "CM";
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    loadHolidays();
+
+    const monthFilter = document.getElementById("monthFilter");
+    const yearFilter = document.getElementById("yearFilter");
+    const searchInput = document.getElementById("searchInput");
+    const filterBtn = document.getElementById("filterBtn");
+    const filterPanel = document.getElementById("filterPanel");
+    const toggleOptions = document.querySelectorAll(".toggle-option");
+
+    /* =========================
+    SET DEFAULT MONTH / YEAR
+    ========================= */
+    const today = new Date();
+    monthFilter.value = today.getMonth() + 1;
+    yearFilter.value = today.getFullYear();
+
+
+    /* =========================
+    TOGGLE TYPE (CM / OP)
+    ========================= */
+
+    toggleOptions.forEach(btn => {
+        if (btn.dataset.type === currentType) {
+            btn.classList.add("active");
+        } else {
+            btn.classList.remove("active");
+        }
+    });
+
+    toggleOptions.forEach(btn => {
+        btn.addEventListener("click", function () {
+
+            toggleOptions.forEach(b => b.classList.remove("active"));
+            this.classList.add("active");
+
+            currentType = this.dataset.type;
+
+            fetchTable();
+        });
+    });
+
+
+    /* =========================
+    SEARCH (DEBOUNCE)
+    ========================= */
+
+    searchInput.addEventListener("input", () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(fetchTable, 300);
+    });
+
+
+    /* =========================
+    MONTH / YEAR FILTER
+    ========================= */
+
+    monthFilter.addEventListener("change", fetchTable);
+    yearFilter.addEventListener("change", fetchTable);
+
+
+    /* =========================
+    SORT OPTIONS (RADIO)
+    ========================= */
+
+   document.querySelectorAll(".sort-option").forEach(option => {
+
+        option.addEventListener("change", function () {
+
+            if (!this.checked) {
+                this.checked = true;
+                return;
+            }
+
+            document.querySelectorAll(".sort-option").forEach(o => {
+                if (o !== this) o.checked = false;
+            });
+
+            fetchTable();
+
+        });
+
+    });
+    /* =========================
+    FILTER PANEL TOGGLE
+    ========================= */
+
+    filterBtn.addEventListener("click", () => {
+        filterPanel.style.display =
+            filterPanel.style.display === "block" ? "none" : "block";
+    });
+    document.addEventListener("click", function(e){
+
+        if (!filterPanel.contains(e.target) && !filterBtn.contains(e.target)) {
+            filterPanel.style.display = "none";
+        }
+
+    });
+
+});
+
+
+/* =========================
+FETCH TABLE
+========================= */
+
+function fetchTable() {
+
+    const search = document.getElementById("searchInput").value;
+    const month = document.getElementById("monthFilter").value;
+    const year = document.getElementById("yearFilter").value;
+
+    let sort = "";
+    const selectedSort = document.querySelector(".sort-option:checked");
+
+    if (selectedSort) {
+        sort = selectedSort.value;
+    }
+
+    const url = `/?search=${encodeURIComponent(search)}&month=${month}&year=${year}&type=${currentType}&sort=${sort}`;
+
+    fetch(url)
+        .then(res => res.text())
+        .then(html => {
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+
+            const newTable = doc.querySelector("#tableContainer");
+
+            if (newTable) {
+                document.querySelector("#tableContainer").innerHTML = newTable.innerHTML;
+            }
+
+        });
+
+}
 
 document.querySelectorAll(".menu-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
@@ -1505,7 +1858,6 @@ form.addEventListener("submit", async function (e) {
 
     const formData = new FormData(form);
 
-    // basic validation
     const from = formData.get("from_office")?.trim();
     const subject = formData.get("subject")?.trim();
 
@@ -1514,19 +1866,19 @@ form.addEventListener("submit", async function (e) {
         return;
     }
 
+    // 🔥 SAVE AUTOCOMPLETE FIRST
+    await saveItem("remarks", document.getElementById("memoRemarks").value);
+    await saveItem("from", document.getElementById("memoFrom").value);
+    await saveItem("forwarded", document.getElementById("memoForwarded").value);
+    await saveItem("released_to", document.getElementById("memoReleaseTo").value.trim());
+
     try {
         const res = await fetch("/secretary/new", {
             method: "POST",
             body: formData
         });
 
-        if (!res.ok) {
-            throw new Error("HTTP error " + res.status);
-        }
-
-        const data = await res.json(); // ✅ backend already returns JSON
-
-        console.log("Server response:", data);
+        const data = await res.json();
 
         if (data.success) {
             form.reset();
@@ -1540,42 +1892,9 @@ form.addEventListener("submit", async function (e) {
         alert("Something went wrong.");
     }
 });
-function updateFormFields(){
-    const type = document.getElementById("source_type_outside").value;
-
-    const memoFrom = document.getElementById("memoFrom");
-    const memoForwarded = document.getElementById("memoForwarded");
-    const memoNumberGroup = document.getElementById("memoNumberGroup");
-
-    if(type === "OP"){
-        memoFrom.value = "OP";
-        memoForwarded.value = "Records";
-
-        // 🔒 lock fields
-        memoFrom.readOnly = true;
-        memoForwarded.readOnly = true;
-
-        // 🙈 hide Memo #
-        memoNumberGroup.style.display = "block";
-
-    } else {
-        memoFrom.value = "";
-        memoForwarded.value = "";
-
-        // 🔓 unlock fields
-        memoFrom.readOnly = false;
-        memoForwarded.readOnly = false;
-
-        // 👀 show Memo #
-        memoNumberGroup.style.display = "none";
-    }
-}
 
 
-/* =========================
-EDIT MEMO
-========================= */
-// HANDLE BUTTON CLICK (set form + fill data)
+// Edit Memo - open modal and fill data
 document.addEventListener('click', function(e) {
     const btn = e.target.closest(".update-new-btn, .update-btn");
     if (!btn) return;
@@ -1587,56 +1906,90 @@ document.addEventListener('click', function(e) {
 
     const memoFrom = document.getElementById("editMemoFrom");
     const memoForwarded = document.getElementById("editMemoForwarded");
+    const memoSubject = document.getElementById("editMemoSubject");
+    const memoDate = document.getElementById("editMemoDate");
 
-    // Fill fields
+    // =========================
+    // 🧾 FILL FIELDS
+    // =========================
     memoFrom.value = btn.dataset.from || "";
     memoForwarded.value = btn.dataset.forwarded || "";
-    document.getElementById("editMemoSubject").value = btn.dataset.subject || "";
+    memoSubject.value = btn.dataset.subject || "";
+
     document.getElementById("editMemoRemarks").value = btn.dataset.remarks || "";
     document.getElementById("editMemoNotes").value = btn.dataset.notes || "";
-    document.getElementById("editMemoDate").value = btn.dataset.date || "";
+    memoDate.value = btn.dataset.date || "";
     document.getElementById("editMemoReleaseTo").value = btn.dataset.released_to || "";
     document.getElementById("editMemoReleaseDate").value = btn.dataset.released_date || "";
 
-    // 🔒 Lock if OP
-    if (sourceType === "OP") {
-        // 🔒 lock
+    // =========================
+    // 🔥 MODE: UPDATE-NEW (LOCK EVERYTHING IMPORTANT)
+    // =========================
+    if (btn.classList.contains("update-new-btn")) {
+
         memoFrom.disabled = true;
         memoForwarded.disabled = true;
+        memoSubject.disabled = true;
+        memoDate.disabled = true;
 
-        // 🎨 style
         memoFrom.classList.add("locked");
         memoForwarded.classList.add("locked");
+        memoSubject.classList.add("locked");
+        memoDate.classList.add("locked");
 
-    } else {
-        // 🔓 unlock
-        memoFrom.disabled = false;
-        memoForwarded.disabled = false;
+    } 
+    // =========================
+    // 🔥 MODE: NORMAL EDIT
+    // =========================
+    else {
 
-        // remove style
-        memoFrom.classList.remove("locked");
-        memoForwarded.classList.remove("locked");
+        // Subject & Date ALWAYS editable here
+        memoSubject.disabled = false;
+        memoDate.disabled = false;
+
+        memoSubject.classList.remove("locked");
+        memoDate.classList.remove("locked");
+
+        // Apply OP logic (your original behavior)
+        if (sourceType === "OP") {
+            memoFrom.disabled = true;
+            memoForwarded.disabled = true;
+
+            memoFrom.classList.add("locked");
+            memoForwarded.classList.add("locked");
+        } else {
+            memoFrom.disabled = false;
+            memoForwarded.disabled = false;
+
+            memoFrom.classList.remove("locked");
+            memoForwarded.classList.remove("locked");
+        }
     }
 
-    // Decide route
+    // =========================
+    // 🔗 ROUTE
+    // =========================
     if (btn.classList.contains("update-btn")) {
         form.action = `/secretary/edit/${id}`;
-    } else if (btn.classList.contains("update-new-btn")) {
+    } else {
         form.action = `/secretary/update/${id}`;
     }
 
     openEditMemo();
 });
-
-
 // 🚀 HANDLE FORM SUBMIT (AJAX - no page redirect)
-document.getElementById("editMemoForm").addEventListener("submit", function(e) {
+document.getElementById("editMemoForm").addEventListener("submit", async function(e) {
     e.preventDefault();
 
     const form = e.target;
     const url = form.action;
     const formData = new FormData(form);
-
+    // 🔥 ADD THIS
+    await saveItem("remarks", document.getElementById("editMemoRemarks").value);
+    await saveItem("from", document.getElementById("editMemoFrom").value);
+    await saveItem("forwarded", document.getElementById("editMemoForwarded").value);
+    await saveItem("released_to", document.getElementById("editMemoReleaseTo").value.trim());
+    
     fetch(url, {
         method: "POST",
         body: formData
@@ -1714,89 +2067,138 @@ function closeDeleteConfirm(){
     memoIdToDelete = null;
 }
 
+
+
 /* =========================
-INITIAL LOAD
+AUTOCOMPLETE SYSTEM (CLEAN)
 ========================= */
 
-document.addEventListener("DOMContentLoaded",function(){
-
-loadHolidays();
-
-});
-const toggle = document.getElementById("typeToggle");
-
-let timeout = null;
-
-const toggleOptions = document.querySelectorAll(".toggle-option");
-
-// default from URL
-let currentType = new URLSearchParams(window.location.search).get("type") || "CM";
-
-// 🔥 initialize active state
-toggleOptions.forEach(btn => {
-    if (btn.dataset.type === currentType) {
-        btn.classList.add("active");
-    } else {
-        btn.classList.remove("active");
-    }
-});
-
-// 🔥 click handler
-toggleOptions.forEach(btn => {
-    btn.addEventListener("click", function () {
-        // remove active from all
-        toggleOptions.forEach(b => b.classList.remove("active"));
-
-        // add active to clicked
-        this.classList.add("active");
-
-        currentType = this.dataset.type;
-
-        fetchTable();
-    });
-});
-
-function fetchTable() {
-    const search = document.getElementById("searchInput").value;
-    const month = document.getElementById("monthFilter").value;
-    const year = document.getElementById("yearFilter").value;
-
-    const url = `/?search=${encodeURIComponent(search)}&month=${month}&year=${year}&type=${currentType}`;
-
-    fetch(url)
-        .then(res => res.text())
-        .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, "text/html");
-
-            const newTable = doc.querySelector("#tableContainer");
-            if (newTable) {
-                document.querySelector("#tableContainer").innerHTML = newTable.innerHTML;
-            }
-        });
+async function fetchList(type) {
+    const res = await fetch(`/secretary/autocomplete/${type}`);
+    return await res.json();
 }
 
+async function saveItem(type, value) {
+    if (!value) return;
+
+    value = value.trim();
+    if (!value) return;
+
+    await fetch("/secretary/autocomplete", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ type: type, value: value })
+    });
+}
+
+async function deleteItem(type, value) {
+    await fetch("/secretary/autocomplete", {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ type: type, value: value })
+    });
+}
+
+function setupAutocomplete(inputId, dropdownId, type) {
+
+    const input = document.getElementById(inputId);
+    const dropdown = document.getElementById(dropdownId);
+
+    if (!input || !dropdown) {
+        console.warn(`Autocomplete skipped: ${inputId}`);
+        return;
+    }
+
+    input.addEventListener("focus", load);
+    input.addEventListener("input", load);
+
+    async function load() {
+        const list = await fetchList(type);
+        const filter = input.value.toLowerCase();
+
+        dropdown.innerHTML = "";
+
+        const filtered = list.filter(item =>
+            item.toLowerCase().includes(filter)
+        );
+
+        if (!filtered.length) {
+            dropdown.style.display = "none";
+            return;
+        }
+
+        filtered.forEach(item => {
+            const div = document.createElement("div");
+            div.classList.add("dropdown-item");
+
+            div.innerHTML = `
+                <span class="item-text">${item}</span>
+                <span class="delete-btn">✕</span>
+            `;
+
+            // SELECT
+            div.querySelector(".item-text").onclick = () => {
+                input.value = item;
+                dropdown.style.display = "none";
+            };
+
+            // DELETE
+            div.querySelector(".delete-btn").onclick = async (e) => {
+                e.stopPropagation();
+                await deleteItem(type, item);
+                load();
+            };
+
+            dropdown.appendChild(div);
+        });
+
+        dropdown.style.display = "block";
+    }
+}
+
+/* =========================
+GLOBAL CLICK HANDLER (ONE ONLY)
+========================= */
+
+if (!window._autocompleteClickBound) {
+    document.addEventListener("click", (e) => {
+        document.querySelectorAll(".dropdown").forEach(dropdown => {
+            const input = dropdown.previousElementSibling;
+
+            if (input &&
+                !input.contains(e.target) &&
+                !dropdown.contains(e.target)) {
+                dropdown.style.display = "none";
+            }
+        });
+    });
+
+    window._autocompleteClickBound = true;
+}
+
+/* =========================
+INIT AUTOCOMPLETE
+========================= */
 
 document.addEventListener("DOMContentLoaded", () => {
-    const monthFilter = document.getElementById("monthFilter");
-    const yearFilter = document.getElementById("yearFilter");
 
-    const today = new Date();
+    // ADD MODAL
+    setupAutocomplete("memoRemarks", "remarksDropdown", "remarks");
+    setupAutocomplete("memoFrom", "fromDropdown", "from");
+    setupAutocomplete("memoForwarded", "forwardedDropdown", "forwarded");
+    setupAutocomplete("memoReleaseTo", "releaseToDropdown", "released_to");
+    
+    // EDIT MODAL
+    setupAutocomplete("editMemoFrom", "editFromDropdown", "from");
+    setupAutocomplete("editMemoForwarded", "editForwardedDropdown", "forwarded");
+    setupAutocomplete("editMemoRemarks", "editRemarksDropdown", "remarks");
+    setupAutocomplete("editMemoReleaseTo", "editReleaseToDropdown", "released_to");
 
-    monthFilter.value = today.getMonth() + 1;
-    yearFilter.value = today.getFullYear();
 });
-
-const searchInput = document.getElementById("searchInput");
-// 🔍 typing (debounce)
-searchInput.addEventListener("input", () => {
-    clearTimeout(timeout);
-    timeout = setTimeout(fetchTable, 300);
-});
-
-// 📅 filters
-monthFilter.addEventListener("change", fetchTable);
-yearFilter.addEventListener("change", fetchTable);
 </script>
 
 {% endblock %}
