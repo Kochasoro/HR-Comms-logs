@@ -1088,9 +1088,15 @@ td.actions {
                 <tr>
                     <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Serial No.</th>
                     <th colspan="4" style="background-color:#e53935; color:#fff;">Incoming</th>
+                    {% if selected_type  != "OP" %}
                     <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Remarks</th>
+                    {% else %}
+                    <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Memo No.</th>
+                    {% endif %}
                     <th rowspan="2" style="background-color:#b71c1c; color:#fff;">Notes</th>
+                    {% if selected_type != "OP" %}
                     <th colspan="2" style="background-color:#e53935; color:#fff;">Released</th>
+                    {% endif %}
                     {% if current_user.is_authenticated %}
                     <th rowspan="2" class="vertical-header" style="background-color:#b71c1c; color:#fff;">Actions</th>
                     {% endif %}
@@ -1100,9 +1106,10 @@ td.actions {
                     <th style="background-color:#fdecea; color:#333;">From</th>
                     <th style="background-color:#fdecea; color:#333;">Forwarded By</th>
                     <th style="background-color:#fdecea; color:#333;">Subject</th>
-
+                    {% if selected_type != "OP" %}
                     <th style="background-color:#fdecea; color:#333;">Date</th>
                     <th style="background-color:#fdecea; color:#333;">To</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -1142,35 +1149,31 @@ td.actions {
                             data-released_to="{{ memo.released_to }}"
                             data-released_date="{{ memo.released_date }}"
                             data-status="{{ memo.status }}">
-                            {% if memo.memo_number %}
-                                {{ memo.memo_number }} - {{ memo.subject }}
-                            {% else %}
-                                {{ memo.subject }}
-                            {% endif %}                    
+                                {{ memo.subject }}                
                         </button>
                         {% else %}
-                            {% if memo.memo_number %}
-                                {{ memo.memo_number }} - {{ memo.subject }}
-                            {% else %}
-                                {{ memo.subject }}
-                            {% endif %}                    
+                        {{ memo.subject }}
                         {% endif %}
                     </td>
 
                     <!-- Remarks / Notes -->
+                    {% if selected_type  != "OP" %}
                     <td>{{ memo.remarks }}</td>
+                    {% else %}
+                    <td>{{ memo.memo_number }}</td>
+                    {% endif %}
                     <td>{{ memo.notes }}</td>
-
+                    {% if selected_type  != "OP" %}
                     <!-- Released Section -->
                     <td>{{ memo.released_date or "" }}</td>                
                     <td>{{ memo.released_to }}</td>
-
+                    {% endif %}
                     <!-- Actions -->
                     {% if current_user.is_authenticated %}
                         <td>
 
                             <!-- ACTION MENU -->
-                            <div lass="action-menu">
+                            <div class="action-menu">
                                 <button class="menu-btn">⋮</button>
 
                                 <div class="menu-dropdown">
@@ -1313,35 +1316,36 @@ td.actions {
         <input name="subject" id="memoSubject">
       </div>
 
-      <!-- Remarks -->
-      <div class="form-group">
+        <!-- Remarks -->
+        <div class="form-group" id="remarksGroup">
         <label>Remarks</label>
         <div class="autocomplete">
-        <textarea name="remarks" id="memoRemarks"></textarea>
-        <div class="dropdown" id="remarksDropdown"></div>
+            <textarea name="remarks" id="memoRemarks"></textarea>
+            <div class="dropdown" id="remarksDropdown"></div>
         </div>
-      </div>
+        </div>
 
-      <!-- Notes -->
-      <div class="form-group">
+        <!-- Notes -->
+        <div class="form-group" id="notesGroup">
         <label>Notes</label>
         <textarea name="notes" id="memoNotes"></textarea>
-      </div>
+        </div>
 
-      <!-- Release Section -->
-      <div class="form-row">
+        <!-- Release Section -->
+        <div class="form-row" id="releaseSection">
         <div class="form-group">
-        <label>Released To</label>
+            <label>Released To</label>
             <div class="autocomplete">
-                <input name="released_to" id="memoReleaseTo" autocomplete="off">
-                <div class="dropdown" id="releaseToDropdown"></div>
+            <input name="released_to" id="memoReleaseTo" autocomplete="off">
+            <div class="dropdown" id="releaseToDropdown"></div>
             </div>
         </div>
+
         <div class="form-group">
-          <label>Released Date</label>
-          <input type="date" name="released_date" id="memoReleaseDate">
+            <label>Released Date</label>
+            <input type="date" name="released_date" id="memoReleaseDate">
         </div>
-      </div>
+        </div>
 
       <div class="modal-buttons">
         <button type="submit" class="btn">Submit</button>
@@ -1390,12 +1394,19 @@ td.actions {
     </div>
 
     <!-- Remarks -->
-    <div class="form-group">
+     <div class="form-row">
+
+    <div class="form-group" id="editRemarksRow">
         <label>Remarks</label>
         <div class="autocomplete">
             <textarea name="remarks" id="editMemoRemarks"></textarea>
             <div class="dropdown" id="editRemarksDropdown"></div>
         </div>
+    </div>
+
+    <div class="form-group" id="editMemoNumberRow">
+        <label>Memo #</label>
+        <input name="memo_number" id="editMemoNumber">
     </div>
 
     <!-- Notes -->
@@ -1404,8 +1415,9 @@ td.actions {
       <textarea name="notes" id="editMemoNotes"></textarea>
     </div>
 
+    </div>
     <!-- Release Section -->
-    <div class="form-row">
+    <div class="form-row" id="editReleaseRow">
         <div class="form-group">
         <label>Released To</label>
         <div class="autocomplete">
@@ -1454,9 +1466,11 @@ td.actions {
     </div>
 </div>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+function initializeColumnResize() {
 
     const table = document.querySelector(".records-table");
+    if (!table) return;
+
     const headers = table.querySelectorAll("th");
 
     headers.forEach((header, index) => {
@@ -1474,6 +1488,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             function mouseMove(e) {
                 const newWidth = startWidth + (e.pageX - startX);
+
                 header.style.width = newWidth + "px";
 
                 const columnCells = table.querySelectorAll(
@@ -1495,9 +1510,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
     });
-
-});
-
+}
 
 /* =========================
 INITIAL LOAD
@@ -1507,6 +1520,16 @@ let timeout = null;
 let currentType = new URLSearchParams(window.location.search).get("type") || "CM";
 
 document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("click", function (e) {
+
+        // 🛑 block row drawer when clicking action menu
+        if (e.target.closest(".action-menu")) {
+            e.stopPropagation();
+            return;
+        }
+
+    });
+    initializeColumnResize();
 
     loadHolidays();
 
@@ -1639,36 +1662,49 @@ function fetchTable() {
 
             if (newTable) {
                 document.querySelector("#tableContainer").innerHTML = newTable.innerHTML;
+
+                initializeColumnResize();
             }
 
         });
-
 }
+document.addEventListener("click", function (e) {
 
-document.querySelectorAll(".menu-btn").forEach(btn => {
-    btn.addEventListener("click", (e) => {
+    const btn = e.target.closest(".menu-btn");
+
+    // CLICK MENU BUTTON
+    if (btn) {
+
         e.stopPropagation();
-
-        document.querySelectorAll(".menu-dropdown")
-            .forEach(m => m.style.display = "none");
 
         const menu = btn.nextElementSibling;
 
-        menu.style.display = "flex"; // show first so width is known
+        const isOpen = menu.style.display === "flex";
 
-        const rect = btn.getBoundingClientRect();
+        // close all menus first
+        document.querySelectorAll(".menu-dropdown")
+            .forEach(m => m.style.display = "none");
 
-        menu.style.position = "fixed";
-        menu.style.top = rect.bottom + "px";
+        // toggle menu
+        if (!isOpen) {
 
-        // ✅ LEFT side of button
-        menu.style.left = (rect.left - menu.offsetWidth + btn.offsetWidth) + "px";
-    });
-});
+            menu.style.display = "flex";
 
-document.addEventListener("click", () => {
+            const rect = btn.getBoundingClientRect();
+
+            menu.style.position = "fixed";
+            menu.style.top = rect.bottom + "px";
+            menu.style.left =
+                rect.right - menu.offsetWidth + "px";
+        }
+
+        return;
+    }
+
+    // CLICK ANYWHERE ELSE → CLOSE MENUS
     document.querySelectorAll(".menu-dropdown")
         .forEach(m => m.style.display = "none");
+
 });
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -1678,8 +1714,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const drawer = document.getElementById("memoDrawer");
 
-        // 🚫 Ignore buttons
-        if (e.target.closest(".actions") || e.target.closest(".update-new-btn")) {
+        if (
+            e.target.closest(".action-menu") ||
+            e.target.closest("button") ||
+            e.target.closest("a") ||
+            e.target.closest("input")
+        ) {
             return;
         }
 
@@ -1689,6 +1729,11 @@ document.addEventListener("DOMContentLoaded", function () {
         // ✅ CLICK ROW
         // =========================
         if (row) {
+
+            if (activeRow === row) {
+                closeDrawer();
+                return;
+            }
 
             document.querySelectorAll(".memo-row")
                 .forEach(r => r.classList.remove("active-row"));
@@ -1881,45 +1926,50 @@ function updateFormFields() {
     const type = document.getElementById("source_type_outside").value;
 
     const memoNumberGroup = document.getElementById("memoNumberGroup");
+    const remarksGroup = document.getElementById("remarksGroup");
+    const releaseSection = document.getElementById("releaseSection");
 
     const fromInput = document.getElementById("memoFrom");
     const forwardedInput = document.getElementById("memoForwarded");
 
-    // 🔥 SOURCE TYPE LOGIC
     if (type === "OP") {
+
         memoNumberGroup.style.display = "block";
 
-        // ✅ AUTO-FILL
+        // hide fields
+        remarksGroup.style.display = "none";
+        releaseSection.style.display = "none";
+
+        // autofill
         fromInput.value = "OP";
         forwardedInput.value = "RECORDS";
 
-        // 🔒 LOCK
         fromInput.readOnly = true;
         forwardedInput.readOnly = true;
 
-        // optional: style it so user knows it's locked
         fromInput.classList.add("locked");
         forwardedInput.classList.add("locked");
 
     } else {
+
         memoNumberGroup.style.display = "none";
 
-        // 🔄 UNLOCK
+        // show fields again
+        remarksGroup.style.display = "block";
+        releaseSection.style.display = "flex"; // because it's form-row
+
         fromInput.readOnly = false;
         forwardedInput.readOnly = false;
 
-        // optional: remove locked style
         fromInput.classList.remove("locked");
         forwardedInput.classList.remove("locked");
 
-        // 🔥 optional reset (only if you want clean fields)
         fromInput.value = "";
         forwardedInput.value = "";
 
         document.getElementById("memoNumber").value = "";
     }
 
-    // 🔥 SYNC HIDDEN INPUT
     const hidden = document.getElementById("hiddenSourceType");
     if (hidden) {
         hidden.value = type;
@@ -2069,6 +2119,9 @@ document.addEventListener('click', function(e) {
     const memoForwarded = document.getElementById("editMemoForwarded");
     const memoSubject = document.getElementById("editMemoSubject");
     const memoDate = document.getElementById("editMemoDate");
+    const remarksRow = document.getElementById("editRemarksRow");
+    const releaseRow = document.getElementById("editReleaseRow");
+    const memoNumberRow = document.getElementById("editMemoNumberRow");
 
     // =========================
     // 🧾 FILL FIELDS
@@ -2082,7 +2135,19 @@ document.addEventListener('click', function(e) {
     memoDate.value = btn.dataset.date || "";
     document.getElementById("editMemoReleaseTo").value = btn.dataset.released_to || "";
     document.getElementById("editMemoReleaseDate").value = btn.dataset.released_date || "";
+    document.getElementById("editMemoNumber").value = btn.dataset.number || "";
 
+    if (sourceType === "OP") {
+
+        remarksRow.style.display = "none";
+        releaseRow.style.display = "none";
+        memoNumberRow.style.display = "flex";  
+    } else {
+        memoNumberRow.style.display = "none";
+        remarksRow.style.display = "flex";
+        releaseRow.style.display = "flex";
+
+    }
     // =========================
     // 🔥 MODE: UPDATE-NEW (LOCK EVERYTHING IMPORTANT)
     // =========================
@@ -2092,11 +2157,13 @@ document.addEventListener('click', function(e) {
         memoForwarded.disabled = true;
         memoSubject.disabled = true;
         memoDate.disabled = true;
+        memoNumberRow.disabled = true;
 
         memoFrom.classList.add("locked");
         memoForwarded.classList.add("locked");
         memoSubject.classList.add("locked");
         memoDate.classList.add("locked");
+        memoNumberRow.classList.add("locked");
 
     } 
     // =========================
@@ -2107,9 +2174,11 @@ document.addEventListener('click', function(e) {
         // Subject & Date ALWAYS editable here
         memoSubject.disabled = false;
         memoDate.disabled = false;
+        memoNumberRow.disabled = false;
 
         memoSubject.classList.remove("locked");
         memoDate.classList.remove("locked");
+        memoNumberRow.classList.remove("locked");   
 
         // Apply OP logic (your original behavior)
         if (sourceType === "OP") {

@@ -7,13 +7,15 @@ from app.models.settings import SystemSettings
 from app.models.holiday import Holiday
 from app.models.memo import Memo
 from app.extensions import db
-from datetime import datetime
+from datetime import date, datetime, timedelta
 import pandas as pd
 from io import BytesIO
 from collections import defaultdict
 from openpyxl import load_workbook
 from werkzeug.utils import secure_filename
 import os
+
+from app.services.log_service import LogService
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -23,8 +25,37 @@ def dashboard():
     if current_user.role != "admin":
         return redirect(url_for("auth.login"))
 
-    return render_template("admin/dashboard.html")
+    sort = request.args.get("sort", "latest")
 
+    query = LogEntry.query
+
+    if sort == "oldest":
+        query = query.order_by(LogEntry.encoded_at.asc())
+    else:
+        query = query.order_by(LogEntry.encoded_at.desc())
+
+    logs = query.limit(3).all()
+
+    today = date.today()
+    start_week = today - timedelta(days=today.weekday())
+
+    week_counts = []
+
+    for i in range(7):
+        day = start_week + timedelta(days=i)
+
+        count = Memo.query.filter(
+            Memo.date == day
+        ).count()
+
+        week_counts.append(count)
+
+    return render_template(
+        "admin/dashboard.html",
+        logs=logs,
+        week_counts=week_counts,
+        current_sort=sort
+    )
 
 @admin_bp.route("/settings/general", methods=["GET", "POST"])
 @login_required
@@ -244,6 +275,13 @@ def import_memos():
 
         db.session.commit()
 
+        LogService.add_log(
+            None,
+            f"{current_user.username} imported memos",
+            f"{imported} imported, {skipped} skipped",
+            current_user.id
+        )
+
         return jsonify({
             "success": True,
             "imported": imported,
@@ -291,6 +329,7 @@ def export_memos():
     memos = query.order_by(Memo.date).all()
 
     # ===== CSV (unchanged) =====
+    # ===== CSV =====
     if csv:
         data = []
         for m in memos:
@@ -313,14 +352,20 @@ def export_memos():
         output.write(df.to_csv(index=False).encode())
         output.seek(0)
 
+        LogService.add_log(
+            None,
+            f"{current_user.username} exported memos as CSV",
+            f"{len(memos)} memo(s) exported",
+            current_user.id
+        )
+
         return send_file(
             output,
             as_attachment=True,
             download_name="memos_export.csv",
             mimetype="text/csv"
         )
-
-    # ===== EXCEL (TEMPLATE-BASED MULTI-SHEET) =====
+    # ===== EXCEL =====
     if excel:
 
         output = BytesIO()
@@ -335,7 +380,6 @@ def export_memos():
         template_ws = wb.active
         template_ws.title = "TEMPLATE"
 
-        # ===== GROUP BY MONTH + TYPE =====
         grouped = defaultdict(list)
 
         for m in memos:
@@ -347,14 +391,11 @@ def export_memos():
 
             grouped[key].append(m)
 
-        # ===== CREATE SHEETS =====
         for key in sorted(grouped.keys()):
             ws = wb.copy_worksheet(template_ws)
             ws.title = key
 
-            # Optional: set title in sheet
             ws["A2"] = key
-
             start_row = 6
 
             for i, m in enumerate(grouped[key]):
@@ -370,14 +411,19 @@ def export_memos():
                 ws.cell(row=row, column=8, value=m.released_date)
                 ws.cell(row=row, column=9, value=m.released_to)
 
-            # Freeze header (nice UX)
             ws.freeze_panes = "A3"
 
-        # Remove template sheet
         wb.remove(template_ws)
 
         wb.save(output)
         output.seek(0)
+
+        LogService.add_log(
+            None,
+            f"{current_user.username} exported memos as Excel",
+            f"{len(memos)} memo(s) exported to XLSX",
+            current_user.id
+        )
 
         return send_file(
             output,
@@ -407,6 +453,12 @@ def create_user():
 
     db.session.add(user)
     db.session.commit()
+    LogService.add_log(
+        user,
+        f"{current_user.username} created a user account",
+        f"Created user '{user.username}' with role '{user.role}'",
+        current_user.id
+    )
 
     flash("User created successfully")
 
@@ -427,7 +479,12 @@ def reset_password(id):
     user.set_password(new_password)
 
     db.session.commit()
-
+    LogService.add_log(
+        user,
+        f"{current_user.username} reset a user's password",
+        f"Password reset for '{user.username}'",
+        current_user.id
+    )
     flash("Password reset successfully")
 
     return redirect(url_for("admin.users"))
@@ -449,10 +506,18 @@ def delete_user(id):
     if user.id == current_user.id:
         flash("You cannot delete your own account.")
         return redirect(url_for("admin.users"))
+    
+    deleted_username = user.username
+    deleted_role = user.role
 
     db.session.delete(user)
     db.session.commit()
-
+    LogService.add_log(
+        None,
+        f"{current_user.username} deleted a user account",
+        f"Deleted user '{deleted_username}' with role '{deleted_role}'",
+        current_user.id
+    )
     flash("User deleted")
 
     return redirect(url_for("admin.users"))
