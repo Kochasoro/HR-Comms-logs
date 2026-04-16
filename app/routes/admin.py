@@ -453,6 +453,12 @@ def create_user():
 
     db.session.add(user)
     db.session.commit()
+    LogService.add_log(
+        user,
+        f"{current_user.username} created a user account",
+        f"Created user '{user.username}' with role '{user.role}'",
+        current_user.id
+    )
 
     flash("User created successfully")
 
@@ -473,7 +479,12 @@ def reset_password(id):
     user.set_password(new_password)
 
     db.session.commit()
-
+    LogService.add_log(
+        user,
+        f"{current_user.username} reset a user's password",
+        f"Password reset for '{user.username}'",
+        current_user.id
+    )
     flash("Password reset successfully")
 
     return redirect(url_for("admin.users"))
@@ -495,10 +506,18 @@ def delete_user(id):
     if user.id == current_user.id:
         flash("You cannot delete your own account.")
         return redirect(url_for("admin.users"))
+    
+    deleted_username = user.username
+    deleted_role = user.role
 
     db.session.delete(user)
     db.session.commit()
-
+    LogService.add_log(
+        None,
+        f"{current_user.username} deleted a user account",
+        f"Deleted user '{deleted_username}' with role '{deleted_role}'",
+        current_user.id
+    )
     flash("User deleted")
 
     return redirect(url_for("admin.users"))
