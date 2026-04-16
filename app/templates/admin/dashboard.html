@@ -81,21 +81,64 @@
   width: 100%;
 }
 
-.bar {
+.bar-wrapper {
+  position: relative;
   flex: 1 1 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  height: 100%;
+}
+
+.bar {
+  width: 100%;
   background: #a42323;
   border-radius: 6px;
   min-height: 6px;
   transition: 0.3s;
   animation: grow 0.7s ease;
+  cursor: pointer;
 }
 
 .bar:hover {
   opacity: 0.8;
 }
 
+.bar-value {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  background: #222;
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.2s ease;
+  white-space: nowrap;
+}
+
+.bar-value::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #222;
+}
+
+.bar-wrapper:hover .bar-value {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 @keyframes grow {
-  from { height: 0; }
+  from {
+    height: 0;
+  }
 }
 
 /* CHART LABELS */
@@ -192,7 +235,7 @@
   <!-- CARDS -->
   <div class="dashboard-grid">
 
-    <!-- USERS -->
+    <!-- USERS
     <div class="stat-card">
       <div>
         <div class="stat-label">Total Users</div>
@@ -201,27 +244,33 @@
       <div class="stat-icon">👤</div>
     </div>
 
-    <!-- PENDING -->
     <div class="stat-card pending-card">
       <div>
         <div class="stat-label">Pending Approvals</div>
         <div class="stat-value">5</div>
       </div>
       <div class="stat-icon">⏳</div>
-    </div>
+    </div> -->
 
     <!-- CHART -->
     <div class="stat-card chart-card">
       <div class="stat-label">Memos (This Week)</div>
 
       <div class="chart-container">
-        <div class="bar" style="height: 40%;"></div>
-        <div class="bar" style="height: 70%;"></div>
-        <div class="bar" style="height: 30%;"></div>
-        <div class="bar" style="height: 90%;"></div>
-        <div class="bar" style="height: 60%;"></div>
-        <div class="bar" style="height: 20%;"></div>
-        <div class="bar" style="height: 50%;"></div>
+        {% set max_val = week_counts|max %}
+        {% if max_val == 0 %}
+          {% set max_val = 1 %}
+        {% endif %}
+
+        {% for count in week_counts %}
+          <div class="bar-wrapper">
+            <div class="bar-value">{{ count }}</div>
+
+            <div class="bar"
+                style="height: {{ (count / max_val) * 100 }}%;">
+            </div>
+          </div>
+        {% endfor %}
       </div>
 
       <div class="chart-labels">
@@ -237,55 +286,46 @@
 
   </div>
 
-  <!-- ACTIVITY -->
-  <div class="activity-log">
-    <div class="log-header">
-      <h2 class="log-title">Recent Activity</h2>
+<!-- ACTIVITY -->
+<div class="activity-log">
+  <div class="log-header">
+    <h2 class="log-title">Recent Activity</h2>
 
-      <div class="controls">
-        <input type="text" placeholder="Search" class="search-input">
-        <select class="sort-select">
-          <option>Sort by</option>
-        </select>
-      </div>
+    <div class="controls">
+
+      <a href="{{ url_for('admin.logs_page') }}" class="btn">View All</a>
     </div>
-
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Ref No.</th>
-          <th>Type</th>
-          <th>File Name</th>
-          <th>Date</th>
-          <th>Time</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>IMP-0001</td>
-          <td>Import</td>
-          <td>records_january.xlsx</td>
-          <td>March 02, 2026</td>
-          <td>11:26 AM</td>
-        </tr>
-        <tr>
-          <td>EXP-0002</td>
-          <td>Export</td>
-          <td>logs_february.pdf</td>
-          <td>March 03, 2026</td>
-          <td>03:49 PM</td>
-        </tr>
-        <tr>
-          <td>IMP-0003</td>
-          <td>Import</td>
-          <td>records_march.csv</td>
-          <td>March 04, 2026</td>
-          <td>01:11 PM</td>
-        </tr>
-      </tbody>
-    </table>
   </div>
 
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Ref No.</th>
+        <th>Type</th>
+        <th>File Name</th>
+        <th>Date</th>
+        <th>Time</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td>#{{ "%04d"|format(log.serial_number) }}</td>
+
+        <td>{{ log.type or "Memo" }}</td>
+
+        <td>
+          {{ log.file_name if log.file_name else log.remarks }}
+        </td>
+
+        <td>{{ log.encoded_at.strftime("%B %d, %Y") }}</td>
+        <td>{{ log.encoded_at.strftime("%I:%M %p") }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 </div>
 
 {% endblock %}

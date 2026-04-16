@@ -155,11 +155,15 @@ def edit_memo(id):
         memo.status = request.form.get("status")
 
         raw_release_date = request.form.get("released_date")
-        if raw_release_date:
+
+        if raw_release_date and raw_release_date not in ["None", ""]:
             memo.released_date = datetime.strptime(raw_release_date, "%Y-%m-%d").date()
+        else:
+            memo.released_date = None
 
         raw_date = request.form.get("date")
-        if raw_date:
+
+        if raw_date and raw_date not in ["None", ""]:
             memo.date = datetime.strptime(raw_date, "%Y-%m-%d").date()
 
         db.session.commit()
