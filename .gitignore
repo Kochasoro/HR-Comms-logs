@@ -1,7 +1,7 @@
 venv/
 __pycache__/
 *.pyc
-instance/
+instance/app.db
 *.db
 .env
 migrations/__pycache__/
