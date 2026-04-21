@@ -1,7 +1,42 @@
+# =========================
+# Python
+# =========================
 venv/
 __pycache__/
 *.pyc
-instance/app.db
+*.pyo
+*.pyd
+
+# Flask instance / runtime
+instance/
 *.db
+*.sqlite3
 .env
+
+# Migrations
 migrations/__pycache__/
+
+# =========================
+# Electron / Node
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Electron build output
+dist/
+out/
+release/
+
+# =========================
+# PyInstaller
+# =========================
+build/
+*.spec
+
+# =========================
+# OS junk
+# =========================
+.DS_Store
+Thumbs.db
