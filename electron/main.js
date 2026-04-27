@@ -1,20 +1,8 @@
 const { app, BrowserWindow } = require('electron');
 const { spawn } = require('child_process');
-const http = require('http');
+const path = require('path');
 
 let flaskProcess;
-
-function waitForFlask(callback) {
-    const check = () => {
-        http.get('http://127.0.0.1:5000', (res) => {
-            callback(); // Flask is ready
-        }).on('error', () => {
-            setTimeout(check, 300); // retry
-        });
-    };
-
-    check();
-}
 
 function createWindow() {
     const win = new BrowserWindow({
@@ -26,18 +14,28 @@ function createWindow() {
     win.loadURL("http://127.0.0.1:5000");
 }
 
-app.whenReady().then(() => {
+function startFlask() {
+    let flaskPath;
 
-    // start Flask
-    flaskProcess = spawn('python', ['../run_desktop.py']);
+    if (app.isPackaged) {
+        flaskPath = path.join(process.resourcesPath, "backend", "run_desktop.exe");
+    } else {
+        flaskPath = path.join(__dirname, "backend", "run_desktop.exe");
+    }
 
-    // WAIT until Flask is actually running
-    waitForFlask(() => {
-        createWindow();
+    flaskProcess = spawn(flaskPath, [], {
+        detached: false,
+        stdio: "ignore"
     });
+}
+
+app.whenReady().then(() => {
+    startFlask();
+
+    setTimeout(createWindow, 3000);
 });
 
-app.on('window-all-closed', () => {
+app.on("window-all-closed", () => {
     if (flaskProcess) flaskProcess.kill();
-    if (process.platform !== 'darwin') app.quit();
+    if (process.platform !== "darwin") app.quit();
 });

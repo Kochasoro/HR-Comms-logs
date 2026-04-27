@@ -221,10 +221,10 @@
             <label>Format:</label>
             <div class="format-group">
               <label><input type="checkbox" id="format-excel"> Excel</label>
-              <span class="v-line">|</span>
+              <!-- <span class="v-line">|</span>
               <label><input type="checkbox" id="format-csv"> CSV</label>
               <span class="v-line">|</span>
-              <label><input type="checkbox" id="format-pdf"> PDF</label>
+              <label><input type="checkbox" id="format-pdf"> PDF</label> -->
             </div>
           </div>
 
@@ -244,8 +244,8 @@ document.getElementById("generate-export").addEventListener("click", () => {
   const dateTo = document.getElementById("date-to").value;
 
   const excel = document.getElementById("format-excel").checked;
-  const csv = document.getElementById("format-csv").checked;
-  const pdf = document.getElementById("format-pdf").checked;
+  // const csv = document.getElementById("format-csv").checked;
+  // const pdf = document.getElementById("format-pdf").checked;
 
   if(!cm && !op){
     alert("Select at least one memo type.");
@@ -261,8 +261,8 @@ document.getElementById("generate-export").addEventListener("click", () => {
     cm,
     op,
     excel,
-    csv,
-    pdf,
+    // csv,
+    // pdf,
     dateFrom,
     dateTo
   });

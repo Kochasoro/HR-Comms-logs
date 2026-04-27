@@ -119,7 +119,6 @@ label { font-size: 0.85rem; color: #555; width: 300px; }
   <div class="tabs-container">
     <button class="tab-btn active" data-tab="general">General</button>
     <button class="tab-btn" data-tab="holidays">Holidays</button>
-    <button class="tab-btn" data-tab="appearance">Appearance</button>
   </div>
 
   <div class="settings-card">
@@ -160,7 +159,12 @@ label { font-size: 0.85rem; color: #555; width: 300px; }
           {% for holiday in holidays %}
           <tr>
 
-          <td>{{ holiday.date }}</td>
+          <td>
+            {{ holiday.date }}
+            {% if holiday.repeat_yearly %}
+              🔁
+            {% endif %}
+          </td>
           <td>{{ holiday.name }}</td>
           <td>{{ holiday.type }}</td>
           <td>{{ holiday.description }}</td>
@@ -183,23 +187,6 @@ label { font-size: 0.85rem; color: #555; width: 300px; }
       </div>
     </div>
 
-    <div class="settings-section"  id="appearance">
-      <div class="section-header">APPEARANCE</div>
-      <div class="form-body">
-        <div class="form-group">
-          <label>Sidebar Color:</label>
-          <div class="color-picker-box">
-            <span class="color-preview"></span>
-            <input type="text" value="#a42323" class="color-input">
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Dark Mode:</label>
-          <select class="wide-input"><option>Disable</option></select>
-        </div>
-        <div class="btn-right"><button class="btn-save">Apply Theme</button></div>
-      </div>
-    </div>
 
   </div>
 </div>
@@ -212,7 +199,6 @@ label { font-size: 0.85rem; color: #555; width: 300px; }
 
     <form method="POST" action="{{ url_for('admin.settings_general') }}">
 
-      <!-- 🔑 tells backend which form -->
       <input type="hidden" name="form_type" value="holiday">
 
       <div class="form-group">
@@ -238,7 +224,12 @@ label { font-size: 0.85rem; color: #555; width: 300px; }
         <label>Description</label>
         <textarea name="description" placeholder="Optional notes..."></textarea>
       </div>
-
+    <div class="form-group">
+      <label>
+        <input type="checkbox" name="repeat_yearly">
+        Repeat every year
+      </label>
+    </div>
       <div class="modal-buttons">
         <button type="button" class="btn cancel" onclick="closeModals()">Cancel</button>
         <button type="submit" class="btn">Save Holiday</button>

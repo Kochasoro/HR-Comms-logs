@@ -14,7 +14,7 @@ class LogService:
             date=date.today(),
             remarks=remarks,
             notes=notes,
-            memo_id=memo.id,
+            memo_id=memo.id if memo else None,  # ✅ safe
             user_id=user_id 
         )
 

@@ -98,11 +98,14 @@ def settings_general():
         # ADD HOLIDAY
         elif form_type == "holiday":
 
+            repeat = "repeat_yearly" in request.form  # ✅ True/False
+
             holiday = Holiday(
                 date=datetime.strptime(request.form["date"], "%Y-%m-%d"),
                 name=request.form["name"],
                 type=request.form["type"],
-                description=request.form["description"]
+                description=request.form["description"],
+                repeat_yearly=repeat
             )
 
             db.session.add(holiday)
@@ -297,6 +300,9 @@ def import_memos():
 @login_required
 def export_memos():
 
+    if current_user.role != "admin":
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+        
     cm = request.args.get("cm") == "true"
     op = request.args.get("op") == "true"
 
@@ -329,7 +335,7 @@ def export_memos():
     memos = query.order_by(Memo.date).all()
 
     # ===== CSV (unchanged) =====
-    # ===== CSV =====
+
     if csv:
         data = []
         for m in memos:

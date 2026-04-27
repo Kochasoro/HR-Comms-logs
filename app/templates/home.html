@@ -1011,7 +1011,7 @@ td.actions {
             <div class="card-content">
             <div class="card-header">
                 <span class="card-date">
-                {{ holiday.date.strftime('%B %d, %Y') }} - {{ holiday.name }}
+                {{ holiday.display_date.strftime('%B %d, %Y') }}- {{ holiday.name }}
                 </span>
                 <span class="badge">{{ holiday.type or "Holiday" }}</span>
             </div>
