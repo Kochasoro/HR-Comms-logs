@@ -1,43 +1,81 @@
 const { app, BrowserWindow } = require('electron');
 const { spawn } = require('child_process');
+const path = require('path');
 const http = require('http');
 
 let flaskProcess;
+let mainWindow;
 
-function waitForFlask(callback) {
-    const check = () => {
-        http.get('http://127.0.0.1:5000', (res) => {
-            callback(); // Flask is ready
-        }).on('error', () => {
-            setTimeout(check, 300); // retry
-        });
-    };
-
-    check();
-}
-
+/* =========================
+CREATE WINDOW
+========================= */
 function createWindow() {
-    const win = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
-        autoHideMenuBar: true
+        autoHideMenuBar: true,
+        show: false // wait until ready
     });
 
-    win.loadURL("http://127.0.0.1:5000");
+    waitForServer(() => {
+        mainWindow.loadURL("http://127.0.0.1:5000");
+        mainWindow.show();
+    });
 }
 
-app.whenReady().then(() => {
-
-    // start Flask
-    flaskProcess = spawn('python', ['../run_desktop.py']);
-
-    // WAIT until Flask is actually running
-    waitForFlask(() => {
-        createWindow();
+/* =========================
+WAIT FOR FLASK SERVER
+========================= */
+function waitForServer(callback, retries = 20) {
+    const req = http.get("http://127.0.0.1:5000", () => {
+        callback();
     });
+
+    req.on("error", () => {
+        if (retries > 0) {
+            setTimeout(() => waitForServer(callback, retries - 1), 500);
+        } else {
+            console.error("❌ Flask failed to start");
+        }
+    });
+
+    req.end();
+}
+
+/* =========================
+START FLASK BACKEND
+========================= */
+function startFlask() {
+    let flaskPath;
+
+    if (app.isPackaged) {
+        flaskPath = path.join(process.resourcesPath, "backend", "run_desktop.exe");
+    } else {
+        flaskPath = path.join(__dirname, "backend", "run_desktop.exe");
+    }
+
+    flaskProcess = spawn(flaskPath, [], {
+        detached: false,
+        stdio: "ignore"
+    });
+
+    flaskProcess.on("error", (err) => {
+        console.error("❌ Failed to start Flask:", err);
+    });
+}
+
+/* =========================
+APP READY
+========================= */
+app.whenReady().then(() => {
+    startFlask();
+    createWindow();
 });
 
-app.on('window-all-closed', () => {
+/* =========================
+CLOSE HANDLING
+========================= */
+app.on("window-all-closed", () => {
     if (flaskProcess) flaskProcess.kill();
-    if (process.platform !== 'darwin') app.quit();
+    if (process.platform !== "darwin") app.quit();
 });
