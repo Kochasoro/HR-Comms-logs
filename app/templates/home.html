@@ -1,12 +1,967 @@
-{% block page_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
-{% endblock %}
-
-
 {% extends "base.html" %}
 
 {% block title %}Secretary Dashboard{% endblock %}
+{% block page_css %}
+<style>
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    border: 1px solid #eee;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+}
+
+/* Top Controls */
+.filter-wrapper{
+    position:relative;
+}
+
+.filter-btn{
+    padding:6px 12px;
+    background:#A12222;
+    color:white;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.filter-panel{
+    position: absolute;
+    right: 0;
+    top: 40px;
+
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    width: 200px;
+
+    display: none;
+
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+
+    z-index: 9999; /* important */
+}
+
+.filter-panel label{
+    display:block;
+    font-size:14px;
+    margin-bottom:6px;
+    cursor:pointer;
+}
+.top-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.search-group {
+    display: flex;
+    gap: 10px;
+}
+
+.search-input {
+    padding: 8px 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 250px;
+    font-size: 14px;
+}
+
+.date-dropdown {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+}
+
+.btn-red {
+    background-color: #A12222;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 5px;
+    text-decoration: none;
+}
+
+/* Announcement */
+.announcement-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.card {
+    flex: 1;
+    background-color: #F8D7DA; /* Light red tint */
+    border: 1px solid #f5c2c7;
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.card-icon {
+    font-size: 20px;
+    opacity: 0.6;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.card-date {
+    font-weight: bold;
+    color: #842029;
+    font-size: 14px;
+}
+
+.badge {
+    background-color: #A12222;
+    color: white;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: capitalize;
+}
+
+.card-sub {
+    margin: 0;
+    font-size: 12px;
+    color: #666;
+}
+
+
+
+
+/* TABLE CONTAINER */
+.table-container {
+    background: white;
+    border-radius: 8px;
+    overflow-x: auto;
+    overflow: visible;
+    width: 100%;
+}
+
+/* TABLE */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+/* HEADER */
+thead {
+    background: #E9EDF2;
+}
+
+/* DEFAULT CELL STYLE */
+th, td {
+    padding: clamp(6px, 1vw, 14px); /* 🔥 auto adjust spacing */
+    text-align: left;
+    white-space: normal;
+    word-break: break-word;
+    font-size: clamp(12px, 0.9vw, 14px); /* 🔥 responsive text */
+}
+
+/* COLUMN WIDTHS (FLEXIBLE) */
+th:nth-child(1), td:nth-child(1) {
+    width: 60px;
+}
+
+th:nth-child(2), td:nth-child(2) {
+    min-width: 200px;
+}
+/* COLUMN RESIZER */
+th {
+    position: relative;
+}
+
+.column-resizer {
+    position: absolute;
+    top: 0;
+    right: -2px;
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+    user-select: none;
+}
+
+.column-resizer:hover {
+    background: rgba(0,0,0,0.15);
+}
+
+/* ROWS */
+tbody tr {
+    border-top: 1px solid #eee;
+    transition: background 0.2s ease;
+}
+
+tbody tr:hover {
+    background: #f9fbfd;
+}
+@media (max-width: 1024px) {
+    th, td {
+        padding: 8px;
+        font-size: 13px;
+    }
+
+    th:nth-child(2) {
+        min-width: 150px;
+    }
+}
+@media (max-width: 768px) {
+    th, td {
+        padding: 6px;
+        font-size: 12px;
+    }
+
+    /* shrink less important columns */
+    th:nth-child(1), td:nth-child(1) {
+        width: 50px;
+    }
+
+    /* subject still readable */
+    th:nth-child(2) {
+        min-width: 140px;
+    }
+
+    /* actions tighter */
+/* ACTION COLUMN (tight + consistent) */
+th:last-child,
+td:last-child {
+    width: 90px;          /* fixed for stability */
+    min-width: 90px;
+    max-width: 90px;
+    white-space: nowrap;
+    text-align: center;
+    padding: 4px;
+}
+}
+
+@media (max-width: 480px) {
+    th, td {
+        padding: 5px;
+        font-size: 11px;
+    }
+
+    .actions {
+        gap: 4px;
+    }
+}
+.action-icons { display:flex; gap:10px; align-items:center; }
+.action-icons iconify-icon { font-size:20px; cursor:pointer; color:#6F1020; }
+.action-icons iconify-icon.delete-btn { color: #f44336 !important; }
+.delete-btn:hover { transform: scale(1.1); }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+tr.row-fade { animation: fadeOut 0.3s forwards; }
+
+/* TABLE BASE */
+.records-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    background: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* HEADER (MAIN) */
+.records-table thead tr:first-child {
+    background: #b71c1c; /* deep red */
+    color: #ffffff;
+}
+
+/* SUB HEADER */
+.records-table thead tr:nth-child(2) {
+    background: #fdecea; /* soft red */
+    color: #333;
+}
+
+/* HEADERS */
+.records-table th {
+    text-align: center;
+    vertical-align: middle;
+    padding: 12px 10px;
+    font-weight: 600;
+    border: 1px solid #f1dada;
+}
+
+/* CELLS */
+.records-table td {
+    text-align: left;
+    padding: 12px 10px;
+    border-bottom: 1px solid #eee;
+    color: #333;
+}
+
+/* ROW STRIPES */
+.records-table tbody tr:nth-child(even) {
+    background-color: #fff5f5;
+}
+
+/* HOVER EFFECT */
+.records-table tbody tr:hover {
+    background-color: #fdecea;
+    transition: 0.2s ease;
+}
+
+/* BUTTON STYLE (matches theme) */
+.update-new-btn {
+    background: none;
+    border: none;
+    color: #b71c1c;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.update-new-btn:hover {
+    color: #e53935;
+    text-decoration: underline;
+}
+
+/* SETTINGS BUTTON */
+.update-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+/* ACTION CELL ALIGNMENT */
+.actions {
+    text-align: center;
+}
+td.actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+}
+.action-btn {
+    padding: 2px 5px;
+    font-size: 11px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    line-height: 1;
+}
+.actions a {
+    text-decoration: none;  /* remove underline */
+    color: #28a745;         /* green like before */
+    cursor: pointer;
+    font-size: 16px;
+    white-space: nowrap;
+}
+.actions a:hover {
+    color: #19692c;         /* darker green on hover */
+}
+/* Modal Overlay Background */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.1); /* Subtle dimming */
+    backdrop-filter: blur(2px);     /* Blurs the dashboard behind it */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Modal Card */
+.modal-card {
+    background: white;
+    width: 450px;
+    border: 3px solid #3498db; /* The blue border from your screenshot */
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    padding: 30px;
+}
+
+.modal-title {
+    color: #611212; /* Darker red/maroon title */
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 1.5rem;
+}
+
+/* Form Styling inside Modal */
+.modal-group {
+    margin-bottom: 18px;
+}
+
+.modal-group label {
+    display: block;
+    color: #8a3333; /* Reddish label text */
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.modal-group input, 
+.modal-group select, 
+.modal-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.modal-group textarea {
+    height: 100px;
+    resize: none;
+}
+
+/* Modal Buttons */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* MENU */
+.action-menu {
+    position: relative;
+}
+td.actions {
+    width: 50px;
+    text-align: center;
+    padding: 2px;
+}
+
+.menu-btn {
+    padding: 2px 6px;
+    font-size: 14px;
+}
+
+.menu-dropdown {
+    min-width: 120px;
+    right: 0;
+}
+.menu-btn {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* DROPDOWN */
+.menu-dropdown {
+    position: absolute;
+    top: 30px;
+    right: 0; /* anchor to right side */
+
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 6px; /* smaller = more square */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+
+    display: none;
+    flex-direction: column;
+
+    /* 💥 KEY FIXES */
+    width: max-content;     /* exact fit to content */
+    max-width: 150px;       /* prevent overflow */
+    padding: 3px;           /* tighter box */
+    gap: 2px;
+
+    overflow: hidden;       /* no spill */
+    z-index: 100;
+}
+
+/* BUTTONS */
+.menu-dropdown button {
+    padding: 4px 6px;
+    border: none;
+    background: none;
+    cursor: pointer;
+
+    font-size: 12px;
+    line-height: 1.2;
+
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    white-space: nowrap;    /* keep text in one line */
+}
+
+/* HOVER */
+.menu-dropdown button:hover {
+    background: #f5f5f5;
+    border-radius: 4px;
+}
+
+.vertical-header {
+    writing-mode: vertical-rl;   /* 🔥 makes text vertical */
+    transform: rotate(180deg);   /* so it reads top → bottom */
+
+    text-align: center;
+    vertical-align: middle;
+
+    background-color: #b71c1c;
+    color: #fff;
+
+    padding: 10px 4px;           /* adjust spacing */
+    width: 40px;                 /* narrow column */
+}
+/* HISTORY BUTTON */
+.history-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+
+.btn-cancel {
+    background-color: #717171;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-save-holiday {
+    background-color: #A12222;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-save-holiday:hover { background-color: #801a1a; }
+.btn-cancel:hover { background-color: #5a5a5a; }
+/* Hidden state by default */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
     
+    /* Animation properties */
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease-in-out;
+}
+
+/* State when active (clicked) */
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Pop effect for the card itself */
+.modal-card {
+    background: white;
+    width: 450px;
+    border: 3px solid #3498db;
+    border-radius: 8px;
+    padding: 30px;
+    transform: scale(0.8); /* Starts slightly smaller */
+    transition: transform 0.3s ease-in-out;
+}
+
+.modal-overlay.active .modal-card {
+    transform: scale(1); /* Grows to full size */
+}
+
+/* CSS example for fade-out effect */
+.row-fade {
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+
+.toggle-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.toggle-pill {
+    display: flex;
+    background: #f5f5f5;
+    border-radius: 999px;
+    padding: 4px;
+    gap: 4px;
+    width: fit-content;
+}
+
+.toggle-option {
+    padding: 6px 14px;
+    font-size: 13px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: 0.25s;
+    color: #555;
+    font-weight: 500;
+}
+
+/* active state */
+.toggle-option.active {
+    background: #b71c1c; /* your red */
+    color: white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* hover */
+.toggle-option:hover {
+    background: #e0e0e0;
+}
+
+.toggle-option.active {
+    background: #b71c1c;
+    box-shadow: 0 0 0 2px rgba(183,28,28,0.2);
+}
+
+.table-top-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+}
+
+.memo-drawer {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100vh;              /* 🔥 full viewport height */
+    background: #fff;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+    transition: right 0.3s ease;
+    z-index: 2000;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: #374151;
+
+    display: flex;            
+    flex-direction: column;    
+    overflow: hidden;         
+}
+
+.memo-drawer.active {
+    right: 0;
+}
+
+.drawer-content {
+    padding: 20px;
+    overflow-y: auto;        
+    flex: 1;    
+    scroll-behavior: smooth;       
+}
+
+.close-drawer {
+    background: none;
+    border: none;
+    font-size: 18px;
+    float: right;
+    cursor: pointer;
+}
+
+.drawer-section p {
+    font-size: 14px;
+    margin: 6px 0;
+}
+
+#relatedMemos {
+    padding-left: 15px;
+}
+
+#relatedMemos li {
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+.memo-row.active-row {
+    background-color: #fdecea !important;
+}
+.drawer-content p {
+  margin: 4px 0;
+}
+
+/* Typography & Colors */
+.text-secondary {
+  color: #4b5563;
+}
+
+/* Header Row */
+.drawer-header-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+/* Badge */
+.badge {
+  display: inline-block;
+  padding: 4px 16px;
+  border-radius: 9999px; /* Pill shape */
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.badge-urgent {
+  background-color: #d97706; /* Orange */
+  color: #ffffff;
+}
+
+/* Subject & Meta */
+.drawer-subject {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: #1f2937;
+}
+
+.drawer-meta {
+  font-size: 15px;
+  margin-bottom: 16px;
+}
+
+/* Notes Box */
+.drawer-notes {
+  background-color: #f3f4f6; /* Light gray background */
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 15px;
+}
+
+/* Release Info Row */
+.drawer-release-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  font-size: 15px;
+}
+
+.release-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Divider */
+.divider {
+  border: 0;
+  border-top: 1px solid #e5e7eb;
+  margin: 20px 0;
+}
+
+/* Related Memos Table */
+.related-memos-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 4px; /* Adds space between rows */
+  text-align: left;
+  font-size: 15px;
+}
+
+.related-memos-table th {
+  color: #6b7280;
+  font-weight: normal;
+  padding: 8px 16px;
+}
+
+.related-memos-table td {
+  background-color: #e2e8f0; /* Slight blue/gray tint matching image */
+  padding: 12px 16px;
+  color: #374151;
+}
+
+/* Rounded corners for table rows */
+.related-memos-table td:first-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.related-memos-table td:last-child {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.thread-group {
+    margin-bottom: 10px;
+}
+
+.thread-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: #f9fafb;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.thread-header:hover {
+    background: #f3f4f6;
+}
+
+.thread-content {
+    margin-top: 6px;
+    padding-left: 8px;
+}
+
+.memo-line {
+    display: grid;
+    grid-template-columns: 60px 1fr 100px;
+    background: #e2e8f0;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    cursor: pointer;
+}
+
+.memo-line.active {
+    background: #fdecea;
+}
+
+.toggle-icon {
+    font-size: 12px;
+}
+
+
+.memo-collapse {
+    margin-bottom: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+}
+
+.memo-collapse-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #f9fafb;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.memo-collapse-header:hover {
+    background: #f3f4f6;
+}
+
+.memo-collapse-body {
+    padding: 14px;
+    background: #ffffff;
+}
+
+.memo-collapse-body .drawer-subject {
+    font-size: 16px;
+    margin: 8px 0;
+}
+
+.toggle-icon {
+    font-size: 12px;
+}
+
+.autocomplete {
+    position: relative;
+}
+
+.dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    max-height: 150px;
+    overflow-y: auto;
+    display: none;
+    z-index: 9999;
+}
+
+.dropdown-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background: #f3f4f6;
+}
+
+.delete-auto {
+    color: red;
+    cursor: pointer;
+}
+
+.success-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.success-modal.show {
+    display: flex;
+}
+
+.success-content {
+    background: #fff;
+    padding: 20px 30px;
+    border-radius: 12px;
+    text-align: center;
+    min-width: 250px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.success-content p {
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+.success-content button {
+    padding: 6px 16px;
+    border: none;
+    background: #b71c1c;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+}
+</style>
+{% endblock %}
 {% block content %}
 <br><br>
   <div class="dashboard-container">
@@ -14,7 +969,6 @@
         <div class="top-controls">
             <div class="search-group">
                 <input type="text" id="searchInput" placeholder="Search subject, memo #, from..." class="search-input">
-                <div class="select-group">
 
                 <select id="monthFilter" class="date-dropdown">
                     <option value="">Month</option>
@@ -38,7 +992,6 @@
                         <option value="{{ y }}">{{ y }}</option>
                     {% endfor %}
                 </select>
-                </div>
             </div>
             {% if current_user.is_authenticated %}
 
@@ -58,7 +1011,7 @@
             <div class="card-content">
             <div class="card-header">
                 <span class="card-date">
-                {{ holiday.display_date.strftime('%B %d, %Y') }}- {{ holiday.name }}
+                {{ holiday.date.strftime('%B %d, %Y') }} - {{ holiday.name }}
                 </span>
                 <span class="badge">{{ holiday.type or "Holiday" }}</span>
             </div>
@@ -144,7 +1097,7 @@
                     {% if selected_type != "OP" %}
                     <th colspan="2" style="background-color:#e53935; color:#fff;">Released</th>
                     {% endif %}
-                    {% if current_user.is_authenticated and current_user.role == "admin" %}
+                    {% if current_user.is_authenticated %}
                     <th rowspan="2" class="vertical-header" style="background-color:#b71c1c; color:#fff;">Actions</th>
                     {% endif %}
                 </tr>
@@ -162,8 +1115,6 @@
             <tbody>
                 {% for memo in memos %}
                 <tr class="memo-row"
-                    data-memo_number="{{ memo.memo_number }}"
-                    data-type="{{ memo.source_type }}"
                     data-thread="{{ memo.thread_id }}"
                     data-serial="{{ memo.serial_number }}"
                     data-subject="{{ memo.subject }}"
@@ -218,9 +1169,10 @@
                     <td>{{ memo.released_to }}</td>
                     {% endif %}
                     <!-- Actions -->
-                    {% if current_user.is_authenticated and current_user.role == "admin" %}
+                    {% if current_user.is_authenticated %}
                         <td>
 
+                            <!-- ACTION MENU -->
                             <div class="action-menu">
                                 <button class="menu-btn">⋮</button>
 
@@ -255,10 +1207,7 @@
                 {% endfor %}
             </tbody>
         </table>
-
-
-
-<!-- SIDE PANEL -->
+        <!-- SIDE PANEL -->
 <div id="memoDrawer" class="memo-drawer">
     <div class="drawer-content">
         
@@ -309,8 +1258,6 @@
     {% endif %}
 </div>
 <br><br>
-
-
 <!-- ADD MEMO MODAL -->
  
 <div id="addMemoModal" class="modal">
@@ -320,6 +1267,7 @@
 
     <form id="memo_form">
 
+      <!-- Source Type -->
       <div class="form-group">
         <label>Source Type</label>
         <input type="hidden" name="source_type" id="hiddenSourceType">
@@ -328,11 +1276,15 @@
             <option value="OP">OP</option>
         </select>
       </div>
+
+
+      <!-- Date -->
       <div class="form-group">
         <label>Date</label>
         <input type="date" name="date" id="memoDate"> 
       </div>
 
+      <!-- From + Forwarded -->
       <div class="form-row">
         <div class="form-group">
         <label>From</label>
@@ -351,16 +1303,20 @@
         </div>
       </div>
 
+      
+      <!-- Memo Number -->
       <div class="form-group" id="memoNumberGroup" style="display: none;">
         <label>Memo #</label>
         <input name="memo_number" id="memoNumber">
       </div>
 
+      <!-- Subject -->
       <div class="form-group">
         <label>Subject</label>
         <input name="subject" id="memoSubject">
       </div>
 
+        <!-- Remarks -->
         <div class="form-group" id="remarksGroup">
         <label>Remarks</label>
         <div class="autocomplete">
@@ -369,11 +1325,13 @@
         </div>
         </div>
 
+        <!-- Notes -->
         <div class="form-group" id="notesGroup">
         <label>Notes</label>
         <textarea name="notes" id="memoNotes"></textarea>
         </div>
 
+        <!-- Release Section -->
         <div class="form-row" id="releaseSection">
         <div class="form-group">
             <label>Released To</label>
@@ -398,12 +1356,12 @@
 
   </div>
 </div>
-
 <!-- EDIT MEMO MODAL -->
 <div id="editMemoModal" class="modal">
   <form method="POST" id="editMemoForm" class="modal-content">
 
-    <h2 id="editMemoTitle">Edit Memo</h2>
+    <h2>Edit Memo</h2>
+
     <!-- From + Forwarded -->
     <div class="form-row">
       <div class="form-group">
@@ -507,9 +1465,973 @@
         <button onclick="closeErrorModal()">OK</button>
     </div>
 </div>
+<script>
+function initializeColumnResize() {
+
+    const table = document.querySelector(".records-table");
+    if (!table) return;
+
+    const headers = table.querySelectorAll("th");
+
+    headers.forEach((header, index) => {
+
+        const resizer = document.createElement("div");
+        resizer.classList.add("column-resizer");
+        header.appendChild(resizer);
+
+        let startX, startWidth;
+
+        resizer.addEventListener("mousedown", function (e) {
+
+            startX = e.pageX;
+            startWidth = header.offsetWidth;
+
+            function mouseMove(e) {
+                const newWidth = startWidth + (e.pageX - startX);
+
+                header.style.width = newWidth + "px";
+
+                const columnCells = table.querySelectorAll(
+                    `td:nth-child(${index + 1})`
+                );
+
+                columnCells.forEach(cell => {
+                    cell.style.width = newWidth + "px";
+                });
+            }
+
+            function mouseUp() {
+                document.removeEventListener("mousemove", mouseMove);
+                document.removeEventListener("mouseup", mouseUp);
+            }
+
+            document.addEventListener("mousemove", mouseMove);
+            document.addEventListener("mouseup", mouseUp);
+        });
+
+    });
+}
+
+/* =========================
+INITIAL LOAD
+========================= */
+
+let timeout = null;
+let currentType = new URLSearchParams(window.location.search).get("type") || "CM";
+
+document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("click", function (e) {
+
+        // 🛑 block row drawer when clicking action menu
+        if (e.target.closest(".action-menu")) {
+            e.stopPropagation();
+            return;
+        }
+
+    });
+    initializeColumnResize();
+
+    loadHolidays();
+
+    const monthFilter = document.getElementById("monthFilter");
+    const yearFilter = document.getElementById("yearFilter");
+    const searchInput = document.getElementById("searchInput");
+    const filterBtn = document.getElementById("filterBtn");
+    const filterPanel = document.getElementById("filterPanel");
+    const toggleOptions = document.querySelectorAll(".toggle-option");
+
+    /* =========================
+    SET DEFAULT MONTH / YEAR
+    ========================= */
+    const today = new Date();
+    monthFilter.value = today.getMonth() + 1;
+    yearFilter.value = today.getFullYear();
 
 
-{% endblock %}
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/home.js') }}"></script>
+    /* =========================
+    TOGGLE TYPE (CM / OP)
+    ========================= */
+
+    toggleOptions.forEach(btn => {
+        if (btn.dataset.type === currentType) {
+            btn.classList.add("active");
+        } else {
+            btn.classList.remove("active");
+        }
+    });
+
+    toggleOptions.forEach(btn => {
+        btn.addEventListener("click", function () {
+
+            toggleOptions.forEach(b => b.classList.remove("active"));
+            this.classList.add("active");
+
+            currentType = this.dataset.type;
+
+            fetchTable();
+        });
+    });
+
+
+    /* =========================
+    SEARCH (DEBOUNCE)
+    ========================= */
+
+    searchInput.addEventListener("input", () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(fetchTable, 300);
+    });
+
+
+    /* =========================
+    MONTH / YEAR FILTER
+    ========================= */
+
+    monthFilter.addEventListener("change", fetchTable);
+    yearFilter.addEventListener("change", fetchTable);
+
+
+    /* =========================
+    SORT OPTIONS (RADIO)
+    ========================= */
+
+   document.querySelectorAll(".sort-option").forEach(option => {
+
+        option.addEventListener("change", function () {
+
+            if (!this.checked) {
+                this.checked = true;
+                return;
+            }
+
+            document.querySelectorAll(".sort-option").forEach(o => {
+                if (o !== this) o.checked = false;
+            });
+
+            fetchTable();
+
+        });
+
+    });
+    /* =========================
+    FILTER PANEL TOGGLE
+    ========================= */
+
+    filterBtn.addEventListener("click", () => {
+        filterPanel.style.display =
+            filterPanel.style.display === "block" ? "none" : "block";
+    });
+    document.addEventListener("click", function(e){
+
+        if (!filterPanel.contains(e.target) && !filterBtn.contains(e.target)) {
+            filterPanel.style.display = "none";
+        }
+
+    });
+
+});
+
+
+/* =========================
+FETCH TABLE
+========================= */
+
+function fetchTable() {
+
+    const search = document.getElementById("searchInput").value;
+    const month = document.getElementById("monthFilter").value;
+    const year = document.getElementById("yearFilter").value;
+
+    let sort = "";
+    const selectedSort = document.querySelector(".sort-option:checked");
+
+    if (selectedSort) {
+        sort = selectedSort.value;
+    }
+
+    const url = `/?search=${encodeURIComponent(search)}&month=${month}&year=${year}&type=${currentType}&sort=${sort}`;
+
+    fetch(url)
+        .then(res => res.text())
+        .then(html => {
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+
+            const newTable = doc.querySelector("#tableContainer");
+
+            if (newTable) {
+                document.querySelector("#tableContainer").innerHTML = newTable.innerHTML;
+
+                initializeColumnResize();
+            }
+
+        });
+}
+document.addEventListener("click", function (e) {
+
+    const btn = e.target.closest(".menu-btn");
+
+    // CLICK MENU BUTTON
+    if (btn) {
+
+        e.stopPropagation();
+
+        const menu = btn.nextElementSibling;
+
+        const isOpen = menu.style.display === "flex";
+
+        // close all menus first
+        document.querySelectorAll(".menu-dropdown")
+            .forEach(m => m.style.display = "none");
+
+        // toggle menu
+        if (!isOpen) {
+
+            menu.style.display = "flex";
+
+            const rect = btn.getBoundingClientRect();
+
+            menu.style.position = "fixed";
+            menu.style.top = rect.bottom + "px";
+            menu.style.left =
+                rect.right - menu.offsetWidth + "px";
+        }
+
+        return;
+    }
+
+    // CLICK ANYWHERE ELSE → CLOSE MENUS
+    document.querySelectorAll(".menu-dropdown")
+        .forEach(m => m.style.display = "none");
+
+});
+document.addEventListener("DOMContentLoaded", function () {
+
+    let activeRow = null;
+
+    document.addEventListener("click", function (e) {
+
+        const drawer = document.getElementById("memoDrawer");
+
+        if (
+            e.target.closest(".action-menu") ||
+            e.target.closest("button") ||
+            e.target.closest("a") ||
+            e.target.closest("input")
+        ) {
+            return;
+        }
+
+        const row = e.target.closest(".memo-row");
+
+        // =========================
+        // ✅ CLICK ROW
+        // =========================
+        if (row) {
+
+            if (activeRow === row) {
+                closeDrawer();
+                return;
+            }
+
+            document.querySelectorAll(".memo-row")
+                .forEach(r => r.classList.remove("active-row"));
+
+            row.classList.add("active-row");
+            activeRow = row;
+
+            const threadId = row.dataset.thread;
+            const subject = row.dataset.subject;
+
+            // 🔥 FILL DETAILS
+            document.getElementById("drawerSubject").innerText = subject || "-";
+            document.getElementById("drawerNumber").innerText = row.dataset.serial || "-";
+            document.getElementById("drawerDate").innerText = row.dataset.date || "-";
+            document.getElementById("drawerRemarks").innerText = row.dataset.remarks || "-";
+
+            document.getElementById("drawerFrom").innerText = row.dataset.from || "-";
+            document.getElementById("drawerForwarded").innerText = row.dataset.forwarded || "-";
+
+            document.getElementById("drawerNotes").innerText = row.dataset.notes || "-";
+            document.getElementById("drawerReleasedTo").innerText = row.dataset.released_to || "-";
+            document.getElementById("drawerReleasedDate").innerText = row.dataset.released_date || "-";
+
+            // =========================
+            // 🔗 GROUP BY THREAD
+            // =========================
+            const relatedList = document.getElementById("relatedMemos");
+            relatedList.innerHTML = "";
+
+            // GET SAME THREAD ONLY
+            const related = [];
+
+            document.querySelectorAll(".memo-row").forEach(r => {
+                if (r.dataset.thread === threadId) {
+                    related.push(r);
+                }
+            });
+
+            // SORT
+            related.sort((a, b) =>
+                new Date(a.dataset.date) - new Date(b.dataset.date)
+            );
+
+            // RENDER EACH AS COLLAPSIBLE CARD
+            related.forEach((r) => {
+
+                const wrapper = document.createElement("li");
+                wrapper.classList.add("memo-collapse");
+
+                const isActive = r === row;
+
+                // =========================
+                // 🔥 HEADER (clickable)
+                // =========================
+                const header = document.createElement("div");
+                header.classList.add("memo-collapse-header");
+
+                header.innerHTML = `
+                    <span>#${r.dataset.serial || "-"}</span>
+                    <span>${r.dataset.date || "-"}</span>
+                    <span class="toggle-icon">${isActive ? "▼" : "▶"}</span>
+                `;
+
+                // =========================
+                // 🔥 FULL CONTENT (CLONE DESIGN)
+                // =========================
+                const content = document.createElement("div");
+                content.classList.add("memo-collapse-body");
+
+                content.style.display = isActive ? "block" : "none";
+
+                content.innerHTML = `
+                    <span class="badge badge-urgent">${r.dataset.remarks || "-"}</span>
+
+                    <h3 class="drawer-subject">${r.dataset.subject || "-"}</h3>
+
+                    <div class="drawer-meta">
+                        <p>From: ${r.dataset.from || "-"}</p>
+                        <p>Forwarded by: ${r.dataset.forwarded || "-"}</p>
+                    </div>
+
+                    <div class="drawer-notes">
+                        Notes: ${r.dataset.notes || "-"}
+                    </div>
+
+                    <div class="drawer-release-row">
+                        <div class="release-col">
+                            <span class="text-secondary">Released to:</span>
+                            <span>${r.dataset.released_to || "-"}</span>
+                        </div>
+                        <div class="release-col">
+                            <span class="text-secondary">Released Date:</span>
+                            <span>${r.dataset.released_date || "-"}</span>
+                        </div>
+                    </div>
+                `;
+
+                // =========================
+                // 🎯 TOGGLE
+                // =========================
+                header.addEventListener("click", () => {
+                    const isOpen = content.style.display === "block";
+
+                    content.style.display = isOpen ? "none" : "block";
+                    header.querySelector(".toggle-icon").innerText = isOpen ? "▶" : "▼";
+                });
+
+                // OPTIONAL: click content → switch main drawer focus
+                content.addEventListener("click", () => {
+                    r.click();
+                });
+
+                wrapper.appendChild(header);
+                wrapper.appendChild(content);
+                relatedList.appendChild(wrapper);
+            });
+            // ✅ OPEN DRAWER
+            drawer.classList.add("active");
+            return;
+        }
+
+        // =========================
+        // ❌ CLICK OUTSIDE
+        // =========================
+        const isInsideDrawer = drawer && drawer.contains(e.target);
+
+        if (!isInsideDrawer) {
+            closeDrawer();
+        }
+
+    });
+
+    window.closeDrawer = function () {
+        const drawer = document.getElementById("memoDrawer");
+
+        if (drawer) drawer.classList.remove("active");
+
+        document.querySelectorAll(".memo-row")
+            .forEach(r => r.classList.remove("active-row"));
+
+        activeRow = null;
+    };
+
+});
+
+
+
+
+/* =========================
+HOLIDAY FUNCTIONS
+========================= */
+
+
+function renderHolidayCard(holiday){
+
+const panel=document.querySelector('.holiday-panel');
+
+const card=document.createElement('div');
+
+card.className='holiday-card';
+
+card.innerHTML=`
+<iconify-icon icon="mdi:calendar"></iconify-icon>
+<div>
+<div class="holiday-top">
+<span class="holiday-title">${holiday.title}</span>
+<span class="holiday-badge">${holiday.badge}</span>
+</div>
+<p>${holiday.desc}</p>
+</div>
+`;
+
+panel.insertBefore(card,panel.firstChild);
+
+}
+
+function loadHolidays(){
+
+const holidays=JSON.parse(localStorage.getItem('holidays')||'[]');
+
+holidays.forEach(renderHolidayCard);
+
+}
+
+
+/* =========================
+MEMO FUNCTIONS
+========================= */
+function updateFormFields() {
+    const type = document.getElementById("source_type_outside").value;
+
+    const memoNumberGroup = document.getElementById("memoNumberGroup");
+    const remarksGroup = document.getElementById("remarksGroup");
+    const releaseSection = document.getElementById("releaseSection");
+
+    const fromInput = document.getElementById("memoFrom");
+    const forwardedInput = document.getElementById("memoForwarded");
+
+    if (type === "OP") {
+
+        memoNumberGroup.style.display = "block";
+
+        // hide fields
+        remarksGroup.style.display = "none";
+        releaseSection.style.display = "none";
+
+        // autofill
+        fromInput.value = "OP";
+        forwardedInput.value = "RECORDS";
+
+        fromInput.readOnly = true;
+        forwardedInput.readOnly = true;
+
+        fromInput.classList.add("locked");
+        forwardedInput.classList.add("locked");
+
+    } else {
+
+        memoNumberGroup.style.display = "none";
+
+        // show fields again
+        remarksGroup.style.display = "block";
+        releaseSection.style.display = "flex"; // because it's form-row
+
+        fromInput.readOnly = false;
+        forwardedInput.readOnly = false;
+
+        fromInput.classList.remove("locked");
+        forwardedInput.classList.remove("locked");
+
+        fromInput.value = "";
+        forwardedInput.value = "";
+
+        document.getElementById("memoNumber").value = "";
+    }
+
+    const hidden = document.getElementById("hiddenSourceType");
+    if (hidden) {
+        hidden.value = type;
+    }
+}
+
+let editingSeries=null;
+let deleteSeries=null;
+let deleteRow=null;
+let deleteId = null;
+
+function openAddMemo() {
+    const modal = document.getElementById("addMemoModal");
+    const select = document.getElementById("source_type_outside");
+    const hidden = document.getElementById("hiddenSourceType");
+
+    if (!select.value) {
+        select.value = currentType;
+    }
+
+    hidden.value = select.value;
+
+    updateFormFields();
+
+    modal.classList.add("show");
+}
+function openEditMemo(){
+  const modal = document.getElementById("editMemoModal");
+  console.log("Opening edit modal", modal);
+  modal.classList.add("show");
+}
+function closeModals(){
+  document.querySelectorAll(".modal").forEach(modal => {
+    modal.classList.remove("show");
+  });
+}
+document.addEventListener("click", function(e) {
+  if (e.target.classList.contains("modal")) {
+    closeModals();
+  }
+});
+
+function showSuccessModal(message) {
+    const modal = document.getElementById("successModal");
+    document.getElementById("successMessage").textContent = message;
+    modal.classList.add("show");
+
+    setTimeout(() => {
+        modal.classList.remove("show");
+    }, 1500);
+}
+
+function closeSuccessModal() {
+    document.getElementById("successModal").classList.remove("show");
+}
+
+function showErrorModal(message) {
+    const modal = document.getElementById("errorModal");
+    document.getElementById("errorMessage").textContent = message;
+    modal.classList.add("show");
+}
+
+function closeErrorModal() {
+    document.getElementById("errorModal").classList.remove("show");
+}
+/* ADD MEMO */
+const form = document.getElementById("memo_form");
+
+form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+
+    const from = formData.get("from_office")?.trim();
+    const subject = formData.get("subject")?.trim();
+
+    if (!from || !subject) {
+        alert("Please fill From and Subject");
+        return;
+    }
+
+    // 🔥 SAVE AUTOCOMPLETE FIRST
+    await saveItem("remarks", document.getElementById("memoRemarks").value);
+    await saveItem("from", document.getElementById("memoFrom").value);
+    await saveItem("forwarded", document.getElementById("memoForwarded").value);
+    await saveItem("released_to", document.getElementById("memoReleaseTo").value.trim());
+
+    try {
+        const res = await fetch("/secretary/new", {
+            method: "POST",
+            body: formData
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+            showErrorModal(data.error || "Something went wrong");
+
+            if (data.error.includes("memo number")) {
+                document.getElementById("memoNumber").focus();
+            }
+
+            return;
+        }
+
+        console.log("NEW RESPONSE:", data); // 🔍 debug
+
+        if (data.success) {
+
+            const select = document.getElementById("source_type_outside");
+            const hidden = document.getElementById("hiddenSourceType");
+
+            // 🔥 CAPTURE CURRENT VALUE (REAL ONE USER USED)
+            const selectedType = select.value;
+
+            form.reset();
+
+            // 🔥 RESTORE EXACT VALUE
+            select.value = selectedType;
+            hidden.value = selectedType;
+
+            updateFormFields();
+
+            fetchTable();
+            showSuccessModal("Memo added successfully!");
+        } else {
+            alert("Failed to save memo.");
+        }
+
+    } catch (err) {
+        console.error("ERROR:", err);
+        alert("Something went wrong.");
+    }
+});
+
+
+// Edit Memo - open modal and fill data
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest(".update-new-btn, .update-btn");
+    if (!btn) return;
+
+    const form = document.getElementById("editMemoForm");
+    const id = btn.dataset.id;
+
+    const sourceType = btn.dataset.source_type;
+
+    const memoFrom = document.getElementById("editMemoFrom");
+    const memoForwarded = document.getElementById("editMemoForwarded");
+    const memoSubject = document.getElementById("editMemoSubject");
+    const memoDate = document.getElementById("editMemoDate");
+    const remarksRow = document.getElementById("editRemarksRow");
+    const releaseRow = document.getElementById("editReleaseRow");
+    const memoNumberRow = document.getElementById("editMemoNumberRow");
+
+    // =========================
+    // 🧾 FILL FIELDS
+    // =========================
+    memoFrom.value = btn.dataset.from || "";
+    memoForwarded.value = btn.dataset.forwarded || "";
+    memoSubject.value = btn.dataset.subject || "";
+
+    document.getElementById("editMemoRemarks").value = btn.dataset.remarks || "";
+    document.getElementById("editMemoNotes").value = btn.dataset.notes || "";
+    memoDate.value = btn.dataset.date || "";
+    document.getElementById("editMemoReleaseTo").value = btn.dataset.released_to || "";
+    document.getElementById("editMemoReleaseDate").value = btn.dataset.released_date || "";
+    document.getElementById("editMemoNumber").value = btn.dataset.number || "";
+
+    if (sourceType === "OP") {
+
+        remarksRow.style.display = "none";
+        releaseRow.style.display = "none";
+        memoNumberRow.style.display = "flex";  
+    } else {
+        memoNumberRow.style.display = "none";
+        remarksRow.style.display = "flex";
+        releaseRow.style.display = "flex";
+
+    }
+    // =========================
+    // 🔥 MODE: UPDATE-NEW (LOCK EVERYTHING IMPORTANT)
+    // =========================
+    if (btn.classList.contains("update-new-btn")) {
+
+        memoFrom.disabled = true;
+        memoForwarded.disabled = true;
+        memoSubject.disabled = true;
+        memoDate.disabled = true;
+        memoNumberRow.disabled = true;
+
+        memoFrom.classList.add("locked");
+        memoForwarded.classList.add("locked");
+        memoSubject.classList.add("locked");
+        memoDate.classList.add("locked");
+        memoNumberRow.classList.add("locked");
+
+    } 
+    // =========================
+    // 🔥 MODE: NORMAL EDIT
+    // =========================
+    else {
+
+        // Subject & Date ALWAYS editable here
+        memoSubject.disabled = false;
+        memoDate.disabled = false;
+        memoNumberRow.disabled = false;
+
+        memoSubject.classList.remove("locked");
+        memoDate.classList.remove("locked");
+        memoNumberRow.classList.remove("locked");   
+
+        // Apply OP logic (your original behavior)
+        if (sourceType === "OP") {
+            memoFrom.disabled = true;
+            memoForwarded.disabled = true;
+
+            memoFrom.classList.add("locked");
+            memoForwarded.classList.add("locked");
+        } else {
+            memoFrom.disabled = false;
+            memoForwarded.disabled = false;
+
+            memoFrom.classList.remove("locked");
+            memoForwarded.classList.remove("locked");
+        }
+    }
+
+    // =========================
+    // 🔗 ROUTE
+    // =========================
+    if (btn.classList.contains("update-btn")) {
+        form.action = `/secretary/edit/${id}`;
+    } else {
+        form.action = `/secretary/update/${id}`;
+    }
+
+    openEditMemo();
+});
+// 🚀 HANDLE FORM SUBMIT (AJAX - no page redirect)
+document.getElementById("editMemoForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const url = form.action;
+    const formData = new FormData(form);
+    // 🔥 ADD THIS
+    await saveItem("remarks", document.getElementById("editMemoRemarks").value);
+    await saveItem("from", document.getElementById("editMemoFrom").value);
+    await saveItem("forwarded", document.getElementById("editMemoForwarded").value);
+    await saveItem("released_to", document.getElementById("editMemoReleaseTo").value.trim());
+    
+    fetch(url, {
+        method: "POST",
+        body: formData
+    })
+    .then(async res => {
+        const data = await res.json(); // ✅ only once
+
+        if (!res.ok) {
+            showErrorModal(data.error || "Update failed");
+            throw new Error(data.error || "HTTP error " + res.status);
+        }
+
+        return data;
+    })
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            showErrorModal(data.error || "Unknown error");
+        }
+    })
+    .catch(err => {
+        console.error("Submit error:", err);
+    });
+});
+/* =========================
+DELETE MEMO WITH WARNING
+========================= */
+let rowToDelete = null;
+let memoIdToDelete = null;
+
+document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener('click', function(e){ 
+        const btn = e.target.closest(".delete-btn");
+        if(!btn) return;
+
+        console.log("Delete button clicked!", btn.dataset.id);
+
+        rowToDelete = btn.closest("tr");
+        memoIdToDelete = btn.dataset.id;
+
+        const modal = document.getElementById("deleteConfirmModal");
+        if(modal){
+            modal.classList.add("show");   // ✅ show the modal
+            console.log("Modal opened");
+        } else {
+            console.error("Modal not found!");
+        }
+    });
+});
+
+function confirmDelete() {
+    if (!memoIdToDelete) return;
+
+    fetch(`/secretary/delete/${memoIdToDelete}`, { method: "POST" })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success){
+            if(rowToDelete){
+                rowToDelete.classList.add("row-fade");
+                setTimeout(() => rowToDelete.remove(), 300);
+            }
+        } else {
+            alert(data.error || "Delete failed");
+        }
+    })
+    .catch(err => console.error(err))
+    .finally(() => closeDeleteConfirm());
+}
+
+function closeDeleteConfirm(){
+    const modal = document.getElementById("deleteConfirmModal");
+    if(modal){
+        modal.classList.remove("show");  // ✅ hide the modal
+    }
+
+    rowToDelete = null;
+    memoIdToDelete = null;
+}
+
+
+
+/* =========================
+AUTOCOMPLETE SYSTEM (CLEAN)
+========================= */
+
+async function fetchList(type) {
+    const res = await fetch(`/secretary/autocomplete/${type}`);
+    return await res.json();
+}
+
+async function saveItem(type, value) {
+    if (!value) return;
+
+    value = value.trim();
+    if (!value) return;
+
+    await fetch("/secretary/autocomplete", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ type: type, value: value })
+    });
+}
+
+async function deleteItem(type, value) {
+    await fetch("/secretary/autocomplete", {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ type: type, value: value })
+    });
+}
+
+function setupAutocomplete(inputId, dropdownId, type) {
+
+    const input = document.getElementById(inputId);
+    const dropdown = document.getElementById(dropdownId);
+
+    if (!input || !dropdown) {
+        console.warn(`Autocomplete skipped: ${inputId}`);
+        return;
+    }
+
+    input.addEventListener("focus", load);
+    input.addEventListener("input", load);
+
+    async function load() {
+        const list = await fetchList(type);
+        const filter = input.value.toLowerCase();
+
+        dropdown.innerHTML = "";
+
+        const filtered = list.filter(item =>
+            item.toLowerCase().includes(filter)
+        );
+
+        if (!filtered.length) {
+            dropdown.style.display = "none";
+            return;
+        }
+
+        filtered.forEach(item => {
+            const div = document.createElement("div");
+            div.classList.add("dropdown-item");
+
+            div.innerHTML = `
+                <span class="item-text">${item}</span>
+                <span class="delete-btn">✕</span>
+            `;
+
+            // SELECT
+            div.querySelector(".item-text").onclick = () => {
+                input.value = item;
+                dropdown.style.display = "none";
+            };
+
+            // DELETE
+            div.querySelector(".delete-btn").onclick = async (e) => {
+                e.stopPropagation();
+                await deleteItem(type, item);
+                load();
+            };
+
+            dropdown.appendChild(div);
+        });
+
+        dropdown.style.display = "block";
+    }
+}
+
+/* =========================
+GLOBAL CLICK HANDLER (ONE ONLY)
+========================= */
+
+if (!window._autocompleteClickBound) {
+    document.addEventListener("click", (e) => {
+        document.querySelectorAll(".dropdown").forEach(dropdown => {
+            const input = dropdown.previousElementSibling;
+
+            if (input &&
+                !input.contains(e.target) &&
+                !dropdown.contains(e.target)) {
+                dropdown.style.display = "none";
+            }
+        });
+    });
+
+    window._autocompleteClickBound = true;
+}
+
+/* =========================
+INIT AUTOCOMPLETE
+========================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    // ADD MODAL
+    setupAutocomplete("memoRemarks", "remarksDropdown", "remarks");
+    setupAutocomplete("memoFrom", "fromDropdown", "from");
+    setupAutocomplete("memoForwarded", "forwardedDropdown", "forwarded");
+    setupAutocomplete("memoReleaseTo", "releaseToDropdown", "released_to");
+    
+    // EDIT MODAL
+    setupAutocomplete("editMemoFrom", "editFromDropdown", "from");
+    setupAutocomplete("editMemoForwarded", "editForwardedDropdown", "forwarded");
+    setupAutocomplete("editMemoRemarks", "editRemarksDropdown", "remarks");
+    setupAutocomplete("editMemoReleaseTo", "editReleaseToDropdown", "released_to");
+
+});
+</script>
+
 {% endblock %}

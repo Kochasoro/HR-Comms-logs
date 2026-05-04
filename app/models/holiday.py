@@ -8,7 +8,5 @@ class Holiday(db.Model):
     date = db.Column(db.Date, nullable=False)
     name = db.Column(db.String(200), nullable=False)
 
-    type = db.Column(db.String(50))
+    type = db.Column(db.String(50))  # Regular, Special, Local
     description = db.Column(db.Text)
-
-    repeat_yearly = db.Column(db.Boolean, default=False) 

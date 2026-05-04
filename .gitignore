@@ -14,7 +14,8 @@ instance/
 .env
 
 # Migrations
-migrations/
+migrations/__pycache__/
+
 # =========================
 # Electron / Node
 # =========================

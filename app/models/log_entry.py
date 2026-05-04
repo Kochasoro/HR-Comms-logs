@@ -19,6 +19,6 @@ class LogEntry(db.Model):
     user_id = db.Column(
         db.Integer,
         db.ForeignKey("users.id", name="fk_log_entries_user_id"),
-        nullable=True  
+        nullable=True   # 👈 TEMPORARY
     )
     user = db.relationship("User", backref="logs")

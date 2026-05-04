@@ -59,28 +59,9 @@ def home():
 
     memos = query.all()
 
-    holidays_raw = Holiday.query.all()
-    holidays = []
-
-    for h in holidays_raw:
-        if h.repeat_yearly:
-            # adjust to current year
-            next_date = h.date.replace(year=today.year)
-
-            if next_date < today:
-                next_date = h.date.replace(year=today.year + 1)
-
-        else:
-            if h.date < today:
-                continue
-            next_date = h.date
-
-        h.display_date = next_date
-        holidays.append(h)
-
-    holidays.sort(key=lambda x: x.display_date)
-
-    holidays = holidays[:3]
+    holidays = Holiday.query.filter(
+        Holiday.date >= today
+    ).order_by(Holiday.date.asc()).limit(3).all()
 
     return render_template(
         "home.html",
