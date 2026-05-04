@@ -44,7 +44,7 @@ def seed_memos(force):
     # DATE RANGE (FEB → APRIL)
     # -------------------------
     start_date = date(2026, 2, 1)
-    end_date = date(2026, 4, 30)
+    end_date = date(2026, 5, 5)
     delta_days = (end_date - start_date).days
 
     temp_memos = []
@@ -56,18 +56,21 @@ def seed_memos(force):
 
         source_type = random.choice(["CM", "OP"])
         thread_id = str(uuid.uuid4())
-        memo_date = start_date + timedelta(days=random.randint(0, delta_days))
+        memo_date = start_date + timedelta(
+            days=int(random.triangular(0, delta_days, delta_days * 0.7))
+        )
         subject = random.choice(subjects)
 
         if source_type == "OP":
             memo_number = f"OP-2026-{random.randint(100, 999)}"
             from_office = "OP"
             forwarded_by = "Record"
+            allow_release = False
         else:
             memo_number = None
             from_office = random.choice(offices)
             forwarded_by = random.choice(people)
-
+            allow_release = True
         # -------------------------
         # FIRST ENTRY
         # -------------------------
@@ -101,7 +104,7 @@ def seed_memos(force):
             updated_entry = {
                 "thread_id": thread_id,
                 "source_type": source_type,
-                "memo_number": memo_number,  # 🔥 SAME memo number
+                "memo_number": memo_number,
                 "date": update_date,
                 "month": update_date.month,
                 "year": update_date.year,
@@ -110,8 +113,8 @@ def seed_memos(force):
                 "subject": subject,
                 "remarks": "Approved / Passed",
                 "notes": "Processed by attorney",
-                "released_to": "Records",
-                "released_date": update_date
+                "released_to": None if source_type == "OP" else "Records",
+                "released_date": None if source_type == "OP" else update_date
             }
 
             temp_memos.append(updated_entry)
