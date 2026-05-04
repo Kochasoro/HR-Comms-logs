@@ -1,8 +1,219 @@
-{% block page_css %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_user.css') }}">
-{% endblock %}
-
 {% extends "base.html" %}
+{% block page_css2 %}
+<style>
+
+.main-content {
+  padding: 40px;
+}
+
+/* Section Badge */
+.section-badge {
+  background-color: #f2dede;
+  color: #a42323;
+  display: inline-block;
+  padding: 15px 35px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 1.3rem;
+  margin-bottom: 30px;
+}
+
+/* Card Container */
+.accounts-card {
+  border: 1px solid #f0f0f0;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+  margin-bottom: 30px;
+}
+
+.accounts-title {
+  color: #c07a7a;
+  font-weight: 500;
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+}
+
+/* FORM DESIGN */
+.form-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.form-group {
+  flex: 1;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+  color: #6c757d;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9rem;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #a42323;
+  box-shadow: 0 0 0 2px rgba(164,35,35,0.1);
+}
+
+/* Submit Button */
+.btn-create {
+  background-color: #a42323;
+  color: white;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.btn-create:hover {
+  opacity: 0.9;
+}
+
+/* Table */
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.user-table th {
+  background-color: #eff1f3;
+  text-align: left;
+  padding: 12px 15px;
+  color: #6c757d;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.user-table td {
+  padding: 20px 15px;
+  border-bottom: 1px solid #f8f9fa;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+/* Actions */
+.action-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.reset-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.password-wrapper input {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 8px 12px;
+  width: 160px;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Buttons */
+.btn-password {
+  background-color: #a42323;
+  color: white;
+  border: none;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.btn-delete {
+  background-color: #eeeeee;
+  border: none;
+  padding: 9px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-delete:hover {
+  background-color: #dbdfe2;
+}
+/* MODAL */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal-box {
+  background: #fff;
+  padding: 25px 30px;
+  border-radius: 12px;
+  width: 350px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.modal-box h4 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.modal-box p {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-cancel {
+  background: #eee;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-confirm {
+  background: #a42323;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-confirm:hover {
+  opacity: 0.9;
+}
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="col-md-10 content">
@@ -12,6 +223,7 @@
     Manage Users
   </div>
 
+  <!-- CREATE USER -->
   <div class="accounts-card">
     <div class="accounts-title">Create New User</div>
 
@@ -41,6 +253,7 @@
     </form>
   </div>
 
+  <!-- USER LIST -->
   <div class="accounts-card">
     <div class="accounts-title">Existing Users</div>
 
@@ -104,7 +317,7 @@ let selectedForm = null;
 
 document.querySelectorAll('.reset-form').forEach(form => {
   form.addEventListener('submit', function(e) {
-    e.preventDefault();
+    e.preventDefault(); // stop immediate submit
     selectedForm = form;
     document.getElementById('confirmModal').style.display = 'flex';
   });

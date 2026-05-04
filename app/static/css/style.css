@@ -6,13 +6,14 @@
 }
 
 body{
-    background:#b71c1c; 
+    background:#b71c1c; /* crimson background */
     height:100vh;
     display:flex;
     justify-content:center;
     align-items:center;
 }
 
+/* login card */
 .login-card{
     width:280px;
     background:#e6e6e6;
@@ -23,6 +24,8 @@ body{
 }
 
 
+
+/* input fields */
 .login-card input{
     width:100%;
     border:none;
@@ -38,6 +41,7 @@ body{
     border-bottom:2px solid #b71c1c;
 }
 
+/* login button */
 button{
     width:100%;
     background:#b71c1c;
@@ -53,6 +57,7 @@ button:hover{
     background:#8f1616;
 }
 
+/* guest link */
 .guest{
     color:#b71c1c;
     font-size:12px;
@@ -66,6 +71,7 @@ font-family:Arial;
 background:#f2f2f2;
 }
 
+/* TOP BAR */
 
 .topbar{
 height:60px;
@@ -85,10 +91,10 @@ gap:12px;
 /* logo */
 .logo {
     width: clamp(70px, 8vw, 100px);
-    height: auto;              
+    height: auto;              /* keep ratio */
 
-    display: block;            
-    margin: 0 auto 15px auto;  
+    display: block;            /* needed for margin auto */
+    margin: 0 auto 15px auto;  /* 🔥 centers horizontally */
 }
 .title{
 font-weight:bold;
@@ -96,6 +102,7 @@ font-size:18px;
 }
 
 
+/* MAIN LAYOUT */
 
 .layout{
 display:flex;
@@ -103,6 +110,7 @@ height:calc(100vh - 60px);
 }
 
 
+/* SIDEBAR */
 
 .sidebar{
 width:70px;
@@ -122,6 +130,7 @@ border-radius:6px;
 }
 
 
+/* MAIN CONTENT */
 
 .main{
 flex:1;
@@ -129,6 +138,7 @@ padding:25px;
 }
 
 
+/* SEARCH BAR */
 
 .controls{
 display:flex;
@@ -164,6 +174,7 @@ margin-left:10px;
   text-decoration: underline;
 }
 
+/* HOLIDAY CARDS */
 
 .holiday-row{
 display:flex;
@@ -188,6 +199,7 @@ border-radius:4px;
 }
 
 
+/* TABLE */
 
 .table-box{
 background:white;
@@ -215,8 +227,9 @@ tbody tr:hover{
 background:#f8f8f8;
 }
 
+/* Dashboard */
 
-
+/* Section Badge */
 .section-badge {
   background-color: #f2dede;
   color: #a42323;
@@ -228,6 +241,7 @@ background:#f8f8f8;
   margin-bottom: 30px;
 }
 
+/* Accounts Card Container */
 .accounts-card {
   border: 1px solid #f0f0f0;
   border-radius: 12px;
@@ -257,6 +271,7 @@ background:#f8f8f8;
   font-family: 'Poppins', sans-serif;
 }
 
+/* Table Design */
 .user-table {
   width: 100%;
   border-collapse: collapse;
@@ -278,6 +293,7 @@ background:#f8f8f8;
   color: #495057;
 }
 
+/* Password Field Elements */
 .password-wrapper {
   display: flex;
   align-items: center;
@@ -304,6 +320,7 @@ background:#f8f8f8;
   font-size: 1.1rem;
 }
 
+/* Change Password Button */
 .btn-password {
   background-color: #a42323;
   color: white;

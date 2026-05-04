@@ -26,12 +26,14 @@ def new_memo():
         print("FORM:", request.form)
         thread_id = str(uuid.uuid4())
         
+        # 📅 Parse dates
         raw_date = request.form.get("date")
         parsed_date = datetime.strptime(raw_date, "%Y-%m-%d").date() if raw_date else None
 
         raw_release_date = request.form.get("released_date")
         parsed_release_date = datetime.strptime(raw_release_date, "%Y-%m-%d").date() if raw_release_date else None
 
+        # 🔑 Core values
         source_type = request.form.get("source_type")
 
         if not source_type:
@@ -41,6 +43,7 @@ def new_memo():
         month = today.month
         year = today.year
 
+        # 🔢 Get next serial (per type/month/year)
         last_memo = Memo.query.filter_by(
             month=month,
             year=year,
@@ -49,11 +52,13 @@ def new_memo():
 
         next_serial = (last_memo.serial_number or 0) + 1 if last_memo else 1
 
+        # 🧠 Memo number logic
         memo_number = request.form.get("memo_number")
 
         if source_type != "OP":
             memo_number = None
         else:
+            # ❗ prevent duplicate OP memo numbers
             existing = Memo.query.filter_by(
                 memo_number=memo_number,
                 source_type="OP"
@@ -65,6 +70,7 @@ def new_memo():
                     "error": "Memorandum number already exists!"
                 }), 400
 
+        # 📦 Data
         data = {
             "memo_number": memo_number,
             "serial_number": next_serial,
@@ -204,6 +210,7 @@ def edit_memo(id):
         print("🔥 EDIT ERROR:", e)
         return jsonify({"success": False, "error": str(e)}), 500
 
+# UPDATE EXISTING MEMO 
 @secretary_bp.route("/update/<int:id>", methods=["POST"])
 @login_required
 def update_memo(id):
@@ -211,7 +218,9 @@ def update_memo(id):
     original = Memo.query.get_or_404(id)
 
     try:
-
+        # =========================
+        # 📅 PARSE DATE (CLEAN)
+        # =========================
         raw_date = request.form.get("date")
 
         parsed_date = None
@@ -226,9 +235,13 @@ def update_memo(id):
                 "error": "Date is required"
             }), 400
 
+        # 🔥 DEFINE MONTH & YEAR (YOU MISSED THIS)
         month = parsed_date.month
         year = parsed_date.year
 
+        # =========================
+        # 📅 RELEASE DATE
+        # =========================
         raw_release_date = request.form.get("released_date")
 
         parsed_release_date = None
@@ -237,9 +250,14 @@ def update_memo(id):
         else:
             parsed_release_date = original.released_date
 
-
+        # =========================
+        # 🔑 SOURCE TYPE
+        # =========================
         source_type = request.form.get("source_type") or original.source_type
 
+        # =========================
+        # 🔢 SERIAL NUMBER
+        # =========================
         last_memo = Memo.query.filter_by(
             month=month,
             year=year,
@@ -248,8 +266,14 @@ def update_memo(id):
 
         next_serial = (last_memo.serial_number or 0) + 1 if last_memo else 1
 
+        # =========================
+        # 🧠 MEMO NUMBER
+        # =========================
         memo_number = original.memo_number if source_type == "OP" else None
 
+        # =========================
+        # 📦 NEW VERSION DATA
+        # =========================
         new_data = {
             "memo_number": memo_number,
             "serial_number": next_serial,
@@ -271,6 +295,9 @@ def update_memo(id):
             "notes": request.form.get("notes")
         }
 
+        # =========================
+        # 💾 SAVE
+        # =========================
         new_memo = MemoService.create_memo(new_data)
 
         LogService.add_log(
@@ -279,10 +306,9 @@ def update_memo(id):
             f"Based on previous memo #{original.serial_number:04d}",
             current_user.id
         )
-        return jsonify({
-            "success": True,
-            "redirect": url_for("main.home")
-        })
+
+        return jsonify({"success": True})
+
     except Exception as e:
         import traceback
         print("🔥 UPDATE ERROR:")
@@ -296,6 +322,7 @@ def update_memo(id):
 @secretary_bp.route("/delete/<int:id>", methods=["POST"])
 @login_required
 def delete_memo(id):
+    # permission check
     if current_user.role != "admin":
         return jsonify(error="Forbidden"), 403
 
