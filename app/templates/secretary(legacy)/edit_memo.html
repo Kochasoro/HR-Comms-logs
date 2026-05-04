@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}New Memo{% endblock %}
+
+{% block content %}
+
+<h2>Edit Memo</h2>
+
+<form method="POST">
+  Memo # 
+  <input name="memo_number" value="{{ memo.memo_number }}"><br>
+
+  Subject 
+  <input name="subject" value="{{ memo.subject }}"><br>
+
+  Type
+  <select name="source_type">
+    <option value="General" {% if memo.source_type == "General" %}selected{% endif %}>General</option>
+    <option value="OP" {% if memo.source_type == "OP" %}selected{% endif %}>OP</option>
+  </select><br>
+
+  From 
+  <input name="from_office" value="{{ memo.from_office }}"><br>
+
+  Forwarded By 
+  <input name="forwarded_by" value="{{ memo.forwarded_by }}"><br>
+
+  Remarks 
+  <input name="remarks" value="{{ memo.remarks }}"><br>
+
+  Notes 
+  <textarea name="notes">{{ memo.notes }}</textarea><br>
+
+  Date
+  <input type="date" name="date" value="{{ memo.date }}"><br>
+
+  <button type="submit">Update</button>
+</form>
+
+{% endblock %}

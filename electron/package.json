@@ -1,16 +1,57 @@
 {
-  "name": "electron",
+  "name": "hr-logger-electron",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "HR Logger Desktop App",
+  "main": "main.js",
+  "type": "commonjs",
+
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron .",
+    "dist": "electron-builder"
   },
-  "keywords": [],
+
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "electron": "^41.2.1"
+
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^41.2.1",
+    "electron-builder": "^26.8.1"
+  },
+
+"build": {
+  "appId": "com.hrlogger.app",
+  "productName": "HR Logger",
+
+  "directories": {
+    "output": "dist"
+  },
+
+  "files": [
+    "main.js",
+    "package.json"
+  ],
+
+  "extraResources": [
+    {
+      "from": "backend",
+      "to": "backend"
+    }
+  ],
+
+  "win": {
+    "target": "nsis",
+    "icon": "app.ico"
+  },
+
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "installerIcon": "app.ico",
+    "uninstallerIcon": "app.ico",
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "runAfterFinish": true
   }
+}
 }
