@@ -1,181 +1,9 @@
-{% extends "base.html" %}
-{% block page_css3 %}
-<style>
-
-.main-content {
-  padding: 40px;
-  max-width: 1200px;
-  margin-left: 50px;
-}
-
-/* Section Badge */
-.section-badge {
-  background-color: #f2dede;
-  color: #a42323;
-  display: inline-block;
-  padding: 12px 25px;
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 1.2rem;
-  margin-bottom: 35px;
-}
-
-/* Grid Layout */
-.cards-grid {
-  display: flex;
-  gap: 30px;
-  margin-bottom: 40px;
-}
-
-.ui-card {
-  flex: 1;
-  background-color: #eef1f6;
-  border-radius: 15px;
-  padding: 30px;
-  text-align: center;
-}
-
-.card-header {
-  color: #a42323;
-  font-weight: 600;
-  font-size: 1.4rem;
-  margin-top: 0;
-  margin-bottom: 20px;
-}
-
-/* Import UI Components */
-.instruction {
-  font-size: 0.85rem;
-  margin-bottom: 15px;
-}
-
-.input-row {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 10px;
-}
-
-.btn-choose {
-  background-color: #f7e6b5;
-  padding: 10px 15px;
-  border: 1px solid #ccc;
-  border-radius: 8px 0 0 8px;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.file-display {
-  border: 1px solid #ccc;
-  border-left: none;
-  border-radius: 0 8px 8px 0;
-  padding: 10px;
-  width: 220px;
-  font-size: 0.8rem;
-}
-
-.validation-text {
-  display: none;
-  margin-top: 8px;
-  font-size: 14px;
-}
-
-.validation-text.success {
-  color: #2ecc71;
-}
-
-.validation-text.error {
-  color: #e74c3c;
-}
-
-/* Export UI Components */
-.form-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  font-size: 0.9rem;
-  text-align: left;
-}
-
-.check-group, .format-group {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.v-line { color: #ccc; margin: 0 2px; }
-
-.input-field {
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  width: 200px;
-}
-
-.btn-action {
-  background-color: #a42323;
-  color: white;
-  border: none;
-  padding: 12px 30px;
-  border-radius: 8px;
-  font-family: 'Poppins', sans-serif;
-  font-weight: 500;
-  cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-/* Recent Activity */
-.activity-log {
-  border: 1px solid #eee;
-  border-radius: 15px;
-  padding: 25px;
-}
-
-.log-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.log-title {
-  color: #b05a5a;
-  font-size: 1.1rem;
-  font-weight: 500;
-}
-
-.search-input, .sort-select {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.85rem;
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.data-table th {
-  background-color: #e9ecef;
-  text-align: left;
-  padding: 12px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #555;
-}
-
-.data-table td {
-  padding: 12px;
-  border-bottom: 1px solid #f1f1f1;
-  font-size: 0.85rem;
-  color: #444;
-}
-
-
-</style>
+{% block page_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/impexp.css') }}">
 {% endblock %}
+
+{% extends "base.html" %}
+
 {% block content %}
 
 <div class="main-content">
@@ -190,9 +18,9 @@
         <p class="instruction">Upload file (Accepts .xlsx and .csv files)</p>
         <div class="input-row">
           <label for="file-upload" class="btn-choose">Choose File:</label>
-          <input type="file" id="file-upload" hidden>
+          <input type="file" id="file-upload" name="file" hidden>
           <input type="text" id="file-display" class="file-display" placeholder="Ex: filename.csv / filename.xlsx" readonly>
-          <button id="upload-btn" class="btn-action">Upload</button>
+          <button id="upload-btn" type="button" class="btn-action">Upload</button>          
         </div>
       </div>
         <p id="import-message" class="validation-text" style="display:none;"></p>
@@ -217,16 +45,7 @@
             <input type="date" id="date-to" class="input-field">
           </div>
 
-          <div class="form-item">
-            <label>Format:</label>
-            <div class="format-group">
-              <label><input type="checkbox" id="format-excel"> Excel</label>
-              <!-- <span class="v-line">|</span>
-              <label><input type="checkbox" id="format-csv"> CSV</label>
-              <span class="v-line">|</span>
-              <label><input type="checkbox" id="format-pdf"> PDF</label> -->
-            </div>
-          </div>
+
 
           <button id="generate-export" class="btn-action">Generate Export</button>
         </div>
@@ -235,6 +54,54 @@
   </div>
 </div>
 <script>
+const fileInput = document.getElementById("file-upload");
+const fileDisplay = document.getElementById("file-display");
+const uploadBtn = document.getElementById("upload-btn");
+
+// show filename
+fileInput.addEventListener("change", () => {
+    if (fileInput.files.length > 0) {
+        fileDisplay.value = fileInput.files[0].name;
+    }
+    
+});
+
+// upload
+uploadBtn.addEventListener("click", async () => {
+
+    if (!fileInput.files.length) {
+        alert("Please select a file first");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+
+    try {
+        const res = await fetch("/admin/import-memos", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            alert(data.error || "Import failed");
+            return;
+        }
+
+        alert(`Imported: ${data.imported}, Skipped: ${data.skipped}`);
+
+        // optional refresh
+        window.location.reload();
+
+    } catch (err) {
+        console.error(err);
+        alert("Upload error");
+    }
+
+});
+
 document.getElementById("generate-export").addEventListener("click", () => {
 
   const cm = document.getElementById("type-cm").checked;
@@ -243,108 +110,20 @@ document.getElementById("generate-export").addEventListener("click", () => {
   const dateFrom = document.getElementById("date-from").value;
   const dateTo = document.getElementById("date-to").value;
 
-  const excel = document.getElementById("format-excel").checked;
-  // const csv = document.getElementById("format-csv").checked;
-  // const pdf = document.getElementById("format-pdf").checked;
-
   if(!cm && !op){
     alert("Select at least one memo type.");
-    return;
-  }
-
-  if(!excel && !csv && !pdf){
-    alert("Select export format.");
     return;
   }
 
   const params = new URLSearchParams({
     cm,
     op,
-    excel,
-    // csv,
-    // pdf,
+    excel: true,  
     dateFrom,
     dateTo
   });
 
   window.location.href = "/admin/export-memos?" + params.toString();
-
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-
-  const fileInput = document.getElementById("file-upload");
-  const fileDisplay = document.getElementById("file-display");
-  const uploadBtn = document.getElementById("upload-btn");
-  const message = document.getElementById("import-message");
-
-  /* Show filename */
-  fileInput.addEventListener("change", () => {
-    const file = fileInput.files[0];
-    if (!file) return;
-
-    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".csv")) {
-      showMessage("⚠ Only .xlsx or .csv files allowed.");
-      fileInput.value = "";
-      fileDisplay.value = "";
-      return;
-    }
-
-    fileDisplay.value = file.name;
-    hideMessage();
-  });
-
-  /* Upload file */
-  uploadBtn.addEventListener("click", async () => {
-    const file = fileInput.files[0];
-
-    if (!file) {
-      showMessage("⚠ Please choose a file first.");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    showMessage("Uploading...");
-
-    try {
-      const response = await fetch("/admin/import-memos", {
-        method: "POST",
-        body: formData
-      });
-
-      // ⚠ handle non-JSON errors (important)
-      if (!response.ok) {
-        throw new Error("Server error");
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        showMessage(`✔ Imported ${data.imported} records. Skipped ${data.skipped}.`);
-
-        fileInput.value = "";
-        fileDisplay.value = "";
-      } else {
-        showMessage(`⚠ ${data.error}`);
-      }
-
-    } catch (err) {
-      console.error(err);
-      showMessage("❌ Upload failed. Check server.");
-    }
-  });
-
-  const showMessage = (text) => {
-    message.style.display = "block";
-    message.textContent = text;
-  };
-
-  const hideMessage = () => {
-    message.style.display = "none";
-    message.textContent = "";
-  };
 
 });
 </script>

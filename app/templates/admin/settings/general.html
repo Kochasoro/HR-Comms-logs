@@ -1,116 +1,8 @@
-{% extends "base.html" %}
-{% block page_css3 %}
-<style>
-
-/* Badge & Tabs */
-.section-badge {
-  background-color: #f2dede;
-  color: #a42323;
-  padding: 12px 35px;
-  border-radius: 8px;
-  display: inline-block;
-  font-weight: 500;
-  margin-bottom: 25px;
-}
-
-.tabs-container {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 0px;
-  position: relative;
-  z-index: 2;
-}
-
-.tab-btn {
-  background: #f2dede;
-  border: 1px solid #ccc;
-  border-bottom: none;
-  padding: 8px 25px;
-  border-radius: 8px 8px 0 0;
-  font-family: 'Poppins';
-  color: #a42323;
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-
-.tab-btn.active { background: white; border-bottom: 2px solid white; }
-
-/* Main Card */
-.settings-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 0 12px 12px 12px;
-  padding: 20px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-  background: white;
-}
-
-/* Sections */
-.settings-section { margin-bottom: 40px; }
-
-.section-header {
-  background-color: #e5e7eb;
-  padding: 8px 15px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #666;
-  margin-bottom: 25px;
-}
-
-.form-body { padding: 0 40px; }
-
-.form-group {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 18px;
-}
-
-label { font-size: 0.85rem; color: #555; width: 300px; }
-
-.wide-input, .file-path, .color-input {
-  padding: 8px 8px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  width: 350px;
-  font-family: 'Poppins';
-  font-size: 0.85rem;
-}
-
-/* Specific UI Elements */
-.file-box { display: flex; }
-.yellow-choose {
-  background-color: #f9e8b3;
-  border: 1px solid #ccc;
-  border-right: none;
-  border-radius: 8px 0 0 8px;
-  padding: 8px 12px;
-  font-size: 0.8rem;
-  width: auto;
-}
-.file-path { border-radius: 0 8px 8px 0; width: 245px; }
-
-.color-picker-box { display: flex; align-items: center; gap: 10px; }
-.color-preview { width: 20px; height: 20px; background: #a42323; border-radius: 4px; }
-
-.btn-right { text-align: right; margin-top: 15px; }
-.btn-save {
-  background-color: #a42323;
-  color: white;
-  border: none;
-  padding: 10px 30px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: 'Poppins';
-  font-size: 0.85rem;
-}
-
-/* Holiday Table */
-.holiday-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-.holiday-table th { background: #eff1f3; text-align: left; padding: 10px; font-size: 0.8rem; color: #666; }
-.holiday-table td { padding: 12px 10px; border-bottom: 1px solid #eee; font-size: 0.8rem; }
-.trash-icon { color: #444; cursor: pointer; }
-</style>
+{% block page_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_settings.css') }}">
 {% endblock %}
+{% extends "base.html" %}
+
 {% block content %}
 <div class="col-md-10 content">
 <div class="main-content">
@@ -119,6 +11,7 @@ label { font-size: 0.85rem; color: #555; width: 300px; }
   <div class="tabs-container">
     <button class="tab-btn active" data-tab="general">General</button>
     <button class="tab-btn" data-tab="holidays">Holidays</button>
+    <button class="tab-btn" data-tab="batch">Memo Settings</button>
   </div>
 
   <div class="settings-card">
@@ -146,6 +39,13 @@ label { font-size: 0.85rem; color: #555; width: 300px; }
 
     <div class="settings-section" id="holidays">
       <div class="section-header">HOLIDAY</div>
+      <div id="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for category, message in messages %}
+            <div class="alert {{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endwith %}
+      </div>
       <div class="form-body">
         <table class="holiday-table">
           <tr>
@@ -187,11 +87,39 @@ label { font-size: 0.85rem; color: #555; width: 300px; }
       </div>
     </div>
 
+    <div class="settings-section" id="batch">
+      <div class="section-header">BATCH DELETE MEMOS</div>
 
+      <form method="POST" action="{{ url_for('admin.delete_memos_by_date') }}">
+        
+        <div class="form-group">
+          <label>Month:</label>
+          <select name="month" required>
+            <option value="">Select Month</option>
+            {% for m in range(1, 13) %}
+              <option value="{{ m }}">{{ m }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Year:</label>
+          <input type="number" name="year" placeholder="e.g. 2026" required>
+        </div>
+
+        <div class="btn-right">
+          <button class="btn-save" type="submit"
+            onclick="return confirm('Delete ALL memos for this month? This cannot be undone.')">
+            Delete Memos
+          </button>
+        </div>
+
+      </form>
+    </div>
+    
   </div>
 </div>
 
-<!-- ADD HOLIDAY MODAL -->
 <div id="addHolidayModal" class="modal">
   <div class="modal-content">
 
@@ -238,9 +166,19 @@ label { font-size: 0.85rem; color: #555; width: 300px; }
     </form>
 
   </div>
+
+  
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(() => {
+    document.querySelectorAll(".alert").forEach(el => {
+      el.style.opacity = "0";
+      setTimeout(() => el.remove(), 500); 
+    });
+  }, 5000); 
+});
 function openAddHoliday(){
   const modal = document.getElementById('addHolidayModal');
   modal.classList.add('show');
@@ -255,13 +193,10 @@ function closeModals(){
 const tabs = document.querySelectorAll(".tab-btn");
 const sections = document.querySelectorAll(".settings-section");
 
-// 👉 function to show a tab
 function showTab(tabName) {
-  // remove active state
   tabs.forEach(t => t.classList.remove("active"));
   sections.forEach(sec => sec.style.display = "none");
 
-  // activate correct tab
   const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
   if (activeTab) {
     activeTab.classList.add("active");
@@ -269,26 +204,22 @@ function showTab(tabName) {
   }
 }
 
-// 👉 click event
 tabs.forEach(tab => {
   tab.addEventListener("click", () => {
     const target = tab.dataset.tab;
 
-    // show tab
     showTab(target);
 
-    // 🔥 save to localStorage
     localStorage.setItem("activeTab", target);
   });
 });
 
-// 👉 on load (restore previous tab)
 const savedTab = localStorage.getItem("activeTab");
 
 if (savedTab) {
   showTab(savedTab);
 } else {
-  showTab("general"); // default
+  showTab("general"); 
 }
 </script>
 {% endblock %}

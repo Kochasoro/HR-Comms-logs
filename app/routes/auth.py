@@ -15,17 +15,14 @@ def change_password():
         new_password = request.form["new_password"]
         confirm_password = request.form["confirm_password"]
 
-        # check current password
         if not current_user.check_password(current_password):
             flash("Current password is incorrect")
             return redirect(url_for("auth.change_password"))
 
-        # check new password match
         if new_password != confirm_password:
             flash("New passwords do not match")
             return redirect(url_for("auth.change_password"))
 
-        # update password
         current_user.set_password(new_password)
 
         db.session.commit()

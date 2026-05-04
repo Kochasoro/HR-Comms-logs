@@ -1,6 +1,7 @@
 import os
 from flask import Blueprint, current_app, jsonify, render_template, request, redirect, url_for, flash, send_file
 from flask_login import login_required, current_user
+from sqlalchemy import extract
 from app.models.log_entry import LogEntry
 from app.models.user import User
 from app.models.settings import SystemSettings
@@ -95,23 +96,46 @@ def settings_general():
             db.session.commit()
             flash("Settings updated")
 
-        # ADD HOLIDAY
         elif form_type == "holiday":
 
-            repeat = "repeat_yearly" in request.form  # ✅ True/False
+            name = request.form.get("name")
+            date_str = request.form.get("date")
+
+            if not name or not name.strip():
+                flash("Holiday name is required", "error")
+                return redirect(url_for("admin.settings_general"))
+
+            if not date_str:
+                flash("Holiday date is required", "error")
+                return redirect(url_for("admin.settings_general"))
+
+            try:
+                holiday_date = datetime.strptime(date_str, "%Y-%m-%d")
+            except ValueError:
+                flash("Invalid date format", "error")
+                return redirect(url_for("admin.settings_general"))
+
+            repeat = "repeat_yearly" in request.form
 
             holiday = Holiday(
-                date=datetime.strptime(request.form["date"], "%Y-%m-%d"),
-                name=request.form["name"],
-                type=request.form["type"],
-                description=request.form["description"],
+                date=holiday_date,
+                name=name.strip(),
+                type=request.form.get("type"),
+                description=request.form.get("description"),
                 repeat_yearly=repeat
             )
 
             db.session.add(holiday)
             db.session.commit()
 
-            flash("Holiday added")
+            LogService.add_log(
+                memo=None,
+                remarks="Holiday Added",
+                notes=f"{holiday.name} on {holiday.date.strftime('%Y-%m-%d')} (Repeat: {holiday.repeat_yearly})",
+                user_id=current_user.id
+            )
+
+            flash("Holiday added", "success")
 
         return redirect(url_for("admin.settings_general"))
 
@@ -123,6 +147,75 @@ def settings_general():
         holidays=holidays
     )
 
+
+@admin_bp.route("/delete-memos-by-date", methods=["POST"])
+@login_required
+def delete_memos_by_date():
+
+    if current_user.role != "admin":
+        return redirect(url_for("auth.login"))
+
+    # 🔹 Get form values
+    month_str = request.form.get("month")
+    year_str = request.form.get("year")
+
+    if not month_str or not year_str:
+        flash("Month and Year are required", "error")
+        return redirect(url_for("admin.settings_general"))
+
+    # 🔹 Convert safely
+    try:
+        month = int(month_str)
+        year = int(year_str)
+    except ValueError:
+        flash("Invalid month/year", "error")
+        return redirect(url_for("admin.settings_general"))
+
+    # 🔹 Create date range (THIS IS THE FIX)
+    start_date = date(year, month, 1)
+
+    if month == 12:
+        end_date = date(year + 1, 1, 1)
+    else:
+        end_date = date(year, month + 1, 1)
+
+    # 🔹 Query memos within the month
+    memos = Memo.query.filter(
+        Memo.date >= start_date,
+        Memo.date < end_date
+    ).all()
+
+    print(f"Deleting {len(memos)} memos from {start_date} to {end_date}")  # debug
+
+    if not memos:
+        flash("No memos found for selected period", "error")
+        return redirect(url_for("admin.settings_general"))
+
+    try:
+        count = len(memos)
+
+        for memo in memos:
+            db.session.delete(memo)
+
+        db.session.commit()
+
+        # 🔹 Optional: cleaner single log instead of spam
+        LogService.add_log(
+            memo=None,
+            remarks="Batch Delete",
+            notes=f"{count} memos deleted for {month}/{year}",
+            user_id=current_user.id
+        )
+
+        flash(f"{count} memos deleted for {month}/{year}", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        print("Batch delete error:", e)
+        flash("Batch delete failed", "error")
+
+    return redirect(url_for("admin.settings_general"))
+
 @admin_bp.route("/settings/holidays/delete/<int:id>", methods=["POST"])
 @login_required
 def delete_holiday(id):
@@ -131,11 +224,17 @@ def delete_holiday(id):
 
     db.session.delete(holiday)
     db.session.commit()
+    LogService.add_log(
+        memo=None,  
+        remarks="Holiday Deleted",
+        notes=f"{holiday.name} on {holiday.date.strftime('%Y-%m-%d')} (Repeat: {holiday.repeat_yearly})",
+        user_id=current_user.id  
+    )
 
     flash("Holiday deleted")
 
     return redirect(url_for("admin.settings_general"))
-
+    
 @admin_bp.route("/users")
 @login_required
 def users():
@@ -149,7 +248,7 @@ def users():
     return render_template("admin/user.html", users=users)
 @admin_bp.route("/import")
 @login_required
-def import_page():   # ✅ different name
+def import_page():  
 
     if current_user.role != "admin":
         flash("Access denied")
@@ -173,6 +272,7 @@ def import_memos():
         return jsonify({"success": False, "error": "No file uploaded"}), 400
 
     try:
+        import uuid
 
         xls = pd.ExcelFile(file)
 
@@ -185,9 +285,30 @@ def import_memos():
         skipped = 0
         year = datetime.now().year
 
+        # ---------- helpers ----------
+        def clean(val):
+            if pd.isna(val):
+                return None
+            return str(val).strip()
+
+        def normalize_subject(val):
+            if pd.isna(val):
+                return None
+            return str(val).strip().lower()
+
+        def parse_date(val):
+            if pd.isna(val):
+                return None
+            if isinstance(val, datetime):
+                return val.date()
+            try:
+                return pd.to_datetime(val).date()
+            except:
+                return None
+        # ------------------------------
+
         for sheet_name in xls.sheet_names:
 
-            # remove anything after |
             sheet_clean = sheet_name.split("|")[0].strip()
 
             if "-" not in sheet_clean:
@@ -196,7 +317,6 @@ def import_memos():
             month_text, sheet_type = sheet_clean.split("-")
 
             month = month_map.get(month_text.capitalize())
-
             if not month:
                 continue
 
@@ -207,29 +327,24 @@ def import_memos():
             else:
                 continue
 
-            df = pd.read_excel(
-                xls,
-                sheet_name=sheet_name,
-                header=None,
-                skiprows=5
-            )
+            raw_df = pd.read_excel(xls, sheet_name=sheet_name, header=None)
+
+            # ---------- scan the starting row ----------
+            start_row = None
+            for i, row in raw_df.iterrows():
+                val = str(row[0]).strip()
+
+                if val.isdigit() and int(val) >= 1:
+                    start_row = i
+                    break
+
+            if start_row is None:
+                continue
+
+            df = raw_df.iloc[start_row:]
+            # ------------------------------------------
 
             for _, row in df.iterrows():
-
-                def clean(val):
-                    if pd.isna(val):
-                        return None
-                    return str(val).strip()
-
-                def parse_date(val):
-                    if pd.isna(val):
-                        return None
-                    if isinstance(val, datetime):
-                        return val.date()
-                    try:
-                        return pd.to_datetime(val).date()
-                    except:
-                        return None
 
                 serial_raw = clean(row[0])
 
@@ -254,15 +369,38 @@ def import_memos():
                     skipped += 1
                     continue
 
+                # ---------- prepare values ----------
+                date_val = parse_date(row[1])
+                subject_raw = clean(row[4])
+                subject_norm = normalize_subject(row[4])
+                # ------------------------------------
+
+                # ---------- THREADING LOGIC ----------
+                thread_id = None
+
+                if subject_norm and date_val:
+                    existing_thread = Memo.query.filter(
+                        Memo.subject.ilike(subject_raw.strip()),  
+                        Memo.date == date_val,
+                        Memo.source_type == source_type
+                    ).first()
+
+                    if existing_thread:
+                        thread_id = existing_thread.thread_id
+
+                if not thread_id:
+                    thread_id = str(uuid.uuid4())
+                # ------------------------------------
+
                 memo = Memo(
                     serial_number=serial,
                     month=month,
                     year=year,
 
-                    date=parse_date(row[1]),
+                    date=date_val,
                     from_office=clean(row[2]),
                     forwarded_by=clean(row[3]),
-                    subject=clean(row[4]),
+                    subject=subject_raw,
 
                     remarks=clean(row[5]),
                     notes=clean(row[6]),
@@ -270,7 +408,8 @@ def import_memos():
                     released_date=parse_date(row[7]),
                     released_to=clean(row[8]),
 
-                    source_type=source_type
+                    source_type=source_type,
+                    thread_id=thread_id
                 )
 
                 db.session.add(memo)
@@ -294,7 +433,6 @@ def import_memos():
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)})
-    
 
 @admin_bp.route("/export-memos")
 @login_required
@@ -307,15 +445,12 @@ def export_memos():
     op = request.args.get("op") == "true"
 
     excel = request.args.get("excel") == "true"
-    csv = request.args.get("csv") == "true"
-    pdf = request.args.get("pdf") == "true"
 
     date_from = request.args.get("dateFrom")
     date_to = request.args.get("dateTo")
 
     query = Memo.query
 
-    # ===== TYPE FILTER =====
     types = []
     if cm:
         types.append("CM")
@@ -325,7 +460,6 @@ def export_memos():
     if types:
         query = query.filter(Memo.source_type.in_(types))
 
-    # ===== DATE FILTER =====
     if date_from:
         query = query.filter(Memo.date >= date_from)
 
@@ -334,44 +468,7 @@ def export_memos():
 
     memos = query.order_by(Memo.date).all()
 
-    # ===== CSV (unchanged) =====
-
-    if csv:
-        data = []
-        for m in memos:
-            data.append({
-                "Serial No": f"{m.serial_number:04d}",
-                "Date": m.date,
-                "From": m.from_office,
-                "Forwarded By": m.forwarded_by,
-                "Subject": m.subject,
-                "Remarks": m.remarks,
-                "Notes": m.notes,
-                "Released Date": m.released_date,
-                "Released To": m.released_to,
-                "Type": m.source_type
-            })
-
-        df = pd.DataFrame(data)
-
-        output = BytesIO()
-        output.write(df.to_csv(index=False).encode())
-        output.seek(0)
-
-        LogService.add_log(
-            None,
-            f"{current_user.username} exported memos as CSV",
-            f"{len(memos)} memo(s) exported",
-            current_user.id
-        )
-
-        return send_file(
-            output,
-            as_attachment=True,
-            download_name="memos_export.csv",
-            mimetype="text/csv"
-        )
-    # ===== EXCEL =====
+    # ===== EXCEL ONLY =====
     if excel:
 
         output = BytesIO()
@@ -438,9 +535,7 @@ def export_memos():
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
-    # ===== PDF (OPTIONAL: KEEP SIMPLE OR REMOVE) =====
-    if pdf:
-        return {"error": "PDF export not supported with template yet"}, 400
+    return jsonify({"error": "Invalid export type"}), 400
     
 @admin_bp.route("/users/create", methods=["POST"])
 @login_required

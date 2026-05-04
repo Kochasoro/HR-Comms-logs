@@ -71,19 +71,15 @@ def home():
                 next_date = h.date.replace(year=today.year + 1)
 
         else:
-            # skip past non-repeating holidays
             if h.date < today:
                 continue
             next_date = h.date
 
-        # attach dynamic date
         h.display_date = next_date
         holidays.append(h)
 
-    # sort by upcoming date
     holidays.sort(key=lambda x: x.display_date)
 
-    # limit to 3
     holidays = holidays[:3]
 
     return render_template(
