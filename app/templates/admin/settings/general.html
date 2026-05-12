@@ -11,6 +11,10 @@
   <div class="tabs-container">
     <button class="tab-btn active" data-tab="general">General</button>
     <button class="tab-btn" data-tab="holidays">Holidays</button>
+    <button class="tab-btn" data-tab="Autocomplete">
+        Autocomplete
+    </button>
+    <button class="tab-btn" data-tab="backups">Backups</button>
     <button class="tab-btn" data-tab="batch">Memo Settings</button>
   </div>
 
@@ -86,6 +90,228 @@
 
       </div>
     </div>
+
+    <div class="settings-section" id="Autocomplete">
+
+        <div class="section-header">
+            AUTOCOMPLETE SETTINGS
+        </div>
+
+        <div class="autocomplete-grid">
+
+            <!-- FROM -->
+            <div class="autocomplete-box">
+
+                <div class="autocomplete-box-header">
+                    <span>From Office</span>
+
+                    <button
+                        class="mini-add-btn"
+                        onclick="openAutocompleteModal('from')">
+                        + Add
+                    </button>
+                </div>
+
+                <div class="autocomplete-scroll">
+
+                    {% for item in from_offices %}
+                    <div class="autocomplete-item">
+
+                        <span>{{ item.value }}</span>
+
+                        <button
+                          class="delete-chip-btn"
+                          data-value="{{ item.value }}"
+                          data-type="from">
+                            ✕
+                        </button>
+
+                    </div>
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+            <!-- FORWARDED -->
+            <div class="autocomplete-box">
+
+                <div class="autocomplete-box-header">
+                    <span>Forwarded By</span>
+
+                    <button
+                        class="mini-add-btn"
+                        onclick="openAutocompleteModal('forwarded')">
+                        + Add
+                    </button>
+                </div>
+
+                <div class="autocomplete-scroll">
+
+                    {% for item in forwarded_people %}
+                    <div class="autocomplete-item">
+
+                        <span>{{ item.value }}</span>
+
+                          <button
+                              class="delete-chip-btn"
+                              data-value="{{ item.value }}"
+                              data-type="forwarded">
+                              ✕
+                          </button>
+
+                    </div>
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+            <!-- RELEASED -->
+            <div class="autocomplete-box">
+
+                <div class="autocomplete-box-header">
+                    <span>Released To</span>
+
+                    <button
+                        class="mini-add-btn"
+                        onclick="openAutocompleteModal('released_to')">
+                        + Add
+                    </button>
+                </div>
+
+                <div class="autocomplete-scroll">
+
+                    {% for item in released_people %}
+                    <div class="autocomplete-item">
+
+                        <span>{{ item.value }}</span>
+
+                        <button
+                            class="delete-chip-btn"
+                            data-value="{{ item.value }}"
+                            data-type="released_to">
+                            ✕
+                        </button>
+
+                    </div>
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+            <!-- REMARKS -->
+            <div class="autocomplete-box">
+
+                <div class="autocomplete-box-header">
+                    <span>Remarks</span>
+
+                    <button
+                        class="mini-add-btn"
+                        onclick="openAutocompleteModal('remarks')">
+                        + Add
+                    </button>
+                </div>
+
+                <div class="autocomplete-scroll">
+
+                    {% for item in remarks_list %}
+                    <div class="autocomplete-item">
+
+                        <span>{{ item.value }}</span>
+
+                        <button
+                            class="delete-chip-btn"
+                            data-value="{{ item.value }}"
+                            data-type="remarks">
+                            ✕
+                        </button>
+
+                    </div>
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="settings-section" id="backups">
+        <div class="backup-card">
+
+            <div class="backup-title">
+                Backup Slot A
+            </div>
+
+            <div class="backup-info">
+                <div>
+                    File:
+                    <strong>app_backup_A.db</strong>
+                </div>
+
+                <div>
+                    Status:
+                      Last Backup:
+                      <strong>{{ backup_a_label }}</strong>
+                </div>
+            </div>
+
+            <form method="POST"
+                action="{{ url_for('admin.restore_backup', slot='A') }}">
+
+                <button
+                    class="btn-restore"
+                    type="submit"
+                    onclick="return confirm('Restore Backup A? Current database will be replaced.')">
+                    Restore A
+                </button>
+
+            </form>
+
+        </div>
+
+
+        <!-- BACKUP B -->
+        <div class="backup-card">
+
+            <div class="backup-title">
+                Backup Slot B
+            </div>
+
+            <div class="backup-info">
+
+                <div>
+                    File:
+                    <strong>app_backup_B.db</strong>
+                </div>
+
+                <div>
+                    Status:
+                      Last Backup:
+                      <strong>{{ backup_b_label }}</strong>
+                </div>
+
+            </div>
+
+            <form method="POST"
+                action="{{ url_for('admin.restore_backup', slot='B') }}">
+
+                <button
+                    class="btn-restore"
+                    type="submit"
+                    onclick="return confirm('Restore Backup B? Current database will be replaced.')">
+                    Restore B
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
 
     <div class="settings-section" id="batch">
       <div class="section-header">BATCH DELETE MEMOS</div>
@@ -169,7 +395,57 @@
 
   
 </div>
+<!-- AUTOCOMPLETE MODAL -->
+<div id="autocompleteModal" class="modal">
 
+    <div class="modal-content autocomplete-modal">
+
+        <h2 id="autocompleteModalTitle">
+            Add Autocomplete
+        </h2>
+
+        <form id="autocompleteForm">
+
+            <input
+                type="hidden"
+                id="autocompleteType"
+                name="type">
+
+            <div class="form-group">
+
+                <label>Value</label>
+
+                <input
+                    type="text"
+                    id="autocompleteValue"
+                    name="value"
+                    required
+                    autocomplete="off">
+
+            </div>
+
+            <div class="modal-buttons">
+
+                <button
+                    type="button"
+                    class="btn cancel"
+                    onclick="closeModals()">
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn">
+                    Save
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   setTimeout(() => {
@@ -194,14 +470,25 @@ const tabs = document.querySelectorAll(".tab-btn");
 const sections = document.querySelectorAll(".settings-section");
 
 function showTab(tabName) {
-  tabs.forEach(t => t.classList.remove("active"));
-  sections.forEach(sec => sec.style.display = "none");
 
-  const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
-  if (activeTab) {
-    activeTab.classList.add("active");
-    document.getElementById(tabName).style.display = "block";
-  }
+    tabs.forEach(t => t.classList.remove("active"));
+
+    sections.forEach(sec => {
+        sec.style.display = "none";
+    });
+
+    const activeTab = document.querySelector(
+        `[data-tab="${tabName}"]`
+    );
+
+    const activeSection = document.getElementById(tabName);
+
+    if (activeTab && activeSection) {
+
+        activeTab.classList.add("active");
+
+        activeSection.style.display = "block";
+    }
 }
 
 tabs.forEach(tab => {
@@ -220,6 +507,130 @@ if (savedTab) {
   showTab(savedTab);
 } else {
   showTab("general"); 
+}
+async function deleteItem(type, value) {
+
+    await fetch(
+        '{{ url_for("secretary.delete_autocomplete") }}',
+        {
+            method: "DELETE",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                type: type,
+                value: value
+            })
+        }
+    );
+}
+document.querySelectorAll(".delete-chip-btn").forEach(btn => {
+
+    btn.addEventListener("click", async function(e){
+
+        e.stopPropagation();
+
+        const value = this.dataset.value;
+        const type = this.dataset.type;
+
+        try{
+
+            await deleteItem(type, value);
+
+            this.closest(".autocomplete-item").remove();
+
+        }catch(err){
+
+            console.error(err);
+        }
+
+    });
+
+});
+function openAutocompleteModal(type){
+
+    const modal = document.getElementById("autocompleteModal");
+
+    const typeInput = document.getElementById("autocompleteType");
+
+    const title = document.getElementById("autocompleteModalTitle");
+
+    const valueInput = document.getElementById("autocompleteValue");
+
+    typeInput.value = type;
+
+    valueInput.value = "";
+
+    const titles = {
+        from: "Add From Office",
+        forwarded: "Add Forwarded By",
+        remarks: "Add Remarks",
+        released_to: "Add Released To"
+    };
+
+    title.textContent = titles[type] || "Add Autocomplete";
+
+    modal.classList.add("show");
+
+    setTimeout(() => {
+        valueInput.focus();
+    }, 100);
+}
+
+
+const autocompleteForm = document.getElementById("autocompleteForm");
+
+if (autocompleteForm){
+
+    autocompleteForm.addEventListener("submit", async function(e){
+
+        e.preventDefault();
+
+        const value = document
+            .getElementById("autocompleteValue")
+            .value
+            .trim();
+
+        const type = document
+            .getElementById("autocompleteType")
+            .value;
+
+        if(!value) return;
+
+        try{
+
+            const res = await fetch(
+                '{{ url_for("secretary.save_autocomplete") }}',
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        value: value,
+                        type: type
+                    })
+                }
+            );
+
+            const data = await res.json();
+
+            if(data.success){
+
+                location.reload();
+            }
+
+        }catch(err){
+
+            console.error(err);
+        }
+
+    });
+
 }
 </script>
 {% endblock %}

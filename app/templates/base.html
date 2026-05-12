@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", function() {
   Logged in as: 
   <span id="userRole">
     {% if current_user.is_authenticated %}
-      {{ current_user.role|capitalize }}
+      {{ current_user.username|capitalize }}
     {% else %}
       Guest
     {% endif %}
@@ -61,41 +61,51 @@ document.addEventListener("DOMContentLoaded", function() {
 
     {% if current_user.role == "admin" %}
     
-    <a href="{{ url_for('admin.dashboard') }}" title="Dashboard">
-        <img src="{{ url_for('static', filename='img/dashboard.svg') }}" alt="Dashboard">
+    <a href="{{ url_for('admin.dashboard') }}"
+       class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+        <img src="{{ url_for('static', filename='img/dashboard.svg') }}">
+        <span>Dashboard</span>
     </a>
 
-    <a href="{{ url_for('admin.users') }}" title="Manage Users">
-        <img src="{{ url_for('static', filename='img/users.svg') }}" alt="Users">
+    <a href="{{ url_for('admin.users') }}"
+       class="{% if request.endpoint == 'admin.users' %}active{% endif %}">
+        <img src="{{ url_for('static', filename='img/users.svg') }}">
+        <span>Manage Users</span>
     </a>
 
-
-
-    <a href="{{ url_for('admin.logs_page') }}" title="Reports">
-        <img src="{{ url_for('static', filename='img/reports.svg') }}" alt="Reports">
+    <a href="{{ url_for('admin.logs_page') }}"
+       class="{% if request.endpoint == 'admin.logs_page' %}active{% endif %}">
+        <img src="{{ url_for('static', filename='img/reports.svg') }}">
+        <span>Reports</span>
     </a>
 
     {% endif %}
 
     {% if current_user.role == "admin" or current_user.role == "secretary" %}
-    <a href="{{ url_for('main.home') }}" title="Memos">
-        <img src="{{ url_for('static', filename='img/memos.svg') }}" alt="Memos">
+    <a href="{{ url_for('main.home') }}"
+       class="{% if request.endpoint == 'main.home' %}active{% endif %}">
+        <img src="{{ url_for('static', filename='img/memos.svg') }}">
+        <span>Memos</span>
     </a>
-
     {% endif %}
 
     {% if current_user.role == "admin" %}
-    <a href="{{ url_for('admin.import_page') }}" title="Import/Export">
-        <img src="{{ url_for('static', filename='img/import.svg') }}" alt="Import">
-    </a>
-    <a href="{{ url_for('admin.settings_general') }}" title="Settings">
-        <img src="{{ url_for('static', filename='img/settings.svg') }}" alt="Settings">
+    <a href="{{ url_for('admin.import_page') }}"
+       class="{% if request.endpoint == 'admin.import_page' %}active{% endif %}">
+        <img src="{{ url_for('static', filename='img/import.svg') }}">
+        <span>Import / Export</span>
     </a>
 
+    <a href="{{ url_for('admin.settings_general') }}"
+       class="{% if request.endpoint == 'admin.settings_general' %}active{% endif %}">
+        <img src="{{ url_for('static', filename='img/settings.svg') }}">
+        <span>Settings</span>
+    </a>
     {% endif %}
 
-    <a href="{{ url_for('auth.logout') }}" title="Logout">
-        <img src="{{ url_for('static', filename='img/logout.svg') }}" alt="Logout">
+    <a href="{{ url_for('auth.logout') }}">
+        <img src="{{ url_for('static', filename='img/logout.svg') }}">
+        <span>Logout</span>
     </a>
 
 </div>

@@ -1,57 +1,105 @@
 import os
-import sys
 import shutil
-from datetime import datetime, date
+import threading
+import time
+
+from datetime import datetime, timedelta
 
 from app import create_app
 from app.extensions import db
 from app.models.user import User
+
 from werkzeug.security import generate_password_hash
 
 
 # =========================
-# BASE PATH (EXE + DEV SAFE)
+# APPDATA PATH (PRODUCTION SAFE)
 # =========================
 appdata = os.getenv("APPDATA")
-BASE_DIR = os.path.join(appdata, "HR-LOGGER")
+
+BASE_DIR = os.path.join(
+    appdata,
+    "HR-LOGGER"
+)
+
 os.makedirs(BASE_DIR, exist_ok=True)
 
-DB_PATH = os.path.join(BASE_DIR, "app.db")
+DB_PATH = os.path.join(
+    BASE_DIR,
+    "app.db"
+)
+
 
 # =========================
 # BACKUP CONFIG
 # =========================
-BACKUP_DIR = os.path.join(BASE_DIR, "backups")
+BACKUP_DIR = os.path.join(
+    BASE_DIR,
+    "backups"
+)
+
 os.makedirs(BACKUP_DIR, exist_ok=True)
 
-BACKUP_A = os.path.join(BACKUP_DIR, "app_backup_A.db")
-BACKUP_B = os.path.join(BACKUP_DIR, "app_backup_B.db")
-STATE_FILE = os.path.join(BACKUP_DIR, "backup_state.txt")
+BACKUP_A = os.path.join(
+    BACKUP_DIR,
+    "app_backup_A.db"
+)
+
+BACKUP_B = os.path.join(
+    BACKUP_DIR,
+    "app_backup_B.db"
+)
+
+STATE_FILE = os.path.join(
+    BACKUP_DIR,
+    "backup_state.txt"
+)
 
 
 # =========================
-# BACKUP LOGIC
+# BACKUP CHECK
 # =========================
 def should_backup():
+
     if not os.path.exists(STATE_FILE):
         return True
 
     try:
-        with open(STATE_FILE, "r") as f:
-            last_date = f.read().strip().split(",")[0]
 
-        last = datetime.strptime(last_date, "%Y-%m-%d").date()
-        return (date.today() - last).days >= 3
+        with open(STATE_FILE, "r") as f:
+            last_time = f.read().strip().split(",")[0]
+
+        last = datetime.strptime(
+            last_time,
+            "%Y-%m-%d %H:%M:%S"
+        )
+
+        # =========================
+        # BACKUP INTERVAL
+        # =========================
+
+        # TEST MODE
+        # BACKUP_INTERVAL = timedelta(minutes=1)
+
+        # PRODUCTION MODE
+        BACKUP_INTERVAL = timedelta(days=3)
+
+        return datetime.now() - last >= BACKUP_INTERVAL
 
     except Exception:
         return True
 
 
+# =========================
+# ROTATING SLOT
+# =========================
 def get_backup_slot():
+
     if not os.path.exists(STATE_FILE):
         return "A"
 
     try:
+
         with open(STATE_FILE, "r") as f:
             parts = f.read().strip().split(",")
 
@@ -64,65 +112,118 @@ def get_backup_slot():
         return "A"
 
 
+# =========================
+# SAVE BACKUP
+# =========================
 def backup_db():
+
     if not os.path.exists(DB_PATH):
+
+        print("Database not found.")
         return
 
     slot = get_backup_slot()
+
     target = BACKUP_A if slot == "A" else BACKUP_B
 
-    shutil.copy2(DB_PATH, target)
+    try:
 
-    with open(STATE_FILE, "w") as f:
-        f.write(f"{date.today()},{slot}")
+        shutil.copy2(DB_PATH, target)
 
-    print(f"Backup saved to slot {slot}: {target}")
+        with open(STATE_FILE, "w") as f:
+
+            f.write(
+                f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')},{slot}"
+            )
+
+        print(
+            f"Backup saved "
+            f"({slot}) "
+            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        )
+
+    except Exception as e:
+
+        print("Backup failed:", e)
 
 
 # =========================
-# APP INIT
+# BACKGROUND BACKUP LOOP
+# =========================
+def backup_loop():
+
+    while True:
+
+        try:
+
+            if should_backup():
+                backup_db()
+
+        except Exception as e:
+
+            print("Backup loop error:", e)
+
+        # CHECK EVERY MINUTE
+        time.sleep(60)
+
+
+# =========================
+# CREATE APP
 # =========================
 app = create_app()
 
+
+# =========================
+# INIT APP
+# =========================
 with app.app_context():
 
-    # 🔥 AUTO BACKUP EVERY 3 DAYS
-    if should_backup():
-        backup_db()
-
-    # 🔥 DB INIT (only if empty/new)
+    # CREATE TABLES
     db.create_all()
 
-    # 🔥 SEED DEFAULT USERS
+    # SEED USERS ONLY IF EMPTY
     if not User.query.first():
+
         print("Seeding default users...")
 
         db.session.add_all([
+
             User(
                 username="Superadmin",
                 password_hash=generate_password_hash("OJTAccess"),
                 role="admin"
             ),
+
             User(
                 username="Admin",
                 password_hash=generate_password_hash("Password"),
                 role="admin"
             ),
+
             User(
                 username="secretary",
                 password_hash=generate_password_hash("secret123"),
                 role="secretary"
             ),
+
         ])
 
         db.session.commit()
+
         print("Seed complete.")
 
 
 # =========================
-# RUN FLASK APP
+# RUN APP
 # =========================
 if __name__ == "__main__":
+
+    # START BACKUP THREAD
+    threading.Thread(
+        target=backup_loop,
+        daemon=True
+    ).start()
+
     app.run(
         host="127.0.0.1",
         port=5000,

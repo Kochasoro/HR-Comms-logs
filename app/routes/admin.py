@@ -1,7 +1,10 @@
 import os
+import shutil
 from flask import Blueprint, current_app, jsonify, render_template, request, redirect, url_for, flash, send_file
 from flask_login import login_required, current_user
 from sqlalchemy import extract
+from app.config import get_database_path
+from app.models.autofill import MemoAutocomplete
 from app.models.log_entry import LogEntry
 from app.models.user import User
 from app.models.settings import SystemSettings
@@ -51,6 +54,7 @@ def dashboard():
 
         week_counts.append(count)
 
+    
     return render_template(
         "admin/dashboard.html",
         logs=logs,
@@ -140,13 +144,170 @@ def settings_general():
         return redirect(url_for("admin.settings_general"))
 
     holidays = Holiday.query.order_by(Holiday.date.asc()).all()
+    from_offices = MemoAutocomplete.query\
+        .filter_by(type="from")\
+        .order_by(MemoAutocomplete.value.asc())\
+        .all()
 
+    forwarded_people = MemoAutocomplete.query\
+        .filter_by(type="forwarded")\
+        .order_by(MemoAutocomplete.value.asc())\
+        .all()
+
+    remarks_list = MemoAutocomplete.query\
+        .filter_by(type="remarks")\
+        .order_by(MemoAutocomplete.value.asc())\
+        .all()
+
+    released_people = MemoAutocomplete.query\
+        .filter_by(type="released_to")\
+        .order_by(MemoAutocomplete.value.asc())\
+        .all()
+
+    BASE_DIR = os.path.abspath(
+        os.path.dirname(current_app.root_path)
+    )
+
+    BACKUP_DIR = os.path.join(BASE_DIR, "backups")
+
+    STATE_FILE = os.path.join(
+        BACKUP_DIR,
+        "backup_state.txt"
+    )
+
+    BACKUP_A = os.path.join(
+        BACKUP_DIR,
+        "app_backup_A.db"
+    )
+
+    BACKUP_B = os.path.join(
+        BACKUP_DIR,
+        "app_backup_B.db"
+    )
+
+
+    backup_a_label = "Missing"
+    backup_b_label = "Missing"
+
+
+    if os.path.exists(STATE_FILE):
+
+        try:
+
+            with open(STATE_FILE, "r") as f:
+
+                last_time, last_slot = (
+                    f.read().strip().split(",")
+                )
+
+            last_backup = datetime.strptime(
+                last_time,
+                "%Y-%m-%d %H:%M:%S"
+            )
+
+            delta = datetime.now() - last_backup
+
+            days = delta.days
+
+            if days == 0:
+
+                label = "Latest Backup"
+
+            elif days == 1:
+
+                label = "1 day ago"
+
+            else:
+
+                label = f"{days} days ago"
+
+            if last_slot == "A":
+
+                backup_a_label = label
+
+                if os.path.exists(BACKUP_B):
+                    backup_b_label = "Older Backup"
+
+            else:
+
+                backup_b_label = label
+
+                if os.path.exists(BACKUP_A):
+                    backup_a_label = "Older Backup"
+
+        except Exception as e:
+
+            print("Backup label error:", e)
+            
     return render_template(
         "admin/settings/general.html",
         settings=settings,
-        holidays=holidays
+        holidays=holidays,
+
+        from_offices=from_offices,
+        forwarded_people=forwarded_people,
+        remarks_list=remarks_list,
+        released_people=released_people,
+
+        backup_a_label=backup_a_label,
+        backup_b_label=backup_b_label
     )
 
+
+
+@admin_bp.route("/restore-backup/<slot>", methods=["POST"])
+@login_required
+def restore_backup(slot):
+
+    if current_user.role != "admin":
+        return redirect(url_for("auth.login"))
+
+    # REAL ACTIVE DATABASE
+    DB_PATH = get_database_path()
+
+    # APPDATA FOLDER
+    APPDATA_DIR = os.path.dirname(DB_PATH)
+
+    # BACKUP FOLDER
+    BACKUP_DIR = os.path.join(APPDATA_DIR, "backups")
+
+    BACKUP_A = os.path.join(
+        BACKUP_DIR,
+        "app_backup_A.db"
+    )
+
+    BACKUP_B = os.path.join(
+        BACKUP_DIR,
+        "app_backup_B.db"
+    )
+
+    backup_file = BACKUP_A if slot == "A" else BACKUP_B
+
+    if not os.path.exists(backup_file):
+
+        flash("Backup file not found", "error")
+
+        return redirect(url_for("admin.settings_general"))
+
+    try:
+
+        # CLOSE SQLITE CONNECTIONS
+        db.session.remove()
+        db.engine.dispose()
+
+        # RESTORE DATABASE
+        shutil.copy2(backup_file, DB_PATH)
+
+        flash(
+            f"Backup {slot} restored successfully",
+            "success"
+        )
+
+    except Exception as e:
+
+        flash(f"Restore failed: {e}", "error")
+
+    return redirect(url_for("admin.settings_general"))
 
 @admin_bp.route("/delete-memos-by-date", methods=["POST"])
 @login_required
@@ -374,7 +535,19 @@ def import_memos():
                 subject_raw = clean(row[4])
                 subject_norm = normalize_subject(row[4])
                 # ------------------------------------
+                memo_number = None
 
+                if source_type == "OP" and subject_raw:
+                    if " - " in subject_raw:
+
+                        split_parts = subject_raw.split(" - ", 1)
+
+                        possible_memo = split_parts[0].strip()
+                        possible_subject = split_parts[1].strip()
+
+                        memo_number = possible_memo
+                        subject_raw = possible_subject
+                        subject_norm = normalize_subject(possible_subject)
                 # ---------- THREADING LOGIC ----------
                 thread_id = None
 
@@ -400,7 +573,9 @@ def import_memos():
                     date=date_val,
                     from_office=clean(row[2]),
                     forwarded_by=clean(row[3]),
+
                     subject=subject_raw,
+                    memo_number=memo_number,
 
                     remarks=clean(row[5]),
                     notes=clean(row[6]),
@@ -489,7 +664,7 @@ def export_memos():
             date_obj = datetime.strptime(str(m.date), "%Y-%m-%d")
             month = date_obj.strftime("%b").upper()
 
-            type_label = "COMMUNICATION" if m.source_type == "CM" else "OP"
+            type_label = "COMMUNICATION" if m.source_type == "CM" else "MEMO"
             key = f"{month}-{type_label}"
 
             grouped[key].append(m)
@@ -508,7 +683,13 @@ def export_memos():
                 ws.cell(row=row, column=2, value=m.date)
                 ws.cell(row=row, column=3, value=m.from_office)
                 ws.cell(row=row, column=4, value=m.forwarded_by)
-                ws.cell(row=row, column=5, value=m.subject)
+                subject_value = (
+                    f"{m.memo_number} - {m.subject}"
+                    if m.source_type == "OP" and m.memo_number
+                    else m.subject
+                )
+
+                ws.cell(row=row, column=5, value=subject_value)
                 ws.cell(row=row, column=6, value=m.remarks)
                 ws.cell(row=row, column=7, value=m.notes)
                 ws.cell(row=row, column=8, value=m.released_date)
@@ -542,18 +723,38 @@ def export_memos():
 def create_user():
 
     if current_user.role != "admin":
-        flash("Access denied")
+        flash("Access denied", "error")
         return redirect(url_for("secretary.dashboard"))
 
-    username = request.form["username"]
+    username = request.form["username"].strip()
     password = request.form["password"]
     role = request.form["role"]
 
-    user = User(username=username, role=role)
+    # CHECK IF USER EXISTS
+    existing_user = User.query.filter_by(
+        username=username
+    ).first()
+
+    if existing_user:
+
+        flash(
+            f"Account '{username}' already exists.",
+            "warning"
+        )
+
+        return redirect(url_for("admin.users"))
+
+    # CREATE USER
+    user = User(
+        username=username,
+        role=role
+    )
+
     user.set_password(password)
 
     db.session.add(user)
     db.session.commit()
+
     LogService.add_log(
         user,
         f"{current_user.username} created a user account",
@@ -561,7 +762,7 @@ def create_user():
         current_user.id
     )
 
-    flash("User created successfully")
+    flash("User created successfully", "success")
 
     return redirect(url_for("admin.users"))
 

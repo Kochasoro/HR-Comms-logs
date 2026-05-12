@@ -324,7 +324,11 @@ def get_autocomplete(type):
     items = MemoAutocomplete.query.filter_by(type=type).all()
     return jsonify([i.value for i in items])
 
-@secretary_bp.route("/autocomplete", methods=["POST"])
+@secretary_bp.route(
+    "/autocomplete",
+    methods=["POST"],
+    endpoint="save_autocomplete"
+)
 def save_autocomplete():
     data = request.json
     value = data.get("value")
@@ -344,7 +348,11 @@ def save_autocomplete():
 
     return jsonify({"success": True})
 
-@secretary_bp.route("/autocomplete", methods=["DELETE"])
+@secretary_bp.route(
+    "/autocomplete",
+    methods=["DELETE"],
+    endpoint="delete_autocomplete"
+)
 def delete_autocomplete():
     data = request.json
     value = data.get("value")
