@@ -9,7 +9,8 @@
 
 /* Top Controls */
 .filter-wrapper{
-    position:relative;
+    position: relative;
+    display: inline-block;
 }
 
 .filter-btn{
@@ -19,33 +20,126 @@
     border:none;
     border-radius:6px;
     cursor:pointer;
+
+    position:relative;
 }
 
 .filter-panel{
-    position: absolute;
-    right: 0;
-    top: 40px;
 
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 10px;
-    width: 200px;
+    position:absolute;
+    right:0;
+    top:45px;
 
-    display: none;
+    width:640px;
+    max-width:90vw;
 
-    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    background:white;
+    border:1px solid #ddd;
+    border-radius:16px;
 
-    z-index: 9999; /* important */
+    padding:14px;
+
+    box-shadow:0 12px 30px rgba(0,0,0,0.15);
+
+    z-index:9999;
+
+    display:none;
+
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap:14px;
+
+    overflow:hidden;
 }
 
+.filter-panel.active{
+    display:grid;
+}
+
+/* EACH COLUMN */
+.filter-group{
+
+    display:flex;
+    flex-direction:column;
+
+    min-width:0;
+}
+
+/* TITLES */
+.filter-title{
+
+    font-size:13px;
+    font-weight:700;
+
+    margin-bottom:8px;
+
+    padding-bottom:6px;
+
+    border-bottom:1px solid #eee;
+}
+
+/* SCROLL AREA */
+.filter-scroll{
+
+    max-height:220px;
+
+    overflow-y:auto;
+
+    overflow-x:hidden;
+
+    padding-right:3px;
+}
+
+/* LABELS */
 .filter-panel label{
-    display:block;
-    font-size:14px;
-    margin-bottom:6px;
+
+    display:grid;
+
+    grid-template-columns:18px 1fr;
+
+    align-items:center;
+
+    gap:8px;
+
+    width:100%;
+
+    font-size:12px;
+
+    padding:6px 8px;
+
+    border-radius:8px;
+
     cursor:pointer;
+
+    transition:0.18s;
+
+    word-break:break-word;
 }
 
+.filter-panel label:hover{
+    background:#f5f5f5;
+}
+
+/* INPUTS */
+.filter-panel input[type="checkbox"],
+.filter-panel input[type="radio"]{
+
+    margin:0;
+
+    width:14px;
+    height:14px;
+
+    justify-self:center;
+}
+
+/* NICE SCROLLBAR */
+.filter-scroll::-webkit-scrollbar{
+    width:6px;
+}
+
+.filter-scroll::-webkit-scrollbar-thumb{
+    background:#d4d4d4;
+    border-radius:10px;
+}
 
 .top-controls {
     display: flex;

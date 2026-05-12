@@ -109,36 +109,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-   document.querySelectorAll(".sort-option").forEach(option => {
+    document.querySelectorAll(".sort-option").forEach(option => {
 
-        option.addEventListener("change", function () {
+        option.addEventListener("change", fetchTable);
 
-            if (!this.checked) {
-                this.checked = true;
-                return;
-            }
+    });
+    document.querySelectorAll(
+        ".office-filter, .forwarded-filter, .released-filter"
+    ).forEach(option => {
 
-            document.querySelectorAll(".sort-option").forEach(o => {
-                if (o !== this) o.checked = false;
-            });
-
-            fetchTable();
-
-        });
+        option.addEventListener("change", fetchTable);
 
     });
 
+    filterBtn.addEventListener("click", (e) => {
 
-    filterBtn.addEventListener("click", () => {
-        filterPanel.style.display =
-            filterPanel.style.display === "block" ? "none" : "block";
+        e.stopPropagation();
+
+        filterPanel.classList.toggle("active");
     });
-    document.addEventListener("click", function(e){
 
-        if (!filterPanel.contains(e.target) && !filterBtn.contains(e.target)) {
-            filterPanel.style.display = "none";
+    document.addEventListener("click", (e) => {
+
+        if (
+            !filterPanel.contains(e.target) &&
+            !filterBtn.contains(e.target)
+        ) {
+            filterPanel.classList.remove("active");
         }
-
     });
 
 });
@@ -148,23 +146,53 @@ document.addEventListener("DOMContentLoaded", function () {
 /* =========================
 FETCH TABLE
 ========================= */
-
 function fetchTable() {
 
-    const search = document.getElementById("searchInput").value;
-    const month = document.getElementById("monthFilter").value;
-    const year = document.getElementById("yearFilter").value;
+    const search = document.getElementById("searchInput")?.value || "";
+    const month = document.getElementById("monthFilter")?.value || "";
+    const year = document.getElementById("yearFilter")?.value || "";
 
-    let sort = "";
+    // SORT (RADIO BUTTON)
     const selectedSort = document.querySelector(".sort-option:checked");
+    const sort = selectedSort ? selectedSort.value : "";
 
-    if (selectedSort) {
-        sort = selectedSort.value;
-    }
+    // FROM OFFICE FILTERS
+    const offices = Array.from(
+        document.querySelectorAll(".office-filter:checked")
+    ).map(cb => cb.value);
 
-    const url = `/?search=${encodeURIComponent(search)}&month=${month}&year=${year}&type=${currentType}&sort=${sort}`;
+    // FORWARDED FILTERS
+    const forwarded = Array.from(
+        document.querySelectorAll(".forwarded-filter:checked")
+    ).map(cb => cb.value);
 
-    fetch(url)
+    // RELEASED FILTERS
+    const released = Array.from(
+        document.querySelectorAll(".released-filter:checked")
+    ).map(cb => cb.value);
+
+    // BUILD PARAMS
+    const params = new URLSearchParams();
+
+    params.append("search", search);
+    params.append("month", month);
+    params.append("year", year);
+    params.append("type", currentType);
+    params.append("sort", sort);
+
+    offices.forEach(o => {
+        params.append("office", o);
+    });
+
+    forwarded.forEach(f => {
+        params.append("forwarded", f);
+    });
+
+    released.forEach(r => {
+        params.append("released", r);
+    });
+
+    fetch("/?" + params.toString())
         .then(res => res.text())
         .then(html => {
 
@@ -172,13 +200,17 @@ function fetchTable() {
             const doc = parser.parseFromString(html, "text/html");
 
             const newTable = doc.querySelector("#tableContainer");
+            const currentTable = document.querySelector("#tableContainer");
 
-            if (newTable) {
-                document.querySelector("#tableContainer").innerHTML = newTable.innerHTML;
+            if (newTable && currentTable) {
+
+                currentTable.innerHTML = newTable.innerHTML;
 
                 initializeColumnResize();
             }
-
+        })
+        .catch(err => {
+            console.error("Fetch table error:", err);
         });
 }
 document.addEventListener("click", function (e) {
@@ -278,8 +310,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
             document.getElementById("drawerNotes").innerText = row.dataset.notes || "-";
             document.getElementById("drawerReleasedTo").innerText = row.dataset.released_to || "-";
-            document.getElementById("drawerReleasedDate").innerText = formatDate(row.dataset.released_date);
+            const releasedDate = row.dataset.released_date;
 
+            document.getElementById("drawerReleasedDate").innerText =
+                releasedDate && releasedDate !== "None" && releasedDate !== "null"
+                    ? formatDate(releasedDate)
+        : "N/A";
             const releaseRow = document.querySelector(".drawer-release-row");
             releaseRow.style.display = memoData.showRelease ? "flex" : "none";
 
@@ -342,7 +378,15 @@ document.addEventListener("DOMContentLoaded", function () {
                         </div>
                         <div class="release-col">
                             <span class="text-secondary">Released Date:</span>
-                            <span>${formatDate(r.dataset.released_date)}</span>
+                            <span>
+                                ${
+                                    r.dataset.released_date &&
+                                    r.dataset.released_date !== "None" &&
+                                    r.dataset.released_date !== "null"
+                                        ? formatDate(r.dataset.released_date)
+                                        : "N/A"
+                                }
+                            </span>
                         </div>
                     </div>
                     ` : ""}
@@ -658,7 +702,6 @@ document.addEventListener('click', function(e) {
         memoFrom.disabled = true;
         memoForwarded.disabled = true;
         memoSubject.disabled = true;
-        memoDate.disabled = true;
         memoNumberRow.disabled = true;
 
         memoFrom.classList.add("locked");
@@ -672,7 +715,6 @@ document.addEventListener('click', function(e) {
     else {
 
         memoSubject.disabled = false;
-        memoDate.disabled = false;
         memoNumberRow.disabled = false;
 
         memoSubject.classList.remove("locked");

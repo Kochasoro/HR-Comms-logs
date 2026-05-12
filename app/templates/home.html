@@ -87,40 +87,93 @@
 
         <div id="filterPanel" class="filter-panel">
 
-            <label>
-                <input type="checkbox" class="sort-option" value="serial_desc" checked>
-                Serial (Newest)
-            </label>
+            <!-- SORT -->
+            <div class="filter-group">
+                <div class="filter-title">Sort</div>
 
-            <label>
-                <input type="checkbox" class="sort-option" value="serial_asc">
-                Serial (Oldest)
-            </label>
+                <label>
+                    <input type="radio" name="sort" class="sort-option" value="serial_desc" checked>
+                    Serial (Newest)
+                </label>
 
-            <label>
-                <input type="checkbox" class="sort-option" value="date_desc">
-                Newest Date
-            </label>
+                <label>
+                    <input type="radio" name="sort" class="sort-option" value="serial_asc">
+                    Serial (Oldest)
+                </label>
 
-            <label>
-                <input type="checkbox" class="sort-option" value="date_asc">
-                Oldest Date
-            </label>
+                <label>
+                    <input type="radio" name="sort" class="sort-option" value="date_desc">
+                    Newest Date
+                </label>
 
-            <label>
-                <input type="checkbox" class="sort-option" value="alpha_subject">
-                Subject A → Z
-            </label>
+                <label>
+                    <input type="radio" name="sort" class="sort-option" value="date_asc">
+                    Oldest Date
+                </label>
 
-            <label>
-                <input type="checkbox" class="sort-option" value="alpha_forwarded">
-                Forwarded By A → Z
-            </label>
+                <label>
+                    <input type="radio" name="sort" class="sort-option" value="alpha_subject">
+                    Subject A → Z
+                </label>
 
-            <label>
-                <input type="checkbox" class="sort-option" value="alpha_from">
-                From Office A → Z
-            </label>
+                <label>
+                    <input type="radio" name="sort" class="sort-option" value="alpha_forwarded">
+                    Forwarded By A → Z
+                </label>
+
+                <label>
+                    <input type="radio" name="sort" class="sort-option" value="alpha_from">
+                    From Office A → Z
+                </label>
+            </div>
+
+            <!-- FROM OFFICE -->
+            <div class="filter-group">
+                <div class="filter-title">From Office</div>
+
+                <div class="filter-scroll">
+                    {% for office in from_offices %}
+                    <label>
+                        <input type="checkbox"
+                            class="office-filter"
+                            value="{{ office[0] }}">
+                        {{ office[0] }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- FORWARDED -->
+            <div class="filter-group">
+                <div class="filter-title">Forwarded By</div>
+
+                <div class="filter-scroll">
+                    {% for person in forwarded_people %}
+                    <label>
+                        <input type="checkbox"
+                            class="forwarded-filter"
+                            value="{{ person[0] }}">
+                        {{ person[0] }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- RELEASED -->
+            <div class="filter-group">
+                <div class="filter-title">Released To</div>
+
+                <div class="filter-scroll">
+                    {% for person in released_people %}
+                    <label>
+                        <input type="checkbox"
+                            class="released-filter"
+                            value="{{ person[0] }}">
+                        {{ person[0] }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
 
         </div>
 
@@ -336,10 +389,10 @@
       <div class="form-row">
         <div class="form-group">
         <label>From</label>
-        <div class="autocomplete">
-            <input name="from_office" id="memoFrom" autocomplete="off">
-            <div class="dropdown" id="fromDropdown"></div>
-        </div>
+            <div class="autocomplete">
+                <input name="from_office" id="memoFrom" autocomplete="off">
+                <div class="dropdown" id="fromDropdown"></div>
+            </div>
         </div>
 
         <div class="form-group">
@@ -378,8 +431,8 @@
         <div class="form-group">
             <label>Released To</label>
             <div class="autocomplete">
-            <input name="released_to" id="memoReleaseTo" autocomplete="off">
-            <div class="dropdown" id="releaseToDropdown"></div>
+                <input name="released_to" id="memoReleaseTo" autocomplete="off">
+                <div class="dropdown" id="releaseToDropdown"></div>
             </div>
         </div>
 
