@@ -1,17 +1,18 @@
+{% extends "base.html" %}
+
 {% block page_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/logs.css') }}">
 {% endblock %}
 
-{% extends "base.html" %}
 {% block content %}
 <h2>Activity Logs</h2>
 
 <div class="timeline">
-  {% for log in logs %}
+  {% for log in logs.items %}
     <div class="timeline-item">
-      
+
       <div class="timeline-time">
-        {{ log.encoded_at.strftime("%B %d, %Y") }} • 
+        {{ log.encoded_at.strftime("%B %d, %Y") }} •
         {{ log.encoded_at.strftime("%I:%M %p") }}
       </div>
 
@@ -22,5 +23,25 @@
 
     </div>
   {% endfor %}
+</div>
+
+<div class="pagination">
+
+  {% if logs.has_prev %}
+    <a href="{{ url_for('admin.logs_page', page=logs.prev_num) }}">
+      Previous
+    </a>
+  {% endif %}
+
+  <span>
+    Page {{ logs.page }} of {{ logs.pages }}
+  </span>
+
+  {% if logs.has_next %}
+    <a href="{{ url_for('admin.logs_page', page=logs.next_num) }}">
+      Next
+    </a>
+  {% endif %}
+
 </div>
 {% endblock %}

@@ -70,8 +70,13 @@
       <tr>
 
         <td>{{ user.username }}</td>
-        <td>{{ user.role }}</td>
-
+        <td>
+            {% if user.role == "secretary" %}
+                Assistant
+            {% else %}
+                {{ user.role|capitalize }}
+            {% endif %}
+        </td>
         <td>
           <div class="action-container">
             

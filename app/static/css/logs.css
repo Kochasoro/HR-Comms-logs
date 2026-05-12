@@ -31,3 +31,23 @@
 .timeline-content {
   font-size: 14px;
 }
+
+.pagination{
+    margin-top:20px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:15px;
+}
+
+.pagination a{
+    padding:8px 14px;
+    background:#A12222;
+    color:white;
+    text-decoration:none;
+    border-radius:6px;
+}
+
+.pagination a:hover{
+    opacity:.9;
+}

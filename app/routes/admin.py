@@ -829,7 +829,18 @@ def delete_user(id):
 @admin_bp.route("/logs")
 @login_required
 def logs_page():
-    logs = LogEntry.query.order_by(LogEntry.encoded_at.desc()).all()
-    return render_template("admin/logs.html", logs=logs)
 
+    page = request.args.get("page", 1, type=int)
 
+    logs = LogEntry.query.order_by(
+        LogEntry.encoded_at.desc()
+    ).paginate(
+        page=page,
+        per_page=100,
+        error_out=False
+    )
+
+    return render_template(
+        "admin/logs.html",
+        logs=logs
+    )
