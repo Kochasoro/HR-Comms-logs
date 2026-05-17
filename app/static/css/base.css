@@ -205,30 +205,19 @@ body{
     color:#991b1b;
 }
 
-/* CONTENT SHIFT */
+/* CONTENT  */
 .content{
     margin-left:78px;
-    margin-top:72px;
+    margin-top:48px;
 
     padding:28px;
+    min-height:100vh;
 
     transition:0.3s ease;
 }
 
 .sidebar:hover ~ .content{
     margin-left:240px;
-}
-
-/* =========================
-   CONTENT
-========================= */
-.content{
-    margin-left:78px;
-    margin-top:72px;
-
-    min-height:100vh;
-
-    padding:28px;
 }
 
 

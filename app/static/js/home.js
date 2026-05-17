@@ -299,120 +299,268 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const memoData = renderMemoData(row.dataset);
 
-            document.getElementById("drawerSubject").innerText = row.dataset.subject || "-";
-            document.getElementById("drawerNumber").innerText = row.dataset.serial || "-";
-            document.getElementById("drawerDate").innerText = formatDate(row.dataset.date);
+            document.getElementById("drawerSubject").innerText =
+                row.dataset.subject || "-";
 
-            document.getElementById("drawerRemarks").innerText = memoData.remarks || "-";
+            document.getElementById("drawerNumber").innerText =
+                row.dataset.serial || "-";
 
-            document.getElementById("drawerFrom").innerText = row.dataset.from || "-";
-            document.getElementById("drawerForwarded").innerText = row.dataset.forwarded || "-";
+            document.getElementById("drawerDate").innerText =
+                formatDate(row.dataset.date);
 
-            document.getElementById("drawerNotes").innerText = row.dataset.notes || "-";
-            document.getElementById("drawerReleasedTo").innerText = row.dataset.released_to || "-";
+            document.getElementById("drawerRemarks").innerText =
+                memoData.remarks || "-";
+
+            document.getElementById("drawerFrom").innerText =
+                row.dataset.from || "-";
+
+            document.getElementById("drawerForwarded").innerText =
+                row.dataset.forwarded || "-";
+
+            document.getElementById("drawerNotes").innerText =
+                row.dataset.notes || "-";
+
+            document.getElementById("drawerReleasedTo").innerText =
+                row.dataset.released_to || "-";
+
             const releasedDate = row.dataset.released_date;
 
             document.getElementById("drawerReleasedDate").innerText =
-                releasedDate && releasedDate !== "None" && releasedDate !== "null"
+                releasedDate &&
+                releasedDate !== "None" &&
+                releasedDate !== "null"
                     ? formatDate(releasedDate)
-        : "N/A";
-            const releaseRow = document.querySelector(".drawer-release-row");
-            releaseRow.style.display = memoData.showRelease ? "flex" : "none";
+                    : "N/A";
+
+            const releaseRow =
+                document.querySelector(".drawer-release-row");
+
+            releaseRow.style.display =
+                memoData.showRelease ? "flex" : "none";
 
             const threadId = row.dataset.thread;
-            const relatedList = document.getElementById("relatedMemos");
-            relatedList.innerHTML = "";
 
-            const related = [];
+            const relatedList =
+                document.getElementById("relatedMemos");
 
-            document.querySelectorAll(".memo-row").forEach(r => {
-                if (r.dataset.thread === threadId) {
-                    related.push(r);
-                }
-            });
+            relatedList.innerHTML = `
+                <li class="loading-related">
+                    Loading related memos...
+                </li>
+            `;
 
-            related.sort((a, b) =>
-                new Date(a.dataset.date) - new Date(b.dataset.date)
-            );
+            fetch(`/thread/${threadId}`)
 
-            related.forEach((r) => {
+                .then(async (res) => {
 
-                const wrapper = document.createElement("li");
-                wrapper.classList.add("memo-collapse");
+                    const data = await res.json();
 
-                const isActive = r === row;
-                const itemData = renderMemoData(r.dataset);
+                    if (!res.ok) {
+                        console.error("THREAD ERROR:", data);
 
-                const header = document.createElement("div");
-                header.classList.add("memo-collapse-header");
+                        relatedList.innerHTML = `
+                            <li class="loading-related">
+                                Failed to load related memos
+                            </li>
+                        `;
 
-                header.innerHTML = `
-                    <span>#${r.dataset.serial || "-"}</span>
-                    <span>${formatDate(r.dataset.date)}</span>
-                    <span class="toggle-icon">${isActive ? "▼" : "▶"}</span>
-                `;
+                        return [];
+                    }
 
-                const content = document.createElement("div");
-                content.classList.add("memo-collapse-body");
-                content.style.display = isActive ? "block" : "none";
+                    return data;
+                })
 
-                content.innerHTML = `
-                    <span class="badge badge-urgent">${itemData.remarks || "-"}</span>
+                .then((related) => {
 
-                    <h3 class="drawer-subject">${r.dataset.subject || "-"}</h3>
+                    relatedList.innerHTML = "";
 
-                    <div class="drawer-meta">
-                        <p>From: ${r.dataset.from || "-"}</p>
-                        <p>Forwarded by: ${r.dataset.forwarded || "-"}</p>
-                    </div>
+                    if (!Array.isArray(related)) {
 
-                    <div class="drawer-notes">
-                        Notes: ${r.dataset.notes || "-"}
-                    </div>
+                        console.error(
+                            "Expected array but got:",
+                            related
+                        );
 
-                    ${itemData.showRelease ? `
-                    <div class="drawer-release-row">
-                        <div class="release-col">
-                            <span class="text-secondary">Released to:</span>
-                            <span>${r.dataset.released_to || "-"}</span>
-                        </div>
-                        <div class="release-col">
-                            <span class="text-secondary">Released Date:</span>
+                        relatedList.innerHTML = `
+                            <li class="loading-related">
+                                Invalid thread response
+                            </li>
+                        `;
+
+                        return;
+                    }
+
+                    if (related.length === 0) {
+
+                        relatedList.innerHTML = `
+                            <li class="loading-related">
+                                No related memos found
+                            </li>
+                        `;
+
+                        return;
+                    }
+
+                    related.sort((a, b) =>
+                        new Date(b.date) - new Date(a.date)
+                    );
+
+                    related.forEach((memo) => {
+
+                        const wrapper =
+                            document.createElement("li");
+
+                        wrapper.classList.add("memo-collapse");
+
+                        const isActive =
+                            memo.serial === row.dataset.serial;
+
+                        const itemData =
+                            renderMemoData(memo);
+
+                        const header =
+                            document.createElement("div");
+
+                        header.classList.add(
+                            "memo-collapse-header"
+                        );
+
+                        header.innerHTML = `
+                            <span>
+                                #${memo.serial || "-"}
+                            </span>
+
                             <span>
                                 ${
-                                    r.dataset.released_date &&
-                                    r.dataset.released_date !== "None" &&
-                                    r.dataset.released_date !== "null"
-                                        ? formatDate(r.dataset.released_date)
-                                        : "N/A"
+                                    memo.released_date &&
+                                    memo.released_date !== "N/A" &&
+                                    memo.released_date !== "None" &&
+                                    memo.released_date !== "null"
+
+                                        ? formatDate(memo.released_date)
+
+                                        : memo.date
+                                            ? formatDate(memo.date)
+                                            : "-"
                                 }
                             </span>
-                        </div>
-                    </div>
-                    ` : ""}
-                `;
 
-                header.addEventListener("click", () => {
-                    const isOpen = content.style.display === "block";
-                    content.style.display = isOpen ? "none" : "block";
-                    header.querySelector(".toggle-icon").innerText = isOpen ? "▶" : "▼";
+                            <span class="toggle-icon">
+                                ${isActive ? "▼" : "▶"}
+                            </span>
+                        `;
+
+                        const content =
+                            document.createElement("div");
+
+                        content.classList.add(
+                            "memo-collapse-body"
+                        );
+
+                        content.style.display =
+                            isActive ? "block" : "none";
+
+                        content.innerHTML = `
+                            <span class="badge badge-urgent">
+                                ${itemData.remarks || "-"}
+                            </span>
+
+                            <h3 class="drawer-subject">
+                                ${memo.subject || "-"}
+                            </h3>
+
+                            <div class="drawer-meta">
+                                <p>
+                                    From:
+                                    ${memo.from || "-"}
+                                </p>
+
+                                <p>
+                                    Forwarded by:
+                                    ${memo.forwarded || "-"}
+                                </p>
+                            </div>
+
+                            <div class="drawer-notes">
+                                Notes:
+                                ${memo.notes || "-"}
+                            </div>
+
+                            ${itemData.showRelease ? `
+                                <div class="drawer-release-row">
+
+                                    <div class="release-col">
+                                        <span class="text-secondary">
+                                            Released to:
+                                        </span>
+
+                                        <span>
+                                            ${memo.released_to || "-"}
+                                        </span>
+                                    </div>
+
+                                    <div class="release-col">
+                                        <span class="text-secondary">
+                                            Released Date:
+                                        </span>
+
+                                        <span>
+                                            ${
+                                                memo.released_date
+                                                    ? formatDate(
+                                                        memo.released_date
+                                                    )
+                                                    : "N/A"
+                                            }
+                                        </span>
+                                    </div>
+
+                                </div>
+                            ` : ""}
+                        `;
+
+                        header.addEventListener("click", () => {
+
+                            const isOpen =
+                                content.style.display === "block";
+
+                            content.style.display =
+                                isOpen ? "none" : "block";
+
+                            header.querySelector(
+                                ".toggle-icon"
+                            ).innerText =
+                                isOpen ? "▶" : "▼";
+                        });
+
+                        wrapper.appendChild(header);
+                        wrapper.appendChild(content);
+
+                        relatedList.appendChild(wrapper);
+                    });
+
+                })
+
+                .catch((err) => {
+
+                    console.error(
+                        "FETCH FAILED:",
+                        err
+                    );
+
+                    relatedList.innerHTML = `
+                        <li class="loading-related">
+                            Error loading related memos
+                        </li>
+                    `;
                 });
-
-                content.addEventListener("click", () => {
-                    r.click();
-                });
-
-                wrapper.appendChild(header);
-                wrapper.appendChild(content);
-                relatedList.appendChild(wrapper);
-            });
 
             drawer.classList.add("active");
             return;
         }
 
-
-        const isInsideDrawer = drawer && drawer.contains(e.target);
+        const isInsideDrawer =
+            drawer && drawer.contains(e.target);
 
         if (!isInsideDrawer) {
             closeDrawer();
@@ -421,12 +569,17 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     window.closeDrawer = function () {
-        const drawer = document.getElementById("memoDrawer");
 
-        if (drawer) drawer.classList.remove("active");
+        const drawer =
+            document.getElementById("memoDrawer");
+
+        if (drawer)
+            drawer.classList.remove("active");
 
         document.querySelectorAll(".memo-row")
-            .forEach(r => r.classList.remove("active-row"));
+            .forEach(r =>
+                r.classList.remove("active-row")
+            );
 
         activeRow = null;
     };
@@ -582,6 +735,366 @@ function showErrorModal(message) {
 function closeErrorModal() {
     document.getElementById("errorModal").classList.remove("show");
 }
+
+
+// =========================
+// SUBJECT SEARCH DROPDOWN
+// =========================
+
+const updateSearch =
+    document.getElementById("updateMemoSearch");
+
+const updateDropdown =
+    document.getElementById("updateMemoDropdown");
+
+let searchTimeout;
+
+updateSearch.addEventListener("input", function () {
+
+    clearTimeout(searchTimeout);
+
+    const query =
+        this.value.trim();
+
+    if (!query) {
+
+        updateDropdown.innerHTML = "";
+        updateDropdown.style.display = "none";
+
+        return;
+    }
+
+    searchTimeout = setTimeout(async () => {
+
+        try {
+
+            const res = await fetch(
+                `/secretary/search-memos?q=${encodeURIComponent(query)}`
+            );
+
+            const memos = await res.json();
+
+            updateDropdown.innerHTML = "";
+
+            if (!memos.length) {
+
+                updateDropdown.style.display = "none";
+                return;
+            }
+
+            memos.forEach(memo => {
+
+                const item =
+                    document.createElement("div");
+
+                item.classList.add("dropdown-item");
+
+                item.innerHTML = `
+
+                    <div class="search-memo-item">
+
+                        <div class="search-memo-top">
+                            <strong>
+                                ${memo.subject || "No Subject"}
+                            </strong>
+                        </div>
+
+                        <div class="search-memo-meta">
+
+                            <span>
+                                #${memo.number || "----"}
+                            </span>
+
+                            <span>
+                                ${memo.date || ""}
+                            </span>
+
+                        </div>
+
+                        <div class="search-memo-bottom">
+
+                            <span>
+                                ${memo.from || "-"}
+                            </span>
+
+                            <span>
+                                ${memo.forwarded || "-"}
+                            </span>
+
+                        </div>
+
+                    </div>
+                `;
+
+            item.addEventListener("click", () => {
+
+                closeModals();
+
+                fillUpdateForm({
+
+                    dataset: {
+
+                        id: memo.id,
+
+                        source_type:
+                            memo.source_type || "CM",
+
+                        from:
+                            memo.from || "",
+
+                        forwarded:
+                            memo.forwarded || "",
+
+                        subject:
+                            memo.subject || "",
+
+                        remarks:
+                            memo.remarks || "",
+
+                        notes:
+                            memo.notes || "",
+
+                        date:
+                            memo.date || "",
+
+                        released_to:
+                            memo.released_to || "",
+
+                        released_date:
+                            memo.released_date || "",
+
+                        number:
+                            memo.number || ""
+                    },
+
+                    classList: {
+
+                        contains: (cls) =>
+                            cls === "update-new-btn"
+                    }
+                });
+
+                updateDropdown.style.display =
+                    "none";
+
+                updateSearch.value = "";
+            });
+
+                updateDropdown.appendChild(item);
+            });
+
+            updateDropdown.style.display = "block";
+
+        }
+
+        catch (err) {
+
+            console.error(
+                "SEARCH ERROR:",
+                err
+            );
+        }
+
+    }, 300);
+});
+// =========================
+// AUTO CLOSE DROPDOWN
+// =========================
+
+document.addEventListener("click", function (e) {
+
+    if (
+        !e.target.closest("#updateMemoSearch") &&
+        !e.target.closest("#updateMemoDropdown")
+    ) {
+
+        updateDropdown.style.display = "none";
+    }
+});
+
+
+// =========================
+// MAIN FORM FILL FUNCTION
+// =========================
+
+function fillUpdateForm(btn) {
+
+    const form =
+        document.getElementById("editMemoForm");
+
+    const title =
+        document.getElementById("editMemoTitle");
+
+    const id =
+        btn.dataset.id;
+
+    const sourceType =
+        btn.dataset.source_type;
+
+    const memoFrom =
+        document.getElementById("editMemoFrom");
+
+    const memoForwarded =
+        document.getElementById("editMemoForwarded");
+
+    const memoSubject =
+        document.getElementById("editMemoSubject");
+
+    const memoDate =
+        document.getElementById("editMemoDate");
+
+    const memoRemarks =
+        document.getElementById("editMemoRemarks");
+
+    const memoNotes =
+        document.getElementById("editMemoNotes");
+
+    const memoReleaseTo =
+        document.getElementById("editMemoReleaseTo");
+
+    const memoReleaseDate =
+        document.getElementById("editMemoReleaseDate");
+
+    const memoNumber =
+        document.getElementById("editMemoNumber");
+
+    const remarksRow =
+        document.getElementById("editRemarksRow");
+
+    const releaseRow =
+        document.getElementById("editReleaseRow");
+
+    const memoNumberRow =
+        document.getElementById("editMemoNumberRow");
+
+
+    // =========================
+    // TITLE
+    // =========================
+
+    title.textContent =
+        btn.classList.contains("update-new-btn")
+            ? "Update Memo"
+            : "Edit Memo";
+
+
+    // =========================
+    // FORM ACTION
+    // =========================
+
+    form.action =
+        btn.classList.contains("update-btn")
+            ? `/secretary/edit/${id}`
+            : `/secretary/update/${id}`;
+
+
+    // =========================
+    // FILL VALUES
+    // =========================
+
+    memoFrom.value =
+        btn.dataset.from || "";
+
+    memoForwarded.value =
+        btn.dataset.forwarded || "";
+
+    memoSubject.value =
+        btn.dataset.subject || "";
+
+    memoRemarks.value =
+        btn.dataset.remarks || "";
+
+    memoNotes.value =
+        btn.dataset.notes || "";
+
+    memoDate.value =
+        btn.dataset.date || "";
+
+    memoReleaseTo.value =
+        btn.dataset.released_to || "";
+
+    memoReleaseDate.value =
+        btn.dataset.released_date || "";
+
+    memoNumber.value =
+        btn.dataset.number || "";
+
+
+    // =========================
+    // OP / CM VIEW
+    // =========================
+
+    if (sourceType === "OP") {
+
+        remarksRow.style.display = "none";
+
+        releaseRow.style.display = "none";
+
+        memoNumberRow.style.display = "flex";
+
+    }
+
+    else {
+
+        memoNumberRow.style.display = "none";
+
+        remarksRow.style.display = "flex";
+
+        releaseRow.style.display = "flex";
+    }
+
+
+    // =========================
+    // UPDATE MODE
+    // =========================
+
+    if (
+        btn.classList.contains("update-new-btn")
+    ) {
+
+        memoFrom.disabled = true;
+        memoForwarded.disabled = true;
+        memoSubject.disabled = true;
+
+        memoFrom.classList.add("locked");
+        memoForwarded.classList.add("locked");
+        memoSubject.classList.add("locked");
+    }
+
+    else {
+
+        memoSubject.disabled = false;
+
+        memoSubject.classList.remove("locked");
+
+        if (sourceType === "OP") {
+
+            memoFrom.disabled = true;
+            memoForwarded.disabled = true;
+
+            memoFrom.classList.add("locked");
+            memoForwarded.classList.add("locked");
+        }
+
+        else {
+
+            memoFrom.disabled = false;
+            memoForwarded.disabled = false;
+
+            memoFrom.classList.remove("locked");
+            memoForwarded.classList.remove("locked");
+        }
+    }
+
+
+    // =========================
+    // OPEN MODAL
+    // =========================
+
+    openEditMemo();
+}
+
+
 /* ADD MEMO */
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -634,116 +1147,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 
-document.addEventListener('click', function(e) {
-    const btn = e.target.closest(".update-new-btn, .update-btn");
+document.addEventListener("click", function (e) {
+
+    const btn =
+        e.target.closest(
+            ".update-new-btn, .update-btn"
+        );
+
     if (!btn) return;
 
-    const form = document.getElementById("editMemoForm");
-    const title = document.getElementById("editMemoTitle");
-
-    const id = btn.getAttribute("data-id");
-
-    if (!id) {
-        console.error("Missing ID", btn);
-        return;
-    }
-
-    title.textContent = btn.classList.contains("update-new-btn")
-        ? "Update Memo"
-        : "Edit Memo";
-
-    form.dataset.actionUrl = btn.classList.contains("update-btn")
-        ? `/secretary/edit/${id}`
-        : `/secretary/update/${id}`;
-
-    console.log("SET URL:", form.dataset.actionUrl);
-
-    const sourceType = btn.dataset.source_type;
-    console.log("RAW ID:", btn.dataset.id);
-    console.log("TYPE:", typeof btn.dataset.id);
-    const memoFrom = document.getElementById("editMemoFrom");
-    const memoForwarded = document.getElementById("editMemoForwarded");
-    const memoSubject = document.getElementById("editMemoSubject");
-    const memoDate = document.getElementById("editMemoDate");
-    const remarksRow = document.getElementById("editRemarksRow");
-    const releaseRow = document.getElementById("editReleaseRow");
-    const memoNumberRow = document.getElementById("editMemoNumberRow");
-    
-    if (btn.classList.contains("update-new-btn")) {
-        title.textContent = "Update Memo";
-    } else {
-        title.textContent = "Edit Memo";
-    }
-    memoFrom.value = btn.dataset.from || "";
-    memoForwarded.value = btn.dataset.forwarded || "";
-    memoSubject.value = btn.dataset.subject || "";
-
-    document.getElementById("editMemoRemarks").value = btn.dataset.remarks || "";
-    document.getElementById("editMemoNotes").value = btn.dataset.notes || "";
-    memoDate.value = btn.dataset.date || "";
-    document.getElementById("editMemoReleaseTo").value = btn.dataset.released_to || "";
-    document.getElementById("editMemoReleaseDate").value = btn.dataset.released_date || "";
-    document.getElementById("editMemoNumber").value = btn.dataset.number || "";
-
-    if (sourceType === "OP") {
-
-        remarksRow.style.display = "none";
-        releaseRow.style.display = "none";
-        memoNumberRow.style.display = "flex";  
-    } else {
-        memoNumberRow.style.display = "none";
-        remarksRow.style.display = "flex";
-        releaseRow.style.display = "flex";
-
-    }
-
-    if (btn.classList.contains("update-new-btn")) {
-
-        memoFrom.disabled = true;
-        memoForwarded.disabled = true;
-        memoSubject.disabled = true;
-        memoNumberRow.disabled = true;
-
-        memoFrom.classList.add("locked");
-        memoForwarded.classList.add("locked");
-        memoSubject.classList.add("locked");
-        memoDate.classList.add("locked");
-        memoNumberRow.classList.add("locked");
-
-    } 
-
-    else {
-
-        memoSubject.disabled = false;
-        memoNumberRow.disabled = false;
-
-        memoSubject.classList.remove("locked");
-        memoDate.classList.remove("locked");
-        memoNumberRow.classList.remove("locked");   
-
-        if (sourceType === "OP") {
-            memoFrom.disabled = true;
-            memoForwarded.disabled = true;
-
-            memoFrom.classList.add("locked");
-            memoForwarded.classList.add("locked");
-        } else {
-            memoFrom.disabled = false;
-            memoForwarded.disabled = false;
-
-            memoFrom.classList.remove("locked");
-            memoForwarded.classList.remove("locked");
-        }
-    }
-
-
-    if (btn.classList.contains("update-btn")) {
-        form.action = `/secretary/edit/${id}`;
-    } else {
-        form.action = `/secretary/update/${id}`;
-    }
-
-    openEditMemo();
+    fillUpdateForm(btn);
 });
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -755,7 +1168,7 @@ document.addEventListener("DOMContentLoaded", function () {
             e.preventDefault();
 
             const form = document.getElementById("editMemoForm");
-            const url = form.dataset.actionUrl;
+            const url = form.action;
             const formData = new FormData(form);
 
             if (!url) {
