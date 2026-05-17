@@ -89,10 +89,24 @@ def settings_general():
 
             if logo_file and logo_file.filename:
 
-                upload_folder = os.path.join(current_app.root_path, "static", "uploads")
+                upload_folder = os.path.join(
+                    current_app.root_path,
+                    "static",
+                    "uploads"
+                )
+
                 os.makedirs(upload_folder, exist_ok=True)
 
-                logo_path = os.path.join(upload_folder, "system_logo.png")
+                logo_path = os.path.join(
+                    upload_folder,
+                    "system_logo.png"
+                )
+
+                # DELETE OLD LOGO IF EXISTS
+                if os.path.exists(logo_path):
+                    os.remove(logo_path)
+
+                # SAVE NEW LOGO
                 logo_file.save(logo_path)
 
                 settings.logo = "uploads/system_logo.png"
@@ -253,7 +267,36 @@ def settings_general():
         backup_b_label=backup_b_label
     )
 
+@admin_bp.route("/settings/remove-logo", methods=["POST"])
+@login_required
+def remove_logo():
 
+    if current_user.role != "admin":
+        return redirect(url_for("auth.login"))
+
+    settings = SystemSettings.query.first()
+
+    if settings and settings.logo:
+
+        logo_path = os.path.join(
+            current_app.root_path,
+            "static",
+            "uploads",
+            "system_logo.png"
+        )
+
+        # DELETE FILE
+        if os.path.exists(logo_path):
+            os.remove(logo_path)
+
+        # RESET DATABASE VALUE
+        settings.logo = None
+
+        db.session.commit()
+
+        flash("Logo removed. Default logo restored.", "success")
+
+    return redirect(url_for("admin.settings_general"))
 
 @admin_bp.route("/restore-backup/<slot>", methods=["POST"])
 @login_required

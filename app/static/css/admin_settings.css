@@ -353,3 +353,52 @@ label { font-size: 0.85rem; color: #555; width: 300px; }
     transform:translateY(-1px);
     opacity:0.95;
 }
+
+
+.remove-logo-wrapper{
+    display:flex;
+    justify-content:center;
+    margin-top:14px;
+}
+
+.danger-btn{
+    background:linear-gradient(
+        135deg,
+        #991b1b,
+        #dc2626
+    );
+
+    color:white;
+    border:none;
+
+    padding:10px 16px;
+
+    border-radius:12px;
+
+    font-size:14px;
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:0.25s ease;
+
+    box-shadow:
+        0 6px 16px rgba(220,38,38,0.25);
+
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+}
+
+.danger-btn:hover{
+    transform:translateY(-2px);
+
+    box-shadow:
+        0 10px 22px rgba(220,38,38,0.35);
+
+    filter:brightness(1.05);
+}
+
+.danger-btn:active{
+    transform:scale(0.97);
+}

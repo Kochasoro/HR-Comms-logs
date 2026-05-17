@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, jsonify, render_template, request
 from datetime import date, datetime
 from app.models.holiday import Holiday
 from app.models.memo import Memo
@@ -22,7 +22,32 @@ def home():
     month_filter = request.args.get("month") or today.month
     year_filter = request.args.get("year") or today.year
 
-    query = Memo.query.filter_by(source_type=type_filter)
+    query = Memo.query
+
+    # TYPE FILTER
+    if type_filter in ["CM", "OP"]:
+
+        query = query.filter(Memo.source_type == type_filter)
+
+    elif type_filter == "incoming":
+
+        query = query.filter(
+            Memo.source_type == "CM",
+            or_(
+                Memo.released_date.is_(None),
+                Memo.released_to.is_(None),
+                Memo.released_to == ""
+            )
+        )
+
+    elif type_filter == "outgoing":
+
+        query = query.filter(
+            Memo.source_type == "CM",
+            Memo.released_date.isnot(None),
+            Memo.released_to.isnot(None),
+            Memo.released_to != ""
+        )
 
     if search:
         query = query.filter(
@@ -131,3 +156,79 @@ def home():
         forwarded_people=forwarded_people,
         released_people=released_people
     )
+
+@main.route("/thread/<thread_id>")
+def get_thread_memos(thread_id):
+
+    try:
+
+        memos = (
+            Memo.query
+            .filter_by(thread_id=thread_id)
+            .order_by(Memo.date.asc())
+            .all()
+        )
+
+        data = []
+
+        for memo in memos:
+
+            data.append({
+
+                "serial": f"{memo.serial_number:04d}"
+                    if memo.serial_number
+                    else "-",
+
+                "subject": memo.subject,
+
+                "date":
+                    memo.date.strftime("%Y-%m-%d")
+                    if memo.date
+                    else None,
+
+                "remarks": memo.remarks,
+
+                "from":
+                    memo.from_office
+                    if memo.from_office
+                    else "-",
+
+                "forwarded":
+                    memo.forwarded_by
+                    if memo.forwarded_by
+                    else "-",
+
+                "notes":
+                    memo.notes
+                    if memo.notes
+                    else "-",
+
+                "released_to":
+                    memo.released_to
+                    if memo.released_to
+                    else "-",
+
+                "released_date":
+                    memo.released_date.strftime("%Y-%m-%d")
+                    if memo.released_date
+                    else None,
+
+                "status":
+                    memo.status
+                    if memo.status
+                    else None
+            })
+
+        return jsonify(data)
+
+    except Exception as e:
+
+        import traceback
+
+        print("THREAD FETCH ERROR:")
+        traceback.print_exc()
+
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500

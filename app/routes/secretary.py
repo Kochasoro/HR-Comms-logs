@@ -293,6 +293,7 @@ def update_memo(id):
             "error": str(e)
         }), 500
 
+
 @secretary_bp.route("/delete/<int:id>", methods=["POST"])
 @login_required
 def delete_memo(id):
@@ -363,3 +364,78 @@ def delete_autocomplete():
         db.session.commit()
 
     return jsonify({"success": True})
+
+
+
+
+
+    
+
+
+@secretary_bp.route("/search-memos")
+@login_required
+def search_memos():
+
+    query = request.args.get("q", "").strip()
+
+    if not query:
+        return jsonify([])
+
+    memos = (
+        Memo.query
+        .filter(
+            db.or_(
+                Memo.subject.ilike(f"%{query}%"),
+                Memo.from_office.ilike(f"%{query}%"),
+                Memo.forwarded_by.ilike(f"%{query}%"),
+                Memo.memo_number.ilike(f"%{query}%")
+            )
+        )
+        .order_by(Memo.date.desc())
+        .limit(20)
+        .all()
+    )
+
+    data = []
+
+    for memo in memos:
+
+        data.append({
+
+            "id": memo.id,
+
+            "subject": memo.subject,
+
+            "number":
+                memo.memo_number
+                if memo.memo_number
+                else f"{memo.serial_number:04d}",
+
+            "date":
+                memo.date.strftime("%Y-%m-%d")
+                if memo.date else "",
+
+            "from":
+                memo.from_office,
+
+            "forwarded":
+                memo.forwarded_by,
+
+            "source_type":
+                memo.source_type,
+
+            "remarks":
+                memo.remarks,
+
+            "notes":
+                memo.notes,
+
+            "released_to":
+                memo.released_to,
+
+            "released_date":
+                memo.released_date.strftime("%Y-%m-%d")
+                if memo.released_date else ""
+        })
+
+    return jsonify(data)
